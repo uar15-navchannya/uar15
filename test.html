@@ -242,6 +242,14 @@ p { margin: 0; }
 .m3d.view { height:min(62svh, 520px); }
 .m3d-stick { position:sticky; top:calc(57px + env(safe-area-inset-top, 0px)); z-index:5; margin-inline:-4px; padding:6px 4px 8px; background:var(--bg); }
 .m3d-stick .m3d { height:min(34svh, 300px); }
+.m3d.dims { height:min(40svh, 330px); }
+.m3d-nav { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-top:6px; }
+.m3d-nav .btn { min-height:44px; font-size:15px; }
+.m3d-nav span { font:500 13px/1.2 var(--display); letter-spacing:1px; text-transform:uppercase; color:var(--muted); text-align:center; }
+.col { display:flex; flex-direction:column; gap:14px; }
+.parts li { cursor:pointer; border-radius:8px; padding-inline:6px; }
+.parts li.sel { background:var(--surface-hi); }
+.steps.voiced .step { cursor:pointer; }
 .m3d-cap { margin-top:6px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
 .m3d-cap button { border:0; background:none; color:var(--violet); font:inherit; padding:0; cursor:pointer; text-decoration:underline; }
 
@@ -487,11 +495,11 @@ function question(item) {
   if (Math.random() < 0.5) {
     const others = shuffle(Object.keys(PARTS).map(Number).filter(k => k !== n).map(k => PARTS[k]));
     const opts = shuffle([name, ...others.slice(0, 3)]);
-    return { item, img: true, prompt: `Що на схемі під номером ${n}?`, options: opts, answer: opts.indexOf(name), note: null };
+    return { item, img: true, prompt: `Що на моделі під номером ${n}?`, options: opts, answer: opts.indexOf(name), note: null };
   }
   const others = shuffle(ON_DIAGRAM.filter(x => x !== n));
   const opts = shuffle([String(n), ...others.slice(0, 3).map(String)]);
-  return { item, img: true, prompt: `Під яким номером на схемі «${name.toLowerCase()}»?`, options: opts, answer: opts.indexOf(String(n)), note: null };
+  return { item, img: true, prompt: `Під яким номером на моделі «${name.toLowerCase()}»?`, options: opts, answer: opts.indexOf(String(n)), note: null };
 }
 
 // ═════════ Дрібниці інтерфейсу ═════════
@@ -697,6 +705,8 @@ function bindSwipe(el) {
 function table() {
   setBar('ТТХ UAR-15S');
   app.innerHTML = `
+    ${m3d('dims', 'dims')}
+    <p class="muted small">На моделі позначено розміри, які можна показати. Модель можна крутити й наближати.</p>
     <dl class="ttx">${FACTS.map(f => `<div><dt>${esc(f.q)}</dt><dd>${esc(f.a)}${f.note ? `<small>${esc(f.note)}</small>` : ''}</dd></div>`).join('')}</dl>
     <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
 }
@@ -705,15 +715,14 @@ function table() {
 function parts() {
   setBar('Будова UAR-15S');
   app.innerHTML = `
-    <h3 class="h">3D-модель</h3>
-    ${m3d('view', 'view')}
-    <p class="muted small">Крути пальцем, розклади повзунком. Торкнись деталі — побачиш назву.</p>
-    <h3 class="h">Схема неповного розбирання</h3>
-    ${zimg(SCHEME, false, '', 'Схема неповного розбирання з номерами частин')}
+    ${m3d('labels', 'view')}
+    <p class="muted small">Номери на моделі — як у списку. Торкнись номера, деталі або рядка списку. Повзунок збирає автомат назад.</p>
     <h3 class="h">Назви частин</h3>
-    <ul class="parts">${Object.entries(PARTS).map(([n, t]) => `<li><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
+    <ul class="parts">${Object.entries(PARTS).map(([n, t]) => `<li data-act="pick-part" data-n="${n}"><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
     <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
 }
+function markPart(n) { for (const li of app.querySelectorAll('.parts li')) li.classList.toggle('sel', +li.dataset.n === n); }
+window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.type === 'uar-picked') markPart(e.data.num); });
 
 // — Тест і повтор —
 let Q = null;
@@ -734,11 +743,13 @@ function renderQuiz(keepScroll) {
   setBar(`${Q.review ? 'Повтор' : 'Тест'} · ${Q.i + 1} / ${Q.qs.length}`);
   const cls = k => !answered ? '' : k === q.answer ? ' right' : k === Q.chosen ? ' wrong' : '';
   const mark = k => !answered ? '' : k === q.answer ? '<span class="mk" aria-label="правильно">✓</span>' : k === Q.chosen ? '<span class="mk" aria-label="помилка">✗</span>' : '';
-  app.innerHTML = `
-    ${q.img ? zimg(SCHEME, false, 'q', 'Схема неповного розбирання з номерами частин') : ''}
+  const body = `
     <div><h2 class="prompt">${esc(q.prompt)}</h2>${q.note && answered ? `<p class="muted small" style="margin-top:4px">${esc(q.note)}</p>` : ''}</div>
     <div class="opts">${q.options.map((o, k) => `<button class="opt${cls(k)}" data-act="opt" data-k="${k}"${answered ? ' aria-disabled="true"' : ''}><span>${esc(o)}</span>${mark(k)}</button>`).join('')}</div>
     ${answered ? `<button class="btn primary" id="qnext" data-act="quiz-next">${last ? 'Підсумок' : 'Далі'}</button>` : ''}`;
+  // Модель лишається на місці між питаннями про будову — не перезавантажується
+  if (q.img && $('qbody') && $('m3d')) $('qbody').innerHTML = body;
+  else app.innerHTML = `${q.img ? m3d('labels', 'view') : ''}<div class="col" id="qbody">${body}</div>`;
   if (answered) { const b = $('qnext'); b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
   if (!keepScroll) window.scrollTo(0, 0);
 }
@@ -781,8 +792,10 @@ function modelStep(n) {
   const f = $('m3d');
   try { if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'uar-step', n }, location.origin); } catch (e) { /* модель ще вантажиться */ }
 }
-const stickModel = (start = 0) => { modelWant = start; return `<div class="m3d-stick">${m3d('steps', '')}
-  <div class="m3d-cap"><span>Модель показує крок, який звучить. Її можна крутити.</span><button data-act="model-reset" data-n="${start}">спочатку</button></div></div>`; };
+let gStep = 0;
+const stickModel = (start = 0, kind = '') => { modelWant = start; gStep = 0; return `<div class="m3d-stick">${m3d('steps', '')}
+  ${kind ? `<div class="m3d-nav"><button class="btn" data-act="model-prev" data-kind="${kind}" data-n="${start}">‹ Назад</button><span id="m3d-pos">початок</span><button class="btn primary" data-act="model-next" data-kind="${kind}">Далі ›</button></div>` : ''}</div>`; };
+function modelPos() { const el = $('m3d-pos'); if (el) el.textContent = gStep ? `крок ${gStep}` : 'початок'; }
 // Збирання: стан моделі після кожного з 11 кроків (номер кроку розбирання, до якого повертаємось)
 const AS_STATE = [14, 13, 11, 10, 9, 8, 6, 3, 2, 3, 3];
 function modelView() {
@@ -791,16 +804,16 @@ function modelView() {
 }
 const listenBtn = kind => `<button class="btn primary" id="listen" data-act="listen-all" data-kind="${kind}">${svg('phones')}<span>Слухати все</span></button>`;
 const stepRow = (kind, n, text, extra) =>
-  `<li class="step" data-step="${n}"><b>${n}.</b><div><span>${esc(text)}</span>${extra || ''}</div>`
+  `<li class="step" data-step="${n}" data-act="play-step" data-kind="${kind}" data-n="${n}"><b>${n}.</b><div><span>${esc(text)}</span>${extra || ''}</div>`
   + `<button class="play" data-act="play-step" data-kind="${kind}" data-n="${n}" aria-label="Слухати крок ${n}">${svg('play')}</button></li>`;
 
 function guide() {
   setBar('Неповне розбирання');
   let n = 0;
   app.innerHTML = `
-    ${stickModel()}
+    ${stickModel(0, 'dis')}
     ${listenBtn('dis')}
-    <p class="muted small">▶ — озвучити крок і показати його на моделі. Торкнись фото, щоб збільшити.</p>
+    <p class="muted small">Торкнись кроку або «Далі» — сержант озвучить його, а модель виконає. Торкнись фото, щоб збільшити.</p>
     ${SECTIONS.map(sec => `
       <h3 class="h">${esc(sec.t)}</h3>
       <ol class="steps voiced">${sec.s.map(st => { n++; return stepRow('dis', n, st.x, st.p ? zimg(stepImg(st.p), true, '', `Малюнок ${st.p}: ${st.x}`) : ''); }).join('')}</ol>
@@ -811,9 +824,9 @@ function guide() {
 function guideAs() {
   setBar('Порядок збирання');
   app.innerHTML = `
-    ${stickModel(AS_STATE[0] + 2)}
+    ${stickModel(16, 'as')}
     ${listenBtn('as')}
-    <p class="muted small">▶ — озвучити крок і показати його на моделі.</p>
+    <p class="muted small">Торкнись кроку або «Далі» — сержант озвучить його, а модель виконає.</p>
     <ol class="steps voiced">${ASM.map((s, i) => stepRow('as', i + 1, s)).join('')}</ol>
     <p class="src">Джерело: ${esc(SRC_AS)}. Звір з інструктором.</p>`;
 }
@@ -852,7 +865,7 @@ function playStep(kind, n, all) {
   P.kind = kind; P.n = n; P.all = all;
   const el = markStep(n, true);
   if (el) el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
-  modelStep(kind === 'dis' ? n : AS_STATE[n - 1]);
+  modelStep(kind === 'dis' ? n : AS_STATE[n - 1]); gStep = n; modelPos();
   $('player-text').textContent = `${kind === 'dis' ? 'Розбирання' : 'Збирання'} · крок ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
@@ -964,6 +977,7 @@ function drill(assembly) {
     D.sec = Math.floor((performance.now() - D.t0) / 1000);
     const t = $('timer'); if (t) t.textContent = fmt(D.sec);
   }, 250);
+  app.innerHTML = `${stickModel(assembly ? 16 : 0)}<div class="col" id="dbody"></div>`;
   renderDrill();
   window.scrollTo(0, 0);
 }
@@ -974,11 +988,10 @@ function renderDrill() {
     const p = D.assembly ? null : picFor(s);
     return `<li class="step ok"><b>${i + 1}.</b><div><span>${esc(s)}</span>${p ? zimg(stepImg(p), true, 'thumb', `Малюнок ${p}: ${s}`) : ''}</div></li>`;
   }).join('');
-  app.innerHTML = `
+  $('dbody').innerHTML = `
     <div class="drill-head"><span class="timer" id="timer" role="timer">${fmt(D.sec)}</span>
       <span class="${D.mistakes ? 'bad-t' : 'muted'}">помилок: ${D.mistakes}</span></div>
     ${D.best != null ? `<p class="muted small" style="margin-top:-8px">найкраще без помилок: ${fmt(D.best)}</p>` : ''}
-    ${zimg(SCHEME, false, 'mini', 'Схема частин')}
     ${D.done ? `<ol class="steps">${done}</ol>` : ''}
     ${!fin ? `
       <h3 class="h">Крок ${D.done + 1} з ${D.steps.length} — що далі?</h3>
@@ -994,6 +1007,7 @@ function pickStep(i) {
   if (s === undefined) return;
   if (s === D.steps[D.done]) {
     D.pool.splice(i, 1); D.done++; D.wrong = null;
+    modelStep(D.assembly ? AS_STATE[D.done - 1] : D.done);
     sfx(D.done === D.steps.length ? 'goal' : 'click');
     if (D.done === D.steps.length) {
       D.finished = true;
@@ -1139,7 +1153,12 @@ document.addEventListener('click', e => {
       break;
     }
     case 'player-stop': stopSteps(); break;
-    case 'model-reset': stopSteps(); modelStep(parseInt(t.dataset.n, 10)); break;
+    case 'model-next': if (gStep < VOICE_STEPS[t.dataset.kind]) playStep(t.dataset.kind, gStep + 1, false); break;
+    case 'model-prev':
+      if (gStep > 1) playStep(t.dataset.kind, gStep - 1, false);
+      else { stopSteps(); gStep = 0; modelPos(); modelStep(parseInt(t.dataset.n, 10)); }
+      break;
+    case 'pick-part': { const n = parseInt(t.dataset.n, 10); markPart(n); try { $('m3d').contentWindow.postMessage({ type: 'uar-pick', num: n }, location.origin); } catch (e) { /* модель ще вантажиться */ } break; }
     case 'backup-copy': backupCopy(); break;
     case 'backup-check': backupCheck(); break;
     case 'backup-apply': backupApply(); break;

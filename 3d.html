@@ -47,6 +47,15 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 [data-embed="view"] .tabs { display:none; }
 [data-embed="view"] .stage { height:calc(100vh - 118px); }
 [data-embed="full"] .stage { height:calc(100vh - 200px); }
+[data-embed="labels"] .tabs { display:none; }
+[data-embed="labels"] .stage { height:calc(100vh - 118px); }
+[data-embed="dims"] .tabs, [data-embed="dims"] .panel { display:none !important; }
+[data-embed="dims"] .stage { height:100vh; }
+[data-embed="dims"] .hint { display:none; }
+.labels { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.lb { position:absolute; transform:translate(-50%,-50%); min-width:22px; height:22px; padding:0 5px; border:0; border-radius:11px; background:var(--orange); color:#000; font:700 13px/22px var(--display); text-align:center; pointer-events:auto; cursor:pointer; box-shadow:0 0 0 2px rgba(16,21,13,.7); }
+.lb.sel { background:#fff; box-shadow:0 0 0 3px var(--orange); }
+.dm { position:absolute; transform:translate(-50%,-50%); padding:2px 7px; border-radius:8px; background:rgba(16,21,13,.88); border:1px solid var(--orange); color:var(--text); font:600 11px/1.3 var(--display); letter-spacing:.2px; white-space:nowrap; }
 </style>
 <script>try { const e = new URLSearchParams(location.search).get('embed'); if (e) document.documentElement.dataset.embed = e; } catch (e) {}</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
@@ -55,6 +64,7 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 <div class="wrap">
   <h1>UAR-15S · 3D <small>пробна версія</small></h1>
   <div class="stage" id="stage">
+    <div class="labels" id="labels"></div>
     <div class="chip" id="chip" hidden></div>
     <div class="hint">крути · наближай · торкнись деталі</div>
   </div>
@@ -175,9 +185,9 @@ part('upper', 'Рама верхня', [
   lathe([[18.6, 1.3], [18.6, 2.0], [20, 2.0], [20, 1.3]]),
   extr([[6.2, -0.9], [8.6, -0.9], [8.6, 0.9], [7.6, 0.9]], 0.5).translate(0, 0, 1.75),
   // досилач затвора: корпус під кутом на правому боці й чорна кнопка ззаду
-  (() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 4.2, 20); g.rotateZ(Math.PI / 2); g.rotateY(-0.2); g.translate(4.3, 0.55, 1.75); return g; })(),
-  [(() => { const g = new THREE.CylinderGeometry(0.4, 0.4, 1.3, 20); g.rotateZ(Math.PI / 2); g.translate(-2.6, 0, 0); g.rotateY(-0.2); g.translate(4.3, 0.55, 1.75); return g; })(), BLK],
-  [(() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 0.35, 20); g.rotateZ(Math.PI / 2); g.translate(-3.35, 0, 0); g.rotateY(-0.2); g.translate(4.3, 0.55, 1.75); return g; })(), BLK],
+  (() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 4.2, 20); g.rotateZ(Math.PI / 2); g.rotateY(0.28); g.translate(4.2, 0.55, 1.85); return g; })(),
+  [(() => { const g = new THREE.CylinderGeometry(0.4, 0.4, 1.3, 20); g.rotateZ(Math.PI / 2); g.translate(-2.6, 0, 0); g.rotateY(0.28); g.translate(4.2, 0.55, 1.85); return g; })(), BLK],
+  [(() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 0.35, 20); g.rotateZ(Math.PI / 2); g.translate(-3.35, 0, 0); g.rotateY(0.28); g.translate(4.2, 0.55, 1.85); return g; })(), BLK],
   box(1.6, 1.3, 1.5, 1.5, -2.2), box(1.6, 1.3, 1.5, 18.5, -2.4),
   [box(6.6, 1.5, 0.12, 12.3, -0.15, 1.58), HOLE], [box(6.6, 1.5, 0.14, 12.3, -1.75, 1.75).rotateX(0), BLK], [cylX(0.14, 7.0, 12.3, -0.98, 1.66), BLK],
   [box(3.4, 0.5, 2.0, 2.6, 3.05), BLK], [box(2.6, 0.45, 1.2, 2.4, 3.45), BLK], [cylZ(0.3, 2.2, 3.9, 3.2), BLK],
@@ -291,7 +301,9 @@ const STEPS = [
 const EMB = document.documentElement.dataset.embed || '';
 let mode = EMB === 'steps' ? 'steps' : 'view', explode = 0, explodeB = 0, step = 0, picked = null;
 const BCG_EXPLODE = { bolt: [5.5, 0, 0], fpin: [-9, -3.2, 0], cam: [0, 4.5, 0], rpin: [0, -1.5, 5], carrier: [0, 0, 0] };
+const BASE = EMB === 'labels' ? { t: [17, 0, 0], w: 46, h: 34 } : EMB === 'dims' ? { t: [22, -5, 0], w: 49, h: 27 } : { t: [22, -3, 0], w: 47, h: 27 };
 let frame = { t: [22, -3, 0], w: 47, h: 27 };
+if (EMB === 'labels') explode = 1;
 function setTargets() {
   for (const p of Object.values(parts)) p.target.set(0, 0, 0);
   if (mode === 'view') { for (const p of Object.values(parts)) p.target.copy(p.explode).multiplyScalar(explode); }
@@ -308,14 +320,14 @@ function paint() {
   $('tab-bcg').setAttribute('aria-pressed', String(mode === 'bcg'));
   $('panel-view').hidden = mode !== 'view'; $('panel-steps').hidden = mode !== 'steps'; $('panel-bcg').hidden = mode !== 'bcg';
   for (const p of Object.values(parts)) p.group.visible = mode !== 'bcg' || p.id in BCG_EXPLODE;
-  const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : { t: [22, -3, 0], w: 47, h: 27 };
+  const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : BASE;
   if (f.w !== frame.w) { frame = f; controls.target.set(...f.t); resize(); }
   if (mode === 'steps') {
     $('stepn').textContent = step === 0 ? 'Зібрана гвинтівка' : `Крок ${step} з ${STEPS.length}`;
     $('stept').textContent = step === 0 ? 'Натисни «Далі», щоб почати неповне розбирання. «Назад» — збирає у зворотному порядку.' : STEPS[step - 1][0];
     $('prev').disabled = step === 0; $('next').disabled = step === STEPS.length;
     setXray(step >= 7 || $('xray').checked);
-  } else setXray($('xray').checked);
+  } else setXray($('xray').checked || EMB === 'dims');
   setTargets();
 }
 $('tab-view').onclick = () => { mode = 'view'; paint(); };
@@ -326,6 +338,50 @@ $('explode').oninput = e => { explode = e.target.value / 100; setTargets(); };
 $('xray').onchange = paint;
 $('prev').onclick = () => { if (step > 0) { step--; paint(); } };
 $('next').onclick = () => { if (step < STEPS.length) { step++; paint(); } };
+
+// ── Номери частин (як у списку «Будова») і розміри з таблиці ТТХ ──
+const NUM = { barrel: 1, handguard: 2, carrier: 3, upper: 4, ch: 5, stock: 6, lower: 7, grip: 8, buffer: 9, spring: 10, sling: 11, mag: 12 };
+const tags = [];   // { el, at() } — підписи, що йдуть за деталями
+function setPicked(id, notify) {
+  if (picked) parts[picked].mat.emissive.setHex(0x000000);
+  picked = id && parts[id] ? id : null;
+  const chip = $('chip');
+  if (picked) { parts[picked].mat.emissive.setHex(0x5a2a00); chip.textContent = (NUM[picked] ? NUM[picked] + ' · ' : '') + parts[picked].name; chip.hidden = false; } else chip.hidden = true;
+  for (const t of tags) if (t.id) t.el.classList.toggle('sel', t.id === picked);
+  if (notify && window.parent !== window) try { window.parent.postMessage({ type: 'uar-picked', num: picked ? (NUM[picked] || 0) : 0 }, location.origin); } catch (e) { /* без батьківської сторінки */ }
+}
+if (EMB === 'labels') {
+  $('explode').value = 100;
+  // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
+  const LAY = { ch: [0, 28, 0], barrel: [-8, 21, 0], upper: [0, 12.5, 0], handguard: [5, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
+    buffer: [33, 6, 0], spring: [53, 6, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [-3, -7, 0], mag: [8, -9, 0], sling: [-7, -13, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
+  for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
+  for (const [id, n] of Object.entries(NUM)) {
+    const c = new THREE.Box3().setFromObject(parts[id].group).getCenter(new THREE.Vector3());
+    if (id === 'lower') c.set(9, -3.2, 0);
+    const el = document.createElement('button'); el.className = 'lb'; el.textContent = n; el.setAttribute('aria-label', parts[id].name);
+    el.onclick = () => setPicked(id, true);
+    $('labels').appendChild(el);
+    tags.push({ el, id, at: v => v.copy(c).add(parts[id].group.position) });
+  }
+}
+if (EMB === 'dims') {
+  const LM = new THREE.LineBasicMaterial({ color: 0xff6a13 }), LF = new THREE.LineBasicMaterial({ color: 0xff6a13, transparent: true, opacity: 0.45 });
+  const line = (pts, m) => scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p[0], p[1], 0))), m));
+  const tag = (x, y, text) => { const el = document.createElement('div'); el.className = 'dm'; el.textContent = text; $('labels').appendChild(el); tags.push({ el, at: v => v.set(x, y, 0) }); };
+  const dim = (x0, x1, y, from, text) => { line([[x0, y], [x1, y]], LM); for (const x of [x0, x1]) { line([[x, y - 0.9], [x, y + 0.9]], LM); line([[x, from], [x, y]], LF); } tag((x0 + x1) / 2, y, text); };
+  dim(-18.5, 62.9, -25, -9, 'Загальна довжина 816 мм (+3,5%)');
+  dim(17.4, 57, 8, 1.2, 'Ствол — не менше 289 мм');
+  dim(20.5, 57, 15, 1.2, 'Нарізна частина — не менше 249 мм');
+  line([[62.9, 0], [52, -6]], LF); tag(46, -7.2, 'Канал ствола 5,56 мм');
+  line([[18.5, -15], [25, -17]], LF); tag(31, -17.6, 'Магазин — 30 патронів');
+  camera.position.set(22, -7, 120);
+}
+const tv = new THREE.Vector3();
+function placeTags() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  for (const t of tags) { t.at(tv).project(camera); t.el.style.display = tv.z > 1 ? 'none' : ''; t.el.style.left = ((tv.x + 1) / 2 * w) + 'px'; t.el.style.top = ((1 - tv.y) / 2 * h) + 'px'; }
+}
 
 // ── Дотик до деталі: назва й підсвітка ──
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
@@ -339,10 +395,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   const hits = ray.intersectObjects(scene.children, true).filter(h => h.object.userData.part && parts[h.object.userData.part].group.visible);
   // крізь прозорий корпус — спершу внутрішні деталі
   const hit = hits.find(h => !(parts[h.object.userData.part].shell && parts[h.object.userData.part].mat.transparent)) || hits[0];
-  if (picked) parts[picked].mat.emissive.setHex(0x000000);
-  picked = hit ? hit.object.userData.part : null;
-  const chip = $('chip');
-  if (picked) { parts[picked].mat.emissive.setHex(0x5a2a00); chip.textContent = parts[picked].name; chip.hidden = false; } else chip.hidden = true;
+  setPicked(hit ? hit.object.userData.part : null, true);
 });
 
 function resize() {
@@ -362,10 +415,13 @@ renderer.setAnimationLoop(() => {
   for (const p of Object.values(parts)) p.group.position.lerp(p.target, 0.14);
   controls.update();
   renderer.render(scene, camera);
+  if (tags.length) placeTags();
 });
 // Навчальна сторінка керує кроком розбирання
 window.addEventListener('message', e => {
-  if (e.origin !== location.origin || !e.data || e.data.type !== 'uar-step') return;
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.type === 'uar-pick') { setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
+  if (e.data.type !== 'uar-step') return;
   mode = 'steps'; step = Math.max(0, Math.min(STEPS.length, e.data.n | 0)); paint();
 });
 window.__3d = { parts, STEPS, get step() { return step; } };
