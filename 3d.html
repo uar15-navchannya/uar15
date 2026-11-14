@@ -191,8 +191,8 @@ part('upper', 'Рама верхня', [
   lathe([[18.6, 1.3], [18.6, 2.0], [20, 2.0], [20, 1.3]]),
   extr([[6.2, -0.9], [8.6, -0.9], [8.6, 0.9], [7.6, 0.9]], 0.5).translate(0, 0, 1.75),
   // досилач затвора: корпус під кутом на правому боці й чорна кнопка ззаду
-  (() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 4.2, 20); g.rotateZ(Math.PI / 2); g.rotateY(0.28); g.translate(4.2, 0.55, 1.85); return g; })(),
-  [(() => { const g = new THREE.CylinderGeometry(0.6, 0.6, 1.5, 24); g.rotateZ(Math.PI / 2); g.translate(-2.85, 0, 0); g.rotateY(0.28); g.translate(4.2, 0.55, 1.85); return g; })(), BLK],
+  (() => { const g = new THREE.CylinderGeometry(0.62, 0.62, 4.2, 20); g.rotateZ(Math.PI / 2); g.rotateY(0.28); g.translate(4.2, -0.15, 1.85); return g; })(),
+  [(() => { const g = new THREE.CylinderGeometry(0.6, 0.6, 1.5, 24); g.rotateZ(Math.PI / 2); g.translate(-2.85, 0, 0); g.rotateY(0.28); g.translate(4.2, -0.15, 1.85); return g; })(), BLK],
   box(1.6, 1.3, 1.5, 1.5, -2.2), box(1.6, 1.3, 1.5, 18.5, -2.4),
   [box(6.6, 1.5, 0.12, 12.3, -0.15, 1.58), HOLE], [box(6.6, 1.5, 0.14, 12.3, -1.75, 1.75).rotateX(0), BLK], [cylX(0.14, 7.0, 12.3, -0.98, 1.66), BLK],
   [box(3.4, 0.5, 2.0, 2.6, 3.05), BLK], [box(2.6, 0.45, 1.2, 2.4, 3.45), BLK], [cylZ(0.3, 2.2, 3.9, 3.2), BLK],
