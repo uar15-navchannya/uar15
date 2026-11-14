@@ -441,8 +441,13 @@ if (EMB === 'dims') {
   const tag = (x, y, text) => { const el = document.createElement('div'); el.className = 'dm'; el.textContent = text; $('labels').appendChild(el); tags.push({ el, at: v => v.set(x, y, 0) }); };
   const dim = (x0, x1, y, from, text) => { line([[x0, y], [x1, y]], LM); for (const x of [x0, x1]) { line([[x, y - 0.9], [x, y + 0.9]], LM); line([[x, from], [x, y]], LF); } tag((x0 + x1) / 2, y, text); };
   dim(-18.5, 51.1, -25, -9, 'Загальна довжина 816 мм (+3,5%)');
-  dim(17.4, 46.3, 8, 1.2, 'Ствол — не менше 289 мм');
-  dim(21.4, 46.3, 15, 1.2, 'Нарізна частина — не менше 249 мм');
+  // Ствол видно крізь прозорий корпус: патронник (≈40 мм біля затвора) і нарізна частина — до дульного зрізу
+  const zone = (x0, x1, r, color, op) => { const g = new THREE.CylinderGeometry(r, r, x1 - x0, 32, 1, true); g.rotateZ(Math.PI / 2); g.translate((x0 + x1) / 2, 0, 0); scene.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, side: THREE.DoubleSide, depthWrite: false }))); };
+  zone(21.4, 46.3, 1.05, 0xff6a13, 0.55);
+  zone(17.4, 21.4, 1.45, 0x8f6bff, 0.6);
+  dim(17.4, 46.3, 5.5, 1.2, 'Ствол — не менше 289 мм');
+  dim(21.4, 46.3, 10, 1.2, 'Нарізна частина — не менше 249 мм');
+  line([[19.4, -1.5], [12, -6]], LF); tag(9, -7.2, 'Патронник');
   line([[51.1, 0], [44, -6]], LF); tag(40, -7.2, 'Канал ствола 5,56 мм');
   line([[18.5, -15], [25, -17]], LF); tag(31, -17.6, 'Магазин — 30 патронів');
   camera.position.set(16, -7, 120);
