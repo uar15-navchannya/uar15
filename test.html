@@ -786,18 +786,16 @@ function renderResults() {
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}" title="3D-модель UAR-15S"></iframe>`;
-let modelWant = 0;
-function modelStep(n) {
-  modelWant = n;
+let modelWant = 0, modelKind = 'dis';
+function modelStep(n, kind) {
+  modelWant = n; if (kind) modelKind = kind;
   const f = $('m3d');
-  try { if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'uar-step', n }, location.origin); } catch (e) { /* модель ще вантажиться */ }
+  try { if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'uar-step', n, kind: modelKind }, location.origin); } catch (e) { /* модель ще вантажиться */ }
 }
 let gStep = 0;
-const stickModel = (start = 0, kind = '') => { modelWant = start; gStep = 0; return `<div class="m3d-stick">${m3d('steps', '')}
+const stickModel = (mk, kind = '') => { modelWant = 0; modelKind = mk; gStep = 0; const start = 0; return `<div class="m3d-stick">${m3d('steps', '')}
   ${kind ? `<div class="m3d-nav"><button class="btn" data-act="model-prev" data-kind="${kind}" data-n="${start}">‹ Назад</button><span id="m3d-pos">початок</span><button class="btn primary" data-act="model-next" data-kind="${kind}">Далі ›</button></div>` : ''}</div>`; };
 function modelPos() { const el = $('m3d-pos'); if (el) el.textContent = gStep ? `крок ${gStep}` : 'початок'; }
-// Збирання: стан моделі після кожного з 11 кроків (номер кроку розбирання, до якого повертаємось)
-const AS_STATE = [14, 13, 11, 10, 9, 8, 6, 3, 2, 3, 3];
 function modelView() {
   setBar('3D-модель');
   app.innerHTML = m3d('full', 'full');
@@ -811,7 +809,7 @@ function guide() {
   setBar('Неповне розбирання');
   let n = 0;
   app.innerHTML = `
-    ${stickModel(0, 'dis')}
+    ${stickModel('dis', 'dis')}
     ${listenBtn('dis')}
     <p class="muted small">Торкнись кроку або «Далі» — сержант озвучить його, а модель виконає. Торкнись фото, щоб збільшити.</p>
     ${SECTIONS.map(sec => `
@@ -824,7 +822,7 @@ function guide() {
 function guideAs() {
   setBar('Порядок збирання');
   app.innerHTML = `
-    ${stickModel(16, 'as')}
+    ${stickModel('as', 'as')}
     ${listenBtn('as')}
     <p class="muted small">Торкнись кроку або «Далі» — сержант озвучить його, а модель виконає.</p>
     <ol class="steps voiced">${ASM.map((s, i) => stepRow('as', i + 1, s)).join('')}</ol>
@@ -865,7 +863,7 @@ function playStep(kind, n, all) {
   P.kind = kind; P.n = n; P.all = all;
   const el = markStep(n, true);
   if (el) el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
-  modelStep(kind === 'dis' ? n : AS_STATE[n - 1]); gStep = n; modelPos();
+  modelStep(n, kind); gStep = n; modelPos();
   $('player-text').textContent = `${kind === 'dis' ? 'Розбирання' : 'Збирання'} · крок ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
@@ -977,7 +975,7 @@ function drill(assembly) {
     D.sec = Math.floor((performance.now() - D.t0) / 1000);
     const t = $('timer'); if (t) t.textContent = fmt(D.sec);
   }, 250);
-  app.innerHTML = `${stickModel(assembly ? 16 : 0)}<div class="col" id="dbody"></div>`;
+  app.innerHTML = `${stickModel(assembly ? 'as' : 'dis')}<div class="col" id="dbody"></div>`;
   renderDrill();
   window.scrollTo(0, 0);
 }
@@ -1007,7 +1005,7 @@ function pickStep(i) {
   if (s === undefined) return;
   if (s === D.steps[D.done]) {
     D.pool.splice(i, 1); D.done++; D.wrong = null;
-    modelStep(D.assembly ? AS_STATE[D.done - 1] : D.done);
+    modelStep(D.done, D.assembly ? 'as' : 'dis');
     sfx(D.done === D.steps.length ? 'goal' : 'click');
     if (D.done === D.steps.length) {
       D.finished = true;
@@ -1182,7 +1180,7 @@ document.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('hashchange', route);
-document.addEventListener('load', e => { if (e.target && e.target.id === 'm3d' && modelWant) setTimeout(() => modelStep(modelWant), 400); }, true);
+document.addEventListener('load', e => { if (e.target && e.target.id === 'm3d' && (modelWant || modelKind === 'as') && /embed=steps/.test(e.target.src)) setTimeout(() => modelStep(modelWant), 400); }, true);
 
 paintVoice();
 route();

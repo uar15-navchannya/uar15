@@ -297,8 +297,26 @@ const STEPS = [
   ['Притримуючи буфер, витягнути його з труби приклада разом зі зворотною пружиною.', [[['buffer'], 13, 5, 0], [['spring'], 23, 9, 0]]],
 ];
 
+// Габарити деталей у зібраному стані — щоб наводити камеру на деталі поточного кроку
+const BOX = {}; for (const [id, p] of Object.entries(parts)) BOX[id] = new THREE.Box3().setFromObject(p.group);
+const ASM_FOCUS = [null, ['buffer', 'spring'], ['bolt', 'carrier'], ['cam', 'carrier'], ['fpin', 'carrier'], ['rpin', 'carrier'], ['ch', 'upper'], ['carrier', 'ch', 'upper'],
+  ['upper', 'lower', 'handguard', 'stock'], ['carrier', 'ch', 'upper', 'lower'], ['ch', 'upper', 'lower'], ['upper', 'lower', 'handguard', 'stock']];
+let auto = false; const dT = new THREE.Vector3(); let dDist = 100;
+function focusStep() {
+  let ids = null;
+  if (step > 0) ids = asm ? ASM_FOCUS[step] : [...new Set(STEPS[step - 1][1].flatMap(m => m[0]))];
+  const b = new THREE.Box3();
+  if (ids) for (const id of ids) b.union(BOX[id].clone().translate(parts[id].target));
+  else b.set(new THREE.Vector3(-19, -22, -2), new THREE.Vector3(63, 4, 2));
+  const c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
+  const w = Math.max(sz.x / 2 + 5, 11), h = Math.max(sz.y / 2 + 4, 7.5), half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  dT.copy(c); dDist = Math.max(w / (half * camera.aspect), h / half); auto = true;
+}
+controls.addEventListener('start', () => { auto = false; });
+
 // ── Стан ──
 const EMB = document.documentElement.dataset.embed || '';
+let asm = false;
 let mode = EMB === 'steps' ? 'steps' : 'view', explode = 0, explodeB = 0, step = 0, picked = null;
 const BCG_EXPLODE = { bolt: [5.5, 0, 0], fpin: [-9, -3.2, 0], cam: [0, 4.5, 0], rpin: [0, -1.5, 5], carrier: [0, 0, 0] };
 const BASE = EMB === 'labels' ? { t: [17, 0, 0], w: 46, h: 34 } : EMB === 'dims' ? { t: [22, -5, 0], w: 49, h: 27 } : { t: [22, -3, 0], w: 47, h: 27 };
@@ -308,7 +326,23 @@ function setTargets() {
   for (const p of Object.values(parts)) p.target.set(0, 0, 0);
   if (mode === 'view') { for (const p of Object.values(parts)) p.target.copy(p.explode).multiplyScalar(explode); }
   else if (mode === 'bcg') { for (const [id, v] of Object.entries(BCG_EXPLODE)) parts[id].target.set(...v).multiplyScalar(explodeB); }
-  else for (let i = 0; i < step; i++) for (const [ids, x, y, z] of STEPS[i][1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
+  else if (!asm) for (let i = 0; i < step; i++) for (const [ids, x, y, z] of STEPS[i][1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
+  else {
+    // Збирання: починаємо з повністю розібраного стану й повертаємо деталі крок за кроком (11 кроків)
+    for (const st of STEPS) for (const [ids, x, y, z] of st[1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
+    const k = step, put = (ids, x, y, z) => { for (const id of ids) parts[id].target.set(x, y, z); };
+    const C = parts.carrier.target.clone();
+    if (k >= 1) put(['buffer', 'spring'], 0, 0, 0);
+    if (k >= 2) put(['bolt'], C.x, C.y, C.z);
+    if (k >= 3) put(['cam'], C.x, C.y, C.z);
+    if (k >= 4) put(['fpin'], C.x, C.y, C.z);
+    if (k >= 5) put(['rpin'], C.x, C.y, C.z);
+    if (k >= 6) put(['ch'], -7, 14, 0);
+    if (k >= 7) put(['ch', ...BCG], 0, 14, 0);
+    if (k >= 8) put([...UPPER, 'rearpin', 'frontpin'], 0, 0, 0);
+    if (k >= 9) put(['ch', ...BCG], -7, 0, 0);
+    if (k >= 10) put(['ch'], 0, 0, 0);
+  }
 }
 function setXray(on) {
   for (const p of Object.values(parts)) if (p.shell) { p.mat.transparent = on; p.mat.opacity = on ? 0.28 : 1; p.mat.depthWrite = !on; p.mat.needsUpdate = true; }
@@ -326,7 +360,8 @@ function paint() {
     $('stepn').textContent = step === 0 ? 'Зібрана гвинтівка' : `Крок ${step} з ${STEPS.length}`;
     $('stept').textContent = step === 0 ? 'Натисни «Далі», щоб почати неповне розбирання. «Назад» — збирає у зворотному порядку.' : STEPS[step - 1][0];
     $('prev').disabled = step === 0; $('next').disabled = step === STEPS.length;
-    setXray(step >= 7 || $('xray').checked);
+    setXray(asm || step >= 7 || $('xray').checked);
+    setTargets(); focusStep();
   } else setXray($('xray').checked || EMB === 'dims');
   setTargets();
 }
@@ -413,6 +448,12 @@ resize(); paint();
 
 renderer.setAnimationLoop(() => {
   for (const p of Object.values(parts)) p.group.position.lerp(p.target, 0.14);
+  if (auto && mode === 'steps') {
+    controls.target.lerp(dT, 0.09);
+    const dir = camera.position.clone().sub(controls.target), len = dir.length();
+    camera.position.copy(controls.target).add(dir.multiplyScalar((len + (dDist - len) * 0.09) / len));
+    if (controls.target.distanceTo(dT) < 0.02 && Math.abs(len - dDist) < 0.05) auto = false;
+  }
   controls.update();
   renderer.render(scene, camera);
   if (tags.length) placeTags();
@@ -422,9 +463,9 @@ window.addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data) return;
   if (e.data.type === 'uar-pick') { setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
   if (e.data.type !== 'uar-step') return;
-  mode = 'steps'; step = Math.max(0, Math.min(STEPS.length, e.data.n | 0)); paint();
+  mode = 'steps'; asm = e.data.kind === 'as'; step = Math.max(0, Math.min(asm ? 11 : STEPS.length, e.data.n | 0)); paint();
 });
-window.__3d = { parts, STEPS, get step() { return step; } };
+window.__3d = { parts, STEPS, get step() { return step; }, get asm() { return asm; } };
 </script>
 </body>
 </html>
