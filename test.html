@@ -5,7 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#10150D">
-<script>try { const t = localStorage.getItem('uar15_theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) { /* без сховища — як у системі */ }</script>
+<script>
+// Схід і захід сонця для широти України (≈50° пн. ш.) — «Авто»: вдень світла тема, увечері й уночі темна
+function uarNight(d) { d = d || new Date(); const y0 = new Date(d.getFullYear(), 0, 1), doy = (d - y0) / 864e5, dst = d.getTimezoneOffset() < Math.max(y0.getTimezoneOffset(), new Date(d.getFullYear(), 6, 1).getTimezoneOffset()) ? 1 : 0; const len = 12 + 4.1 * Math.sin(2 * Math.PI * (doy - 80) / 365), noon = 12.1 + dst, h = d.getHours() + d.getMinutes() / 60; return h < noon - len / 2 - 0.3 || h > noon + len / 2 + 0.3; }
+let t = null; try { t = localStorage.getItem('uar15_theme'); } catch (e) { /* без сховища */ }
+document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : (uarNight() ? 'dark' : 'light');
+</script>
 <link rel="icon" href="img/sgt/calm.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="img/icon-180.png">
@@ -566,16 +571,17 @@ function buzz() { try { if (navigator.vibrate) navigator.vibrate(60); } catch (e
 let voiceOn = store.get(K_VOICE) !== '0';
 // — Тема: авто (як у системі) → день → ніч —
 const K_THEME = 'uar15_theme', THEMES = ['auto', 'light', 'dark'];
-const THEME_NAME = { auto: 'Тема: як у системі', light: 'Тема: денна', dark: 'Тема: нічна' };
+const THEME_NAME = { auto: 'Тема: авто — вдень світла, увечері темна', light: 'Тема: денна', dark: 'Тема: нічна' };
 let theme = 'auto'; try { theme = localStorage.getItem(K_THEME) || 'auto'; } catch (e) { /* без сховища */ }
 if (!THEMES.includes(theme)) theme = 'auto';
 function applyTheme() {
-  if (theme === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
-  const dark = theme === 'dark' || (theme === 'auto' && !(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches));
+  const dark = theme === 'dark' || (theme === 'auto' && uarNight());
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#10150D' : '#EEF0E8';
   const b = $('theme'); if (b) { b.innerHTML = svg(theme === 'light' ? 'sun' : theme === 'dark' ? 'moon' : 'auto'); b.setAttribute('aria-label', THEME_NAME[theme]); b.title = THEME_NAME[theme]; }
 }
-try { matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme); } catch (e) { /* старий браузер */ }
+setInterval(() => { if (theme === 'auto') applyTheme(); }, 60 * 1000);
+document.addEventListener('visibilitychange', () => { if (theme === 'auto') applyTheme(); });
 function paintVoice() {
   const b = $('voice');
   b.innerHTML = svg(voiceOn ? 'voiceOn' : 'voiceOff');
@@ -1325,7 +1331,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261114-200046';
+const APP_V = '20261114-200120';
 let updWarned = false;
 async function checkUpdate() {
   try {

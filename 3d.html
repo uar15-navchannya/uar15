@@ -69,8 +69,9 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 </style>
 <script>
 // Тема — як обрано на навчальній сторінці (те саме сховище); оновлюється одразу при перемиканні
-function uarTheme() { let t = null; try { t = localStorage.getItem('uar15_theme'); } catch (e) { /* без сховища */ } if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
-uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.key === null) uarTheme(); });
+function uarNight(d) { d = d || new Date(); const y0 = new Date(d.getFullYear(), 0, 1), doy = (d - y0) / 864e5, dst = d.getTimezoneOffset() < Math.max(y0.getTimezoneOffset(), new Date(d.getFullYear(), 6, 1).getTimezoneOffset()) ? 1 : 0; const len = 12 + 4.1 * Math.sin(2 * Math.PI * (doy - 80) / 365), noon = 12.1 + dst, h = d.getHours() + d.getMinutes() / 60; return h < noon - len / 2 - 0.3 || h > noon + len / 2 + 0.3; }
+function uarTheme() { let t = null; try { t = localStorage.getItem('uar15_theme'); } catch (e) { /* без сховища */ } document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : (uarNight() ? 'dark' : 'light'); }
+uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.key === null) uarTheme(); }); setInterval(uarTheme, 60 * 1000);
 </script>
 <script>try { const e = new URLSearchParams(location.search).get('embed'); if (e) document.documentElement.dataset.embed = e; } catch (e) {}</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
