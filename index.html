@@ -44,6 +44,7 @@
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
+    --hl: color-mix(in srgb, var(--violet) 30%, transparent);
     --bg: #EEF0E8; --surface: #FFFFFF; --surface-hi: #E4E7DB; --line: #C9CFBD;
     --text: #161C12; --muted: #555F4E; --orange: #E85A08; --on-orange: #000000;
     --violet: #6A3BDB; --good: #0B8457; --bad: #C21F33; --shadow: 0 10px 30px rgba(22, 28, 18, .18);
@@ -51,6 +52,7 @@
   }
 }
 :root[data-theme="light"] {
+    --hl: color-mix(in srgb, var(--violet) 30%, transparent);
   --bg: #EEF0E8; --surface: #FFFFFF; --surface-hi: #E4E7DB; --line: #C9CFBD;
   --text: #161C12; --muted: #555F4E; --orange: #E85A08; --on-orange: #000000;
   --violet: #6A3BDB; --good: #0B8457; --bad: #C21F33; --shadow: 0 10px 30px rgba(22, 28, 18, .18);
@@ -114,6 +116,14 @@ p { margin: 0; }
 @media (min-width: 600px) { .coach video { width: 88px; height: 88px; } .coach p { font-size: 15px; } }
 .who { font: 600 12px/1.1 var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); }
 .coach p { font-size: 14px; line-height: 1.4; margin-top: 3px; }
+.law { display:flex; flex-direction:column; gap:12px; }
+.art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
+.art h3 { margin:0 0 8px; font:600 15px/1.25 var(--display); letter-spacing:1.5px; text-transform:uppercase; color:var(--violet); }
+.art p { margin:0 0 8px; line-height:1.5; }
+.art p:last-child, .art ul:last-child { margin-bottom:0; }
+.art ul { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px; line-height:1.5; }
+.art mark { color:inherit; font-weight:600; padding:0 2px; margin:0 -2px; border-radius:3px; background:linear-gradient(to top, var(--hl, color-mix(in srgb, var(--violet) 55%, transparent)) 0 42%, transparent 42%); -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+.art .cut { color:var(--muted); font-size:13px; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
 .tile {
   display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 10px 12px 10px 14px; text-align: left;
@@ -491,6 +501,7 @@ const app = $('app');
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
 const ICON = {
+  shield: '<path d="M12 3l7 3v6c0 4.2-3 7.6-7 9-4-1.4-7-4.8-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
   cards: '<rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>',
   table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
   parts: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.4 8.3l3.4 7.4M16.6 8.3l-3.4 7.4"/>',
@@ -631,6 +642,7 @@ function home() {
       ${tile('list', 'guide-as', 'Порядок збирання', '11 кроків з озвучкою')}
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
       ${tile('watch', 'drill-as', 'Збирання на час', best(ba))}
+      ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
     </div>
     <div class="srcs">
@@ -1057,11 +1069,83 @@ Z.stage.addEventListener('pointercancel', zEnd);
 Z.stage.addEventListener('wheel', e => { e.preventDefault(); const p = local(e); zAt(p.x, p.y, Z.s * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
 window.addEventListener('resize', () => { if (!Z.el.hidden) zApply(); });
 
+
+// — Застосування зброї: текст статей і перевірка —
+const LAW_SRC = 'Статут внутрішньої служби ЗС України, ст. 20–22 (текст для навчання; звір з офіційною редакцією)';
+const LAW = [
+  { n: 20, body: '<p>Військовослужбовці під час виконання службових обовʼязків мають право застосовувати заходи фізичного впливу, а також носити, зберігати та застосовувати спеціальні засоби, зброю <mark>в порядку, встановленому законодавством</mark>.</p>' },
+  { n: 21, body: '<p>Застосування заходів фізичного впливу, спеціальних засобів та зброї допускається, <mark>якщо інші заходи виявилися неефективними</mark> або якщо через обставини застосування інших заходів є неможливим.</p>'
+    + '<p>Застосуванню зброї, за винятком випадків раптового нападу, нападу із застосуванням бойової техніки, транспортних засобів, літальних апаратів, морських і річкових суден, втечі з-під варти зі зброєю або за допомогою транспортних засобів під час руху, повинно передувати <mark>попередження про намір застосовувати зброю і постріл угору</mark>.</p>'
+    + '<p>У разі застосування і використання зброї військовослужбовець зобовʼязаний <mark>вжити всіх заходів для того, щоб не було завдано шкоди стороннім особам</mark>.</p>' },
+  { n: 22, body: '<p>Військовослужбовці мають право застосовувати спеціальні засоби, засоби фізичного впливу та зброю <mark>особисто або у складі підрозділу</mark>:</p><ul>'
+    + '<li>для захисту свого здоровʼя і життя, а також здоровʼя і життя інших військовослужбовців і цивільних осіб від нападу, якщо іншими способами й засобами захистити їх у даній ситуації неможливо;</li>'
+    + '<li>для затримання особи, яку застали при вчиненні тяжкого злочину та яка намагається втекти або яка чинить збройний опір, намагається втекти з-під варти, а також для затримання озброєної особи, яка загрожує застосуванням зброї та інших засобів, що становить загрозу для життя і здоровʼя військовослужбовця чи інших осіб;</li>'
+    + '<li>для відбиття нападу на обʼєкти, що охороняються військовослужбовцями, а також для звільнення цих обʼєктів у разі захоплення;</li>'
+    + '<li>у разі спроби насильного заволодіння зброєю, бойовою та іншою технікою, якщо іншими способами і засобами неможливо припинити… <span class="cut">(далі текст статті ще не додано)</span></li></ul>' },
+];
+// Питання — лише за текстом статей вище
+const LAW_Q = [
+  { prompt: 'Що має передувати застосуванню зброї (крім передбачених винятків)?', right: 'Попередження про намір застосувати зброю і постріл угору', wrong: ['Доповідь командиру й очікування наказу', 'Лише усне попередження', 'Постріл у ноги'], art: 21 },
+  { prompt: 'Коли допускається застосування фізичного впливу, спецзасобів і зброї?', right: 'Якщо інші заходи виявилися неефективними або їх застосування неможливе', wrong: ['Завжди, коли військовослужбовець на посту', 'Лише за письмовим наказом', 'Тільки в бойовій обстановці'], art: 21 },
+  { prompt: 'У якому випадку попередження й постріл угору НЕ обовʼязкові?', right: 'Раптовий напад', wrong: ['Затримання особи, яка намагається втекти', 'Особа відмовляється показати документи', 'Порушення порядку на території частини'], art: 21 },
+  { prompt: 'Втеча з-під варти зі зброєю: чи потрібні попередження й постріл угору?', right: 'Ні, це один із винятків', wrong: ['Так, завжди', 'Так, якщо втікач пішки', 'Лише постріл угору'], art: 21 },
+  { prompt: 'Що зобовʼязаний зробити військовослужбовець, застосовуючи зброю?', right: 'Вжити всіх заходів, щоб не завдати шкоди стороннім особам', wrong: ['Зробити не менше трьох пострілів угору', 'Спершу викликати поліцію', 'Застосувати спецзасоби до всіх присутніх'], art: 21 },
+  { prompt: 'Як військовослужбовці мають право застосовувати зброю за ст. 22?', right: 'Особисто або у складі підрозділу', wrong: ['Лише у складі підрозділу', 'Лише особисто', 'Тільки разом із поліцією'], art: 22 },
+  { prompt: 'Яка з підстав є у ст. 22?', right: 'Відбиття нападу на обʼєкти, що охороняються військовослужбовцями', wrong: ['Припинення порушення військової дисципліни', 'Затримання за адміністративне правопорушення', 'Примус до виконання наказу'], art: 22 },
+  { prompt: 'В якому порядку військовослужбовці застосовують спецзасоби та зброю (ст. 20)?', right: 'У порядку, встановленому законодавством', wrong: ['На власний розсуд', 'За усним наказом будь-якого старшого', 'Згідно з інструкцією виробника зброї'], art: 20 },
+];
+const LAW_BEST = 'uar15_law_best';
+let L = null;
+function lawView() {
+  setBar('Застосування зброї');
+  let best = null; try { best = localStorage.getItem(LAW_BEST); } catch (e) { /* без сховища */ }
+  app.innerHTML = `<div class="law">
+    ${LAW.map(a => `<section class="art"><h3>Стаття ${a.n}</h3>${a.body}</section>`).join('')}
+    <button class="btn primary" data-act="go" data-to="law-test">Перевір себе · ${LAW_Q.length} питань</button>
+    ${best ? `<p class="muted small center">Найкраще: ${esc(best)} / ${LAW_Q.length}</p>` : ''}
+    <p class="src">Джерело: ${esc(LAW_SRC)}.</p></div>`;
+}
+function lawTest() {
+  const sh = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  L = { qs: sh(LAW_Q).map(q => { const options = sh([q.right, ...q.wrong]); return { ...q, options, answer: options.indexOf(q.right) }; }), i: 0, chosen: null, ok: [] };
+  lawRender();
+}
+function lawRender() {
+  if (!L) return lawTest();
+  if (L.i >= L.qs.length) {
+    const n = L.ok.filter(Boolean).length;
+    try { const b = +localStorage.getItem(LAW_BEST) || 0; if (n > b) localStorage.setItem(LAW_BEST, String(n)); } catch (e) { /* без сховища */ }
+    if (n / L.qs.length >= 0.8) say('good'); else if (n / L.qs.length < 0.5) say('bad');
+    setBar('Підсумок');
+    const miss = L.qs.map((q, i) => L.ok[i] ? '' : `<div><p>${esc(q.prompt)}</p><p>${esc(q.right)} (ст. ${q.art})</p></div>`).join('');
+    app.innerHTML = `<div><p class="score">${n} / ${L.qs.length}</p><p class="muted center">правильних відповідей</p></div>
+      ${miss ? `<h3 class="h">Помилки</h3><div class="miss">${miss}</div>` : ''}
+      <button class="btn primary" data-act="law-again">Ще раз</button>
+      <button class="btn" data-act="go" data-to="law">До статей</button>`;
+    window.scrollTo(0, 0); return;
+  }
+  const q = L.qs[L.i], answered = L.chosen != null;
+  setBar(`Перевірка · ${L.i + 1} / ${L.qs.length}`);
+  const cls = k => !answered ? '' : k === q.answer ? ' right' : k === L.chosen ? ' wrong' : '';
+  const mark = k => !answered ? '' : k === q.answer ? '<span class="mk" aria-label="правильно">✓</span>' : k === L.chosen ? '<span class="mk" aria-label="помилка">✗</span>' : '';
+  app.innerHTML = `<div class="col">
+    <div><h2 class="prompt">${esc(q.prompt)}</h2>${answered ? `<p class="muted small" style="margin-top:4px">Стаття ${q.art}</p>` : ''}</div>
+    <div class="opts">${q.options.map((o, k) => `<button class="opt${cls(k)}" data-act="law-opt" data-k="${k}"${answered ? ' aria-disabled="true"' : ''}><span>${esc(o)}</span>${mark(k)}</button>`).join('')}</div>
+    ${answered ? `<button class="btn primary" id="qnext" data-act="law-next">${L.i === L.qs.length - 1 ? 'Підсумок' : 'Далі'}</button>` : ''}</div>`;
+  if (answered) { const b = $('qnext'); b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+function lawAnswer(k) {
+  if (!L || L.chosen != null) return;
+  const ok = k === L.qs[L.i].answer;
+  sfx(ok ? 'rep' : 'miss'); if (!ok) buzz(); streak(ok);
+  L.chosen = k; L.ok.push(ok); lawRender();
+}
+
 // ═════════ Події й маршрути ═════════
 const ROUTES = {
   '': home, ttx: cards, table, parts,
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
-  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, law: lawView, 'law-test': lawTest,
 };
 function route() {
   closeZoom();
@@ -1093,6 +1177,9 @@ document.addEventListener('click', e => {
     case 'card-prev': cardGo(-1); break;
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
+    case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;
+    case 'law-next': L.i++; L.chosen = null; lawRender(); window.scrollTo(0, 0); break;
+    case 'law-again': lawTest(); window.scrollTo(0, 0); break;
     case 'quiz-next': quizNext(); break;
     case 'quiz-again': quiz(Q ? Q.review : false); break;
     case 'pick': pickStep(parseInt(t.dataset.i, 10)); break;
