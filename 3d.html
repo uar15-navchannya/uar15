@@ -46,7 +46,10 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 [data-embed="steps"] .hint { display:none; }
 [data-embed="view"] .tabs { display:none; }
 [data-embed="view"] .stage { height:calc(100vh - 118px); }
-[data-embed="full"] .stage { height:calc(100vh - 200px); }
+[data-embed="full"] .wrap { height:100vh; box-sizing:border-box; overflow:hidden; }
+[data-embed="full"] .stage { flex:1 1 auto; height:auto; min-height:140px; }
+[data-embed="full"] .tabs, [data-embed="full"] .panel { flex:none; }
+[data-embed="full"] .panel { padding:10px; gap:8px; }
 [data-embed="labels"] .tabs { display:none; }
 [data-embed="labels"] .stage { height:calc(100vh - 118px); }
 [data-embed="dims"] .tabs, [data-embed="dims"] .panel { display:none !important; }
