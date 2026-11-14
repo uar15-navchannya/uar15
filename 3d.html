@@ -185,6 +185,10 @@ part('handguard', 'Цівка', [
   ...[0, 1, 2, 3, 4].map(i => [box(2.7, 0.22, 2.56, 37, -4.4 - i * 1.0), RUB]),
 ], M(TAN), [8, 20, 0], true);
 
+// Передня частина за фото й ТТХ: ствол 289 мм від дзеркала затвора (≈ x 17,4), полум'ягасник ≈ 4,8 см.
+// Деталі вище змодельовано довшими — стискаємо все, що попереду верхньої рами (x > 20), у k разів.
+{ const k = 0.711, seen = new Set(); for (const id of ['barrel', 'handguard']) parts[id].group.traverse(o => { if (!o.isMesh || seen.has(o.geometry)) return; seen.add(o.geometry); const a = o.geometry.attributes.position; for (let i = 0; i < a.count; i++) { const x = a.getX(i); if (x > 20) a.setX(i, 20 + (x - 20) * k); } a.needsUpdate = true; o.geometry.computeVertexNormals(); o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); }); }
+
 part('upper', 'Рама верхня', [
   xsec((() => { const sh = new THREE.Shape([[-1.5, -1.8], [1.5, -1.8], [1.6, 0.7], [1.2, 1.9], [1.05, 2.2], [-1.05, 2.2], [-1.2, 1.9], [-1.6, 0.7]].map(p => new THREE.Vector2(p[0], p[1]))); const h = new THREE.Path(); h.absarc(0, 0, 1.3, 0, Math.PI * 2, true); sh.holes.push(h); return sh; })(), 0, 20),
   box(20, 0.3, 2.1, 10, 2.33), ...teethRow(0.2, 19.8, 2.63),
@@ -344,7 +348,7 @@ const EMB = document.documentElement.dataset.embed || '';
 let asm = false;
 let mode = EMB === 'steps' ? 'steps' : 'view', explode = 0, explodeB = 0, step = 0, picked = null;
 const BCG_EXPLODE = { bolt: [5.5, 0, 0], fpin: [-9, -3.2, 0], cam: [0, 4.5, 0], rpin: [0, -1.5, 5], carrier: [0, 0, 0] };
-const BASE = EMB === 'labels' ? { t: [17, 0, 0], w: 46, h: 34 } : EMB === 'dims' ? { t: [22, -5, 0], w: 49, h: 27 } : { t: [22, -3, 0], w: 47, h: 27 };
+const BASE = EMB === 'labels' ? { t: [17, 0, 0], w: 46, h: 34 } : EMB === 'dims' ? { t: [16, -5, 0], w: 43, h: 27 } : { t: [16, -3, 0], w: 41, h: 27 };
 let frame = { t: [22, -3, 0], w: 47, h: 27 };
 if (EMB === 'labels') explode = 1;
 function setTargets() {
@@ -436,12 +440,12 @@ if (EMB === 'dims') {
   const line = (pts, m) => scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p[0], p[1], 0))), m));
   const tag = (x, y, text) => { const el = document.createElement('div'); el.className = 'dm'; el.textContent = text; $('labels').appendChild(el); tags.push({ el, at: v => v.set(x, y, 0) }); };
   const dim = (x0, x1, y, from, text) => { line([[x0, y], [x1, y]], LM); for (const x of [x0, x1]) { line([[x, y - 0.9], [x, y + 0.9]], LM); line([[x, from], [x, y]], LF); } tag((x0 + x1) / 2, y, text); };
-  dim(-18.5, 62.9, -25, -9, 'Загальна довжина 816 мм (+3,5%)');
-  dim(17.4, 57, 8, 1.2, 'Ствол — не менше 289 мм');
-  dim(20.5, 57, 15, 1.2, 'Нарізна частина — не менше 249 мм');
-  line([[62.9, 0], [52, -6]], LF); tag(46, -7.2, 'Канал ствола 5,56 мм');
+  dim(-18.5, 51.1, -25, -9, 'Загальна довжина 816 мм (+3,5%)');
+  dim(17.4, 46.3, 8, 1.2, 'Ствол — не менше 289 мм');
+  dim(21.4, 46.3, 15, 1.2, 'Нарізна частина — не менше 249 мм');
+  line([[51.1, 0], [44, -6]], LF); tag(40, -7.2, 'Канал ствола 5,56 мм');
   line([[18.5, -15], [25, -17]], LF); tag(31, -17.6, 'Магазин — 30 патронів');
-  camera.position.set(22, -7, 120);
+  camera.position.set(16, -7, 120);
 }
 const tv = new THREE.Vector3();
 function placeTags() {
