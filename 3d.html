@@ -246,12 +246,11 @@ part('cam', 'Палець затвора', [cylY(0.4, 1.8, 14.9, 0.55), box(1.0,
 part('rpin', 'Шплінт фіксації ударника', [wire([[10.6, 0.06, -1.15], [10.6, 0.06, 0.2], [10.6, 0.07, 0.95], [10.6, 0.2, 1.2], [10.6, 0.2, 1.45], [10.6, 0, 1.6], [10.6, -0.2, 1.45], [10.6, -0.2, 1.2], [10.6, -0.07, 0.95], [10.6, -0.06, 0.2], [10.6, -0.06, -1.15]], 0.05)],
   M(0x2c2e31, { metalness: 0.7, roughness: 0.4 }), [-28, 5, 5]);
 part('lower', 'Рама нижня в зборі', [
-  extrH([[-1.2, -1.8], [20, -1.8], [20, -3.0], [19.2, -3.4], [19.5, -8.4], [11.6, -9.0], [11.3, -8.2], [6.3, -8.0], [5.8, -7.2], [5.8, -4.5], [1.6, -4.6], [-1.2, -3.8]],
-    [[[10.8, -5.7], [10.8, -7.6], [6.8, -7.5], [6.4, -5.7]]], 3.0),
+  extrH([[-1.2, -1.8], [20, -1.8], [20, -3.0], [19.2, -3.4], [19.5, -8.4], [11.6, -9.0], [11.3, -8.2], [4.9, -8.0], [4.4, -7.2], [4.4, -4.5], [1.6, -4.6], [-1.2, -3.8]],
+    [[[10.6, -5.7], [10.6, -7.6], [5.0, -7.5], [4.7, -5.7]]], 3.0),
   box(7.6, 0.25, 3.3, 15.5, -8.55), box(0.3, 4.6, 3.2, 19.35, -6.0), box(0.25, 3.0, 3.16, 17.0, -5.6), box(0.25, 3.0, 3.16, 14.6, -5.6),
   lathe([[-1.4, 1.5], [-1.4, 1.95], [0, 1.95], [0, 1.5]]),
   [lathe([[-17.6, 0], [-17.6, 1.42], [-2.6, 1.42], [-2.6, 1.9], [-2.3, 2.05], [-1.7, 2.05], [-1.7, 1.42], [-1.4, 1.42]]), BLK], [box(0.35, 4.4, 2.6, -1.55, -0.4), BLK],
-  [extr([[8.3, -5.7], [8.9, -5.7], [8.9, -6.3], [9.2, -6.85], [9.75, -7.2], [9.6, -7.42], [8.9, -7.1], [8.45, -6.45]], 0.5), BLK],
   [cylZ(0.38, 3.3, 3.6, -3.0), BLK], [box(1.7, 0.34, 0.2, 4.3, -3.0, 1.62), BLK], [box(1.7, 0.34, 0.2, 4.3, -3.0, -1.62), BLK],
   [cylZ(0.5, 0.36, 10.9, -3.7, 1.62), BLK], [box(1.1, 0.14, 0.4, 10.9, -3.7, 1.68), RUB], [box(1.1, 0.14, 0.4, 10.9, -3.45, 1.68), RUB], [box(1.1, 0.14, 0.4, 10.9, -3.95, 1.68), RUB],
   [box(0.9, 2.0, 0.3, 11.6, -2.9, -1.62), BLK], [box(1.3, 0.8, 0.3, 11.6, -1.6, -1.66), BLK],
@@ -264,9 +263,12 @@ part('stock', 'Приклад', [
   [cylZ(0.45, 3.5, -15.9, -4.0), HOLE], [cylZ(0.2, 3.6, -12.2, -1.6), SCREW],
   [extr([[-7.0, -3.3], [-12.5, -6.6], [-12.9, -6.2], [-7.4, -2.9]], 1.2), RUB],
 ], M(0x202225, { roughness: 0.85, metalness: 0.05 }), [-12, 0, 0], true);
+// Спусковий гачок — окрема деталь, щоб показати натискання (вісь обертання — у верхній частині)
+part('trigger', 'Спусковий гачок', [extr([[6.3, -4.9], [6.9, -4.9], [6.9, -6.3], [7.2, -6.85], [7.75, -7.2], [7.6, -7.42], [6.9, -7.1], [6.45, -6.45]], 0.5)], M(BLACK, { roughness: 0.8 }), [0, 0, 0]);
+{ const m = parts.trigger.group.children[0]; m.geometry.translate(-6.6, 5.2, 0); m.position.set(6.6, -5.2, 0); }
 part('grip', 'Пістолетне руків’я', [
-  extr([[1.2, -4.5], [6.2, -4.5], [6.0, -6.2], [5.3, -9], [4.7, -15.6], [0.7, -15.0], [1.7, -9], [1.9, -6.2]], 2.9),
-  ...[0, 1, 2, 3, 4, 5].map(i => [box(3.6, 0.18, 2.96, 3.5 - i * 0.12, -8.2 - i * 1.1), RUB]),
+  extr([[4.45, -4.5], [4.0, -6.5], [3.6, -8.0], [2.64, -10.2], [1.4, -12.7], [0.6, -15.3], [0.2, -15.9], [-0.5, -16.1], [-4.3, -15.1], [-4.85, -14.6], [-4.7, -13.9], [-2.9, -11.2], [-1.3, -8.6], [-0.3, -6.6], [0.05, -5.4], [-0.45, -4.4], [-1.3, -3.3], [-2.0, -2.5], [-1.95, -2.15], [-1.5, -2.0], [-1.15, -2.3], [-1.2, -3.8], [1.6, -4.6]], 2.9),
+  [extr([[2.6, -8.2], [-0.6, -8.4], [-3.1, -12.4], [0.9, -13.1]], 3.0), RUB],
 ], M(0x202225, { roughness: 0.85, metalness: 0.05 }), [3, -9, 0]);
 part('mag', 'Магазин', [
   extr([[11.8, -2.2], [17.2, -2.2], [18.5, -13], [20.0, -20.2], [14.6, -21.2], [12.8, -13]], 2.3),
@@ -323,6 +325,9 @@ function focusStep() {
   const b = new THREE.Box3();
   if (ids) for (const id of ids) b.union(BOX[id].clone().translate(parts[id].target));
   else b.set(new THREE.Vector3(-19, -22, -2), new THREE.Vector3(63, 4, 2));
+  // Магазин видно на всьому шляху з шахти; на кроці 3 у кадрі й спусковий гачок
+  if (!asm && step === 1) b.union(BOX.mag);
+  if (!asm && step === 3) b.union(BOX.trigger);
   const c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
   // Осі виходять убік, тому на цих кроках дивимось під кутом і ближче
   const pins = !asm && (step === 4 || step === 5) || asm && step === 8;
@@ -383,7 +388,7 @@ function paint() {
     setXray(asm || step >= 7 || $('xray').checked);
     setTargets(); focusStep();
   }
-  lightStep();
+  lightStep(); stepAnims();
   if (mode === 'steps') {
   } else setXray($('xray').checked || EMB === 'dims');
   setTargets();
@@ -484,11 +489,38 @@ function resize() {
   if (dir.lengthSq() < 1) dir.set(0.35, 0.22, 1);
   camera.position.copy(controls.target).add(dir.normalize().multiplyScalar(dist));
 }
+// Повільні показові рухи: магазин виходить із шахти, гачок натискається
+const anims = [];
+const ease = u => u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2;
+function playPath(id, pts, dur, delay = 0) { for (let i = anims.length - 1; i >= 0; i--) if (anims[i].id === id) anims.splice(i, 1); anims.push({ id, pts: pts.map(v => new THREE.Vector3(...v)), dur, t0: performance.now() + delay }); }
+function playTrigger(delay) { for (let i = anims.length - 1; i >= 0; i--) if (anims[i].id === 'trig') anims.splice(i, 1); anims.push({ id: 'trig', dur: 1100, t0: performance.now() + delay }); }
+let prevStep = 0, prevAsm = false;
+function stepAnims() {
+  if (mode !== 'steps' || asm || prevAsm) { prevStep = step; prevAsm = asm; return; }
+  const MAG = [[0, 0, 0], [0.6, -5, 0], [1.3, -10.5, 0], [3, -14, 0]];
+  if (step === 1 && prevStep === 0) playPath('mag', MAG, 1800);
+  if (step === 0 && prevStep === 1) playPath('mag', [...MAG].reverse(), 1800);
+  if (step === 3 && prevStep === 2) playTrigger(900);
+  prevStep = step; prevAsm = asm;
+}
+function runAnims(now) {
+  const busy = new Set();
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i], u = Math.min(1, Math.max(0, (now - a.t0) / a.dur));
+    if (a.id === 'trig') { parts.trigger.group.children[0].rotation.z = -0.4 * Math.sin(Math.PI * Math.min(1, u * 1.15)); if (u >= 1) anims.splice(i, 1); continue; }
+    busy.add(a.id);
+    const n = a.pts.length - 1, f = ease(u) * n, k = Math.min(n - 1, Math.floor(f));
+    parts[a.id].group.position.lerpVectors(a.pts[k], a.pts[k + 1], f - k);
+    if (u >= 1) anims.splice(i, 1);
+  }
+  return busy;
+}
 new ResizeObserver(resize).observe(stage);
 resize(); paint();
 
 renderer.setAnimationLoop(() => {
-  for (const p of Object.values(parts)) p.group.position.lerp(p.target, 0.14);
+  const busy = runAnims(performance.now());
+  for (const p of Object.values(parts)) if (!busy.has(p.id)) p.group.position.lerp(p.target, 0.14);
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
     const dir = camera.position.clone().sub(controls.target), len = dir.length();
