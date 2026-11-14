@@ -1,0 +1,15 @@
+{
+  "name": "Гвинтівка UAR-15S",
+  "short_name": "UAR-15S",
+  "description": "ТТХ, будова, тест, неповне розбирання і збирання UAR-15S",
+  "lang": "uk",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#10150D",
+  "theme_color": "#10150D",
+  "icons": [
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
