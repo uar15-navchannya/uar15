@@ -109,8 +109,9 @@ p { margin: 0; }
 .prog span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .meter { height: 6px; margin-top: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .meter i { display: block; height: 100%; width: var(--p); background: var(--good); border-radius: 3px; transition: width .4s ease; }
-.coach { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: var(--surface); }
-.coach img { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--orange); flex: none; background: #10150D; }
+.coach { display: flex; gap: 14px; align-items: center; padding: 12px 14px 12px 12px; border-radius: 16px; background: var(--surface); }
+.coach img { width: 76px; height: 76px; border-radius: 50%; border: 2px solid var(--orange); flex: none; background: #10150D; box-shadow: 0 0 0 4px var(--surface-hi); }
+@media (min-width: 600px) { .coach img { width: 88px; height: 88px; } .coach p { font-size: 15px; } }
 .who { font: 600 12px/1.1 var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); }
 .coach p { font-size: 14px; line-height: 1.4; margin-top: 3px; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
