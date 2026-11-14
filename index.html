@@ -103,8 +103,8 @@ p { margin: 0; }
 
 /* ── Головна ── */
 .hero { display: flex; flex-direction: column; gap: 10px; }
-.hero-img { margin: 0; border-radius: 14px; overflow: hidden; background: var(--mat-scheme); }
-.hero-img img { display: block; width: 100%; height: auto; }
+.hero-img { margin: 0; padding: 14px 10px 10px; border-radius: 14px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #56614c 0%, #2c3527 58%, #182015 100%); }
+.hero-img img { display: block; width: 100%; height: auto; filter: drop-shadow(0 10px 12px rgba(0,0,0,.45)); }
 .eyebrow { font: 500 13px/1.2 var(--display); letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 .hero h2 { margin: 2px 0 0; font: 700 clamp(40px, 12vw, 64px)/1 var(--display); letter-spacing: 1px; }
 .prog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -624,7 +624,7 @@ function home() {
     + `${badge ? `<span class="badge">${badge}</span>` : ''}${off ? '' : `<span class="chev">${svg('chev')}</span>`}</button>`;
   app.innerHTML = `
     <section class="hero">
-      <figure class="hero-img"><img src="img/view.jpg" alt="Гвинтівка UAR-15S, загальний вигляд" width="950" height="296"></figure>
+      <figure class="hero-img"><img src="img/hero.webp" alt="Гвинтівка UAR-15S, загальний вигляд" width="1600" height="643" decoding="async"></figure>
       <div><div class="eyebrow">5,56 мм автоматична гвинтівка</div><h2>UAR-15S</h2></div>
     </section>
     <div class="prog">
