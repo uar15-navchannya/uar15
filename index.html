@@ -279,7 +279,7 @@ p { margin: 0; }
       <svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <h1 id="title">UAR-15S</h1>
-    <button id="voice" class="icon-btn" data-act="voice" aria-pressed="true" aria-label="Голос сержанта"></button>
+    <button id="voice" class="icon-btn" data-act="voice" aria-pressed="true" aria-label="Звук: голос сержанта й ефекти"></button>
   </div>
 </header>
 
@@ -527,8 +527,40 @@ function paintVoice() {
   const b = $('voice');
   b.innerHTML = svg(voiceOn ? 'voiceOn' : 'voiceOff');
   b.setAttribute('aria-pressed', String(voiceOn));
-  b.title = voiceOn ? 'Голос сержанта увімкнено' : 'Голос сержанта вимкнено';
+  b.title = voiceOn ? 'Звук увімкнено: голос сержанта й ефекти' : 'Звук вимкнено';
 }
+
+// Звукові ефекти з DigDeep (гучність — як у додатку). Web Audio: без затримки й накладання.
+const SFX = { click: 0.7, whoosh: 0.55, rep: 1.0, miss: 0.7, goal: 1.0 };
+const sfxBuf = {};
+let actx = null;
+function sfxInit() {
+  if (actx) { if (actx.state === 'suspended') actx.resume().catch(() => {}); return; }
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    actx = new Ctx();
+    for (const n of Object.keys(SFX)) {
+      fetch(`sfx/${n}.mp3`).then(r => r.arrayBuffer())
+        .then(buf => new Promise((res, rej) => actx.decodeAudioData(buf, res, rej)))
+        .then(decoded => { sfxBuf[n] = decoded; }).catch(() => {});
+    }
+  } catch (e) { actx = null; }
+}
+function sfx(name) {
+  if (!voiceOn) return;
+  try {
+    sfxInit();
+    const buf = sfxBuf[name];
+    if (!actx || !buf) return;
+    const src = actx.createBufferSource(), gain = actx.createGain();
+    src.buffer = buf; gain.gain.value = SFX[name];
+    src.connect(gain); gain.connect(actx.destination);
+    src.start();
+  } catch (e) { /* без звуку — не критично */ }
+}
+// Перший дотик розблоковує звук (iPhone дозволяє Web Audio лише після дії людини).
+document.addEventListener('pointerdown', sfxInit, { once: true, capture: true });
 let audio = null, sgtTimer = null;
 const recent = { good: [], bad: [] };
 function showSgt(text, mood, ms) {
@@ -637,7 +669,7 @@ function cards() {
     <p class="src">Свайп вліво/вправо або стрілки на клавіатурі. Джерело: ${esc(SRC_TTX)}.</p>`;
   bindSwipe($('card'));
 }
-function cardGo(d) { const n = Math.min(FACTS.length - 1, Math.max(0, C.i + d)); if (n !== C.i) { C.i = n; cards(); } }
+function cardGo(d) { const n = Math.min(FACTS.length - 1, Math.max(0, C.i + d)); if (n !== C.i) { C.i = n; sfx('whoosh'); cards(); } }
 let swiped = false;
 function bindSwipe(el) {
   let x0 = null, y0 = 0;
@@ -699,6 +731,7 @@ function renderQuiz(keepScroll) {
 function answer(k) {
   if (!Q || Q.chosen != null || Q.done) return;
   const q = Q.qs[Q.i], ok = k === q.answer;
+  sfx(ok ? 'rep' : 'miss');
   if (!ok) buzz();
   streak(ok);
   grade(Q.m, q.item, ok, new Date());
@@ -928,6 +961,7 @@ function pickStep(i) {
   if (s === undefined) return;
   if (s === D.steps[D.done]) {
     D.pool.splice(i, 1); D.done++; D.wrong = null;
+    sfx(D.done === D.steps.length ? 'goal' : 'click');
     if (D.done === D.steps.length) {
       D.finished = true;
       D.sec = Math.floor((performance.now() - D.t0) / 1000);
@@ -936,7 +970,7 @@ function pickStep(i) {
       say(D.mistakes === 0 ? 'good' : 'bad');
     }
   } else {
-    D.mistakes++; D.wrong = s; buzz();
+    D.mistakes++; D.wrong = s; sfx('miss'); buzz();
   }
   renderDrill();
 }
@@ -1054,7 +1088,8 @@ document.addEventListener('click', e => {
     case 'zoom-out': zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s / 1.6); break;
     case 'flip':
       if (swiped) { swiped = false; break; }
-      C.open.has(C.i) ? C.open.delete(C.i) : C.open.add(C.i); cards(); $('card').focus({ preventScroll: true }); break;
+      if (C.open.has(C.i)) C.open.delete(C.i); else { C.open.add(C.i); sfx('click'); }
+      cards(); $('card').focus({ preventScroll: true }); break;
     case 'card-prev': cardGo(-1); break;
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
