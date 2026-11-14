@@ -10,6 +10,10 @@
 <style>
 :root { --bg:#10150D; --surface:#1A2117; --surface-hi:#242C20; --line:#2E3829; --text:#F2F0EA; --muted:#9AA392; --orange:#FF6A13; --violet:#8B5CF6;
   --display:"Oswald","Arial Narrow",Impact,sans-serif; --body:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color-scheme:dark; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg:#EEF0E8; --surface:#FFFFFF; --surface-hi:#E4E7DB; --line:#C9CFBD; --text:#161C12; --muted:#555F4E; --orange:#E85A08; --violet:#6A3BDB; color-scheme:light; } }
+:root[data-theme="light"] { --bg:#EEF0E8; --surface:#FFFFFF; --surface-hi:#E4E7DB; --line:#C9CFBD; --text:#161C12; --muted:#555F4E; --orange:#E85A08; --violet:#6A3BDB; color-scheme:light; }
+.stage .hint { color:#c9cfbd; }
+.stage .chip, .dm { color:#F2F0EA !important; }
 * { box-sizing:border-box; }
 html, body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 var(--body); -webkit-tap-highlight-color:transparent; }
 [hidden] { display:none !important; }
@@ -63,6 +67,11 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 .lb.sel { background:#fff; box-shadow:0 0 0 3px var(--orange); }
 .dm { position:absolute; transform:translate(-50%,-50%); padding:2px 7px; border-radius:8px; background:rgba(16,21,13,.88); border:1px solid var(--orange); color:var(--text); font:600 11px/1.3 var(--display); letter-spacing:.2px; white-space:nowrap; }
 </style>
+<script>
+// Тема — як обрано на навчальній сторінці (те саме сховище); оновлюється одразу при перемиканні
+function uarTheme() { let t = null; try { t = localStorage.getItem('uar15_theme'); } catch (e) { /* без сховища */ } if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
+uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.key === null) uarTheme(); });
+</script>
 <script>try { const e = new URLSearchParams(location.search).get('embed'); if (e) document.documentElement.dataset.embed = e; } catch (e) {}</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>

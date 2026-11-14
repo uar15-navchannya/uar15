@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#10150D">
+<script>try { const t = localStorage.getItem('uar15_theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) { /* без сховища — як у системі */ }</script>
 <link rel="icon" href="img/sgt/calm.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="img/icon-180.png">
@@ -104,7 +105,7 @@ p { margin: 0; }
 /* ── Головна ── */
 .hero { display: flex; flex-direction: column; gap: 10px; }
 .hero-img { margin: 0; padding: 14px 10px 10px; border-radius: 14px; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #56614c 0%, #2c3527 58%, #182015 100%); }
-.hero-img img { display: block; width: 100%; height: auto; filter: drop-shadow(0 10px 12px rgba(0,0,0,.45)); }
+.hero-img img { display: block; width: 100%; height: auto; max-height: 52svh; object-fit: contain; filter: drop-shadow(0 10px 12px rgba(0,0,0,.45)); }
 .eyebrow { font: 500 13px/1.2 var(--display); letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 .hero h2 { margin: 2px 0 0; font: 700 clamp(40px, 12vw, 64px)/1 var(--display); letter-spacing: 1px; }
 .prog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -253,7 +254,8 @@ p { margin: 0; }
 
 /* ── 3D-модель ── */
 .m3d { display:block; width:100%; border:0; border-radius:14px; background:#10150D; }
-.m3d.full { height:calc(100svh - 80px); min-height:560px; }
+.m3d.full { height:calc(100svh - 80px); min-height:min(560px, 100svh); }
+@media (orientation: landscape) and (max-height: 500px) { .m3d.full { min-height:420px; } }
 .m3d.view { height:min(62svh, 520px); }
 .m3d-stick { position:sticky; top:calc(57px + env(safe-area-inset-top, 0px)); z-index:5; margin-inline:-4px; padding:6px 4px 8px; background:var(--bg); }
 .m3d-stick .m3d { height:min(34svh, 300px); }
@@ -312,6 +314,7 @@ p { margin: 0; }
       <svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <h1 id="title">UAR-15S</h1>
+    <button id="theme" class="icon-btn" data-act="theme"></button>
     <button id="voice" class="icon-btn" data-act="voice" aria-pressed="true" aria-label="Звук: голос сержанта й ефекти"></button>
   </div>
 </header>
@@ -539,6 +542,9 @@ const ICON = {
   save: '<path d="M12 3v11M7.5 9.5L12 14l4.5-4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
   phones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/>',
   play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
   shield: '<path d="M12 3l7 3v6c0 4.2-3 7.6-7 9-4-1.4-7-4.8-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
   cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
@@ -558,6 +564,18 @@ function buzz() { try { if (navigator.vibrate) navigator.vibrate(60); } catch (e
 
 // ═════════ Сержант: текст, фото, голос ═════════
 let voiceOn = store.get(K_VOICE) !== '0';
+// — Тема: авто (як у системі) → день → ніч —
+const K_THEME = 'uar15_theme', THEMES = ['auto', 'light', 'dark'];
+const THEME_NAME = { auto: 'Тема: як у системі', light: 'Тема: денна', dark: 'Тема: нічна' };
+let theme = 'auto'; try { theme = localStorage.getItem(K_THEME) || 'auto'; } catch (e) { /* без сховища */ }
+if (!THEMES.includes(theme)) theme = 'auto';
+function applyTheme() {
+  if (theme === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
+  const dark = theme === 'dark' || (theme === 'auto' && !(window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches));
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? '#10150D' : '#EEF0E8';
+  const b = $('theme'); if (b) { b.innerHTML = svg(theme === 'light' ? 'sun' : theme === 'dark' ? 'moon' : 'auto'); b.setAttribute('aria-label', THEME_NAME[theme]); b.title = THEME_NAME[theme]; }
+}
+try { matchMedia('(prefers-color-scheme: light)').addEventListener('change', applyTheme); } catch (e) { /* старий браузер */ }
 function paintVoice() {
   const b = $('voice');
   b.innerHTML = svg(voiceOn ? 'voiceOn' : 'voiceOff');
@@ -1277,6 +1295,10 @@ document.addEventListener('click', e => {
     case 'backup-check': backupCheck(); break;
     case 'backup-apply': backupApply(); break;
     case 'backup-cancel': pending = null; $('restore-confirm').hidden = true; break;
+    case 'theme':
+      theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+      try { if (theme === 'auto') localStorage.removeItem(K_THEME); else localStorage.setItem(K_THEME, theme); } catch (e) { /* без сховища */ }
+      applyTheme(); sfx('click'); break;
     case 'voice':
       voiceOn = !voiceOn; store.set(K_VOICE, voiceOn ? '1' : '0'); paintVoice();
       if (!voiceOn && audio) audio.pause();
@@ -1298,11 +1320,12 @@ document.addEventListener('keydown', e => {
 window.addEventListener('hashchange', route);
 document.addEventListener('load', e => { if (e.target && e.target.id === 'm3d' && (modelWant || modelKind === 'as') && /embed=steps/.test(e.target.src)) setTimeout(() => modelStep(modelWant), 400); }, true);
 
+applyTheme();
 paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261114-192350';
+const APP_V = '20261114-195810';
 let updWarned = false;
 async function checkUpdate() {
   try {
