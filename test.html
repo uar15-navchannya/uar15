@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#10150D">
+<link rel="icon" href="img/sgt/calm.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="UAR-15S">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Гвинтівка UAR-15S · тест 3D</title>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: одна колонка до 720px, липка шапка; екрани перемикаються за #хешем, як розділ UAR-15S у DigDeep.
+   Кольори — DigDeep: темне оливкове тло, помаранчева дія, фіолетовий акцент модуля «Мозок». */
+:root {
+  --bg: #10150D;
+  --surface: #1A2117;
+  --surface-hi: #242C20;
+  --line: #2E3829;
+  --text: #F2F0EA;
+  --muted: #9AA392;
+  --orange: #FF6A13;
+  --on-orange: #000000;
+  --violet: #8B5CF6;
+  --good: #34D399;
+  --bad: #D7263D;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  /* Тло зображень і плашки на них — однакові в обох темах, бо належать самим зображенням. */
+  --mat-scheme: #C6C0B1;
+  --mat-photo: #EDEDED;
+  --chip-bg: rgba(16, 21, 13, .82);
+  --chip-fg: #F2F0EA;
+  --display: "Oswald", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EEF0E8; --surface: #FFFFFF; --surface-hi: #E4E7DB; --line: #C9CFBD;
+    --text: #161C12; --muted: #555F4E; --orange: #E85A08; --on-orange: #000000;
+    --violet: #6A3BDB; --good: #0B8457; --bad: #C21F33; --shadow: 0 10px 30px rgba(22, 28, 18, .18);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #EEF0E8; --surface: #FFFFFF; --surface-hi: #E4E7DB; --line: #C9CFBD;
+  --text: #161C12; --muted: #555F4E; --orange: #E85A08; --on-orange: #000000;
+  --violet: #6A3BDB; --good: #0B8457; --bad: #C21F33; --shadow: 0 10px 30px rgba(22, 28, 18, .18);
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  --bg: #10150D; --surface: #1A2117; --surface-hi: #242C20; --line: #2E3829;
+  --text: #F2F0EA; --muted: #9AA392; --orange: #FF6A13; --on-orange: #000000;
+  --violet: #8B5CF6; --good: #34D399; --bad: #D7263D; --shadow: 0 10px 30px rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+html.lock, html.lock body { overflow: hidden; }
+body { background: var(--bg); color: var(--text); font: 16px/1.45 var(--body); -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ── Шапка ── */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar-in { max-width: 720px; margin: 0 auto; min-height: 56px; display: flex; align-items: center; gap: 4px; }
+.bar h1 { flex: 1; min-width: 0; margin: 0; font: 600 19px/1.2 var(--display); letter-spacing: 1px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 12px; background: transparent; cursor: pointer; color: var(--text); flex: none; }
+.icon-btn:hover { background: var(--surface); }
+.icon-btn[aria-pressed="false"] { color: var(--muted); }
+#back { margin-left: -10px; }
+
+main {
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 120px;
+}
+.wrap { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.wrap > * { min-width: 0; }
+
+/* ── Типографіка ── */
+.h { margin: 6px 0 0; font: 600 16px/1.25 var(--display); letter-spacing: 2px; text-transform: uppercase; text-wrap: balance; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.src { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.srcs { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+p { margin: 0; }
+
+/* ── Головна ── */
+.hero { display: flex; flex-direction: column; gap: 10px; }
+.hero-img { margin: 0; border-radius: 14px; overflow: hidden; background: var(--mat-scheme); }
+.hero-img img { display: block; width: 100%; height: auto; }
+.eyebrow { font: 500 13px/1.2 var(--display); letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.hero h2 { margin: 2px 0 0; font: 700 clamp(40px, 12vw, 64px)/1 var(--display); letter-spacing: 1px; }
+.prog { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.prog span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter { height: 6px; margin-top: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; width: var(--p); background: var(--good); border-radius: 3px; transition: width .4s ease; }
+.coach { display: flex; gap: 14px; align-items: center; padding: 12px 14px 12px 12px; border-radius: 16px; background: var(--surface); }
+.coach video { display: block; width: 76px; height: 76px; object-fit: cover; border-radius: 50%; border: 2px solid var(--orange); flex: none; background: #10150D; box-shadow: 0 0 0 4px var(--surface-hi); }
+@media (min-width: 600px) { .coach video { width: 88px; height: 88px; } .coach p { font-size: 15px; } }
+.who { font: 600 12px/1.1 var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--orange); }
+.coach p { font-size: 14px; line-height: 1.4; margin-top: 3px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
+.tile {
+  display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 10px 12px 10px 14px; text-align: left;
+  background: var(--surface); border: 1px solid transparent; border-radius: 14px; cursor: pointer; transition: border-color .15s, transform .1s;
+}
+.tile:hover { border-color: var(--line); }
+.tile:active { transform: scale(.985); }
+.tile > svg:first-child { color: var(--violet); }
+.tile .t { flex: 1; min-width: 0; }
+.tile b { display: block; font: 600 16px/1.2 var(--display); letter-spacing: .6px; text-transform: uppercase; }
+.tile small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.3; color: var(--muted); }
+.tile .chev { color: var(--muted); }
+.tile[disabled] { cursor: default; }
+.tile[disabled]:active { transform: none; }
+.tile[disabled] > svg:first-child { color: var(--line); }
+.tile[disabled] b { color: var(--muted); }
+.tile .badge { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: var(--orange); color: var(--on-orange); font: 600 13px/24px var(--display); text-align: center; }
+
+/* ── Кнопки ── */
+.btn {
+  width: 100%; min-height: 56px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px solid var(--line); border-radius: 10px; background: transparent; color: var(--text); cursor: pointer;
+  font: 500 18px/1 var(--display); letter-spacing: 1px; text-transform: uppercase;
+}
+.btn.primary { background: var(--orange); border-color: var(--orange); color: var(--on-orange); font-weight: 600; }
+.btn[disabled] { opacity: .38; cursor: default; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ── Зображення, що збільшуються ── */
+.zimg { position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 14px; overflow: hidden; background: var(--mat-scheme); cursor: zoom-in; }
+.zimg.photo { background: var(--mat-photo); }
+.zimg img { display: block; width: 100%; height: auto; object-fit: contain; }
+.zimg.q img { height: clamp(200px, 40svh, 340px); }
+.zimg.mini img { height: clamp(140px, 22svh, 200px); }
+.zimg.thumb img { height: 120px; }
+.zbadge { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; padding: 5px 10px 5px 7px; border-radius: 20px; background: var(--chip-bg); color: var(--chip-fg); font-size: 13px; }
+.zbadge svg.i { width: 18px; height: 18px; }
+
+/* ── Картки ТТХ ── */
+.card {
+  width: 100%; min-height: min(56svh, 460px); padding: 26px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 18px; text-align: center; cursor: pointer; touch-action: pan-y; user-select: none;
+  transition: border-color .2s;
+}
+.card.open { border-color: var(--violet); }
+.card .q { font: 600 clamp(22px, 6.4vw, 30px)/1.2 var(--display); text-wrap: balance; }
+.card .a { font: 700 clamp(30px, 9.5vw, 46px)/1.1 var(--display); color: var(--violet); font-variant-numeric: tabular-nums; animation: pop .22s ease-out; }
+.card .note { font-size: 14px; color: var(--muted); max-width: 32ch; }
+.dots { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--violet); }
+.dots i.seen { background: var(--muted); }
+
+/* ── Таблиця ── */
+.ttx { margin: 0; display: flex; flex-direction: column; }
+.ttx div { padding: 11px 0; border-bottom: 1px solid var(--line); }
+.ttx dt { font-size: 14px; color: var(--muted); }
+.ttx dd { margin: 2px 0 0; font: 600 21px/1.25 var(--display); font-variant-numeric: tabular-nums; }
+.ttx dd small { display: block; font: 400 12px/1.35 var(--body); color: var(--muted); margin-top: 2px; }
+
+/* ── Будова ── */
+.parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 2px 16px; }
+.parts li { display: grid; grid-template-columns: 38px 1fr; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
+.parts b { font: 700 19px/1 var(--display); color: var(--violet); font-variant-numeric: tabular-nums; }
+
+/* ── Тест ── */
+.prompt { margin: 0; font: 600 clamp(21px, 5.6vw, 26px)/1.22 var(--display); text-wrap: balance; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt {
+  width: 100%; min-height: 58px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 14px; text-align: left; cursor: pointer;
+  font: 600 18px/1.3 var(--body); font-variant-numeric: tabular-nums;
+}
+.opt:hover:not([aria-disabled="true"]) { border-color: var(--muted); }
+.opt[aria-disabled="true"] { cursor: default; }
+.opt.right { border-color: var(--good); }
+.opt.wrong { border-color: var(--bad); }
+.opt .mk { font: 700 20px/1 var(--display); flex: none; }
+.opt.right .mk { color: var(--good); }
+.opt.wrong .mk { color: var(--bad); }
+.opt.right, .opt.wrong { animation: pop .2s ease-out; }
+.score { margin: 10px 0 0; text-align: center; font: 700 64px/1 var(--display); font-variant-numeric: tabular-nums; }
+.center { text-align: center; }
+.miss { display: flex; flex-direction: column; gap: 10px; }
+.miss div { padding: 10px 12px; border-radius: 12px; background: var(--surface); }
+.miss p:first-child { font-size: 14px; color: var(--muted); }
+.miss p:last-child { font: 600 18px/1.25 var(--display); color: var(--good); }
+
+/* ── Розбирання / збирання ── */
+.drill-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.timer { font: 700 42px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+.bad-t { color: var(--bad); }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.step { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px 4px; }
+.step > b { font: 700 17px/1.4 var(--display); color: var(--violet); font-variant-numeric: tabular-nums; }
+.step.ok > b { color: var(--good); }
+.step > div { display: flex; flex-direction: column; gap: 8px; line-height: 1.4; }
+.pool { display: flex; flex-direction: column; gap: 8px; }
+.pick { width: 100%; min-height: 52px; padding: 10px 14px; text-align: left; background: var(--surface); border: 2px solid var(--line); border-radius: 12px; cursor: pointer; font-size: 15px; line-height: 1.35; }
+.pick:hover { border-color: var(--muted); }
+.pick.wrong { border-color: var(--bad); animation: shake .3s; }
+.verdict { font: 600 21px/1.3 var(--display); }
+.note { padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; line-height: 1.4; }
+.empty { display: flex; flex-direction: column; gap: 16px; align-items: stretch; padding-top: 18vh; text-align: center; }
+
+/* ── Озвучка кроків ── */
+.steps.voiced { gap: 6px; }
+.steps.voiced .step { grid-template-columns: 30px minmax(0, 1fr) 44px; align-items: start; padding: 8px 6px 8px 8px; border-radius: 12px; transition: background .2s; }
+.steps.voiced .step > div { padding-top: 10px; }
+.steps.voiced .step > b { padding-top: 10px; }
+.steps.voiced .step.playing { background: var(--surface-hi); }
+.steps.voiced .step.playing > b { color: var(--orange); }
+.play { width: 44px; height: 44px; display: grid; place-items: center; border: 1.5px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--text); cursor: pointer; }
+.play svg.i { width: 18px; height: 18px; }
+.step.playing .play { border-color: var(--orange); color: var(--orange); }
+.player { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; pointer-events: none;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.player-in { pointer-events: auto; max-width: 560px; margin: 0 auto; display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px;
+  background: var(--surface-hi); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); animation: rise .25s ease-out; }
+.player-in > span { flex: 1; min-width: 0; font: 500 15px/1.2 var(--display); letter-spacing: .5px; text-transform: uppercase; }
+.player .icon-btn { color: var(--orange); }
+
+/* ── 3D-модель ── */
+.m3d { display:block; width:100%; border:0; border-radius:14px; background:#10150D; }
+.m3d.full { height:calc(100svh - 96px); min-height:420px; }
+.m3d.view { height:min(62svh, 520px); }
+.m3d-stick { position:sticky; top:calc(57px + env(safe-area-inset-top, 0px)); z-index:5; margin-inline:-4px; padding:6px 4px 8px; background:var(--bg); }
+.m3d-stick .m3d { height:min(34svh, 300px); }
+.m3d-cap { margin-top:6px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
+.m3d-cap button { border:0; background:none; color:var(--violet); font:inherit; padding:0; cursor:pointer; text-decoration:underline; }
+
+/* ── Збереження прогресу ── */
+.code { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text);
+  font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; word-break: break-all; resize: vertical; }
+.note p + p { margin-top: 6px; }
+.note b { color: var(--text); font-weight: 600; }
+.ok-t { color: var(--good); }
+
+/* ── Сержант ── */
+.sgt { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; pointer-events: none;
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.sgt-in { pointer-events: auto; width: 100%; max-width: 560px; margin: 0 auto; display: flex; gap: 12px; align-items: center; padding: 10px 8px 10px 10px;
+  background: var(--surface-hi); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); text-align: left; cursor: pointer; animation: rise .25s ease-out; }
+.sgt img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--orange); flex: none; background: #10150D; }
+.sgt .t { flex: 1; min-width: 0; }
+.sgt p { margin-top: 3px; font-size: 15px; line-height: 1.35; }
+
+/* ── Перегляд на весь екран ── */
+.zoom { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; background: var(--mat-scheme); }
+.zoom.photo { background: var(--mat-photo); }
+.zoom-top { display: flex; align-items: center; gap: 8px; background: var(--chip-bg); color: var(--chip-fg);
+  padding: calc(6px + env(safe-area-inset-top, 0px)) max(8px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px)); }
+.zoom-top p { flex: 1; min-width: 0; font-size: 14px; }
+.zoom-top .icon-btn { color: var(--chip-fg); }
+.zoom-top .icon-btn:hover { background: rgba(255, 255, 255, .1); }
+.zoom-stage { position: relative; flex: 1; overflow: hidden; touch-action: none; cursor: grab; }
+.zoom-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transform-origin: 0 0; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.zoom-tools { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 10px; }
+.zoom-tools button { width: 50px; height: 50px; border: 0; border-radius: 50%; background: var(--chip-bg); color: var(--chip-fg); font: 500 26px/1 var(--display); cursor: pointer; }
+
+@keyframes pop { from { transform: scale(.94); opacity: .4; } to { transform: none; opacity: 1; } }
+@keyframes rise { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes shake { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-in">
+    <button id="back" class="icon-btn" data-act="go" data-to="" aria-label="До розділу" hidden>
+      <svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h1 id="title">UAR-15S</h1>
+    <button id="voice" class="icon-btn" data-act="voice" aria-pressed="true" aria-label="Звук: голос сержанта й ефекти"></button>
+  </div>
+</header>
+
+<main><div class="wrap" id="app"></div></main>
+
+<div id="sgt" class="sgt" hidden aria-live="polite">
+  <button class="sgt-in" data-act="sgt-close" aria-label="Закрити">
+    <img id="sgt-img" src="img/sgt/calm.png" alt="">
+    <span class="t"><span class="who">Сержант Андрій</span><p id="sgt-text"></p></span>
+  </button>
+</div>
+
+<div id="player" class="player" hidden>
+  <div class="player-in">
+    <span id="player-text"></span>
+    <button class="icon-btn" data-act="player-stop" aria-label="Зупинити озвучку">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="zoom" class="zoom" hidden role="dialog" aria-modal="true" aria-label="Зображення на весь екран">
+  <div class="zoom-top">
+    <p>Розведи пальці або двічі торкнись</p>
+    <button class="icon-btn" data-act="zoom-close" aria-label="Закрити">
+      <svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="zoom-stage" id="zoom-stage">
+    <img id="zoom-img" alt="">
+    <div class="zoom-tools">
+      <button data-act="zoom-out" aria-label="Зменшити">−</button>
+      <button data-act="zoom-in" aria-label="Збільшити">+</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ═════════ Дані (ті самі, що в DigDeep, lib/iq/uar15.dart) ═════════
+const SRC_TTX = 'Інфографіка «5,56 мм автоматична гвинтівка UAR-15 S»';
+const SRC_DIS = 'Плакат «Гвинтівка UAR-15. Порядок неповного розбирання гвинтівки» (varchdesign.com.ua)';
+const SRC_AS = 'USMC FMST 108 «M16/M4 Service Rifle Familiarization» (платформа AR-15), без кроків зі знімною цівкою';
+const APPROX = 'приблизне значення';
+
+const FACTS = [
+  { id: 'caliber', q: 'Калібр патрона', a: '5,56×45 мм', w: ['5,45×39 мм', '7,62×39 мм', '7,62×51 мм'] },
+  { id: 'bore', q: 'Діаметр каналу ствола', a: '5,56 мм', w: ['5,45 мм', '7,62 мм', '6,5 мм'] },
+  { id: 'barrel', q: 'Загальна довжина ствола (не менше)', a: '289 мм', w: ['249 мм', '368 мм', '330 мм'] },
+  { id: 'rifled', q: 'Довжина нарізної частини ствола (не менше)', a: '249 мм', w: ['289 мм', '178 мм', '310 мм'] },
+  { id: 'twist', q: 'Крок нарізів', a: '178 мм', w: ['229 мм', '305 мм', '249 мм'] },
+  { id: 'length', q: 'Загальна довжина гвинтівки', a: '816 мм (+3,5%)', w: ['889 мм (+3,5%)', '760 мм (+3,5%)', '940 мм (+3,5%)'],
+    note: 'без дульних насадок, із зсунутим прикладом' },
+  { id: 'rate', q: 'Темп стрільби', a: '700–950 постр./хв', w: ['600–650 постр./хв', '400–500 постр./хв', '1000–1200 постр./хв'], note: APPROX },
+  { id: 'practical', q: 'Практична скорострільність (одиночними / чергами)', a: '40 / 100 постр./хв',
+    w: ['100 / 40 постр./хв', '20 / 60 постр./хв', '60 / 150 постр./хв'] },
+  { id: 'range', q: 'Дальність ефективної стрільби', a: '400–500 м', w: ['300–350 м', '600–800 м', '1000 м'], note: APPROX },
+  { id: 'group', q: 'Купчастість стрільби на 100 м (не більше)', a: '40 мм', w: ['20 мм', '80 мм', '100 мм'] },
+  { id: 'velocity', q: 'Початкова швидкість кулі', a: '830 ± 60 м/с', w: ['715 ± 30 м/с', '900 ± 20 м/с', '990 ± 60 м/с'], note: APPROX },
+  { id: 'magazine', q: 'Місткість магазина', a: '30 патронів', w: ['20 патронів', '40 патронів', '45 патронів'] },
+  { id: 'trigger', q: 'Зусилля натискання на спусковий гачок', a: '15–45 Н', w: ['5–10 Н', '50–80 Н', '100–120 Н'] },
+  { id: 'mass', q: 'Загальна маса (не більше)', a: '2,9 кг', w: ['3,6 кг', '2,2 кг', '4,1 кг'],
+    note: 'без дульних насадок, прицільних пристосувань, магазина й ременів' },
+];
+
+const PARTS = {
+  1: 'Ствол', 2: 'Цівка', 3: 'Затворна рама', 4: 'Рама верхня', 5: 'Рукоятка перезаряджання', 6: 'Приклад',
+  7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка', 12: 'Магазин',
+};
+const ON_DIAGRAM = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+const SECTIONS = [
+  { t: '1. Розрядити зброю', s: [
+    { x: 'Натиснути кнопку фіксатора магазина й вийняти магазин.' },
+    { x: 'Важелем перезаряджання відтягнути затворну раму назад і оглянути патронник.' },
+    { x: 'Відпустити важіль — затворна рама йде вперед. Спустити курок, натиснувши спусковий гачок.' },
+  ] },
+  { t: '2. Розділити ствольну коробку', s: [
+    { x: 'Витиснути задню вісь.', p: 1 },
+    { x: 'Витиснути передню вісь.', p: 2 },
+    { x: 'Роз’єднати верхню й нижню рами.', p: 3 },
+  ], note: 'Туга вісь — можна витиснути інструментом або патроном. Осі мають фіксатори й лишаються в корпусі рами. '
+    + 'Забороняється роз’єднувати рами «переломуванням» на передній осі без пристрою для фіксації ствольної коробки.' },
+  { t: '3. Від’єднати затворну раму із затвором', s: [
+    { x: 'Відтягнути важіль перезаряджання назад.', p: 4 },
+    { x: 'Витягнути затворну раму в зборі із затвором.', p: 5 },
+    { x: 'Витягнути важіль перезаряджання з направляючих пазів.', p: 6 },
+  ] },
+  { t: '4. Розібрати затворну раму', s: [
+    { x: 'Витягнути шплінт фіксації ударника.', p: 7 },
+    { x: 'Повернути затворну раму затвором догори — ударник випадає.', p: 8 },
+    { x: 'Зсунути затвор до упору, натиснувши на дзеркало затвора.', p: 9 },
+    { x: 'Провернути головку пальця затвора на 90° і витягти палець.', p: 10 },
+    { x: 'Витягнути затвор із затворної рами.', p: 11 },
+  ], note: 'Тугий шплінт можна витиснути патроном. Палець затвора має виходити без зайвих зусиль.' },
+  { t: '5. Від’єднати зворотний механізм', s: [
+    { x: 'Втиснути буфер віддачі в трубу приклада й натиснути фіксатор буфера донизу.', p: 12 },
+    { x: 'Притримуючи буфер, витягнути його з труби приклада разом зі зворотною пружиною.' },
+  ] },
+];
+const DIS = SECTIONS.flatMap(sec => sec.s.map(st => st.x));
+const picFor = text => { for (const sec of SECTIONS) for (const st of sec.s) if (st.x === text) return st.p || null; return null; };
+
+const ASM = [
+  'Притиснути курок униз і вставити буфер віддачі зі зворотною пружиною в трубу приклада до фіксації.',
+  'Вставити затвор у затворну раму: викидач — на «11 годину».',
+  'Вставити палець затвора й повернути його на чверть оберту.',
+  'Вставити ударник ззаду в затворну раму.',
+  'Вставити шплінт фіксації ударника.',
+  'Вставити важіль перезаряджання у верхню раму: виступи — в пази.',
+  'Вставити затворну раму у верхню раму разом із важелем до фіксації.',
+  'Сумістити рами й вставити передню та задню осі.',
+  'Відвести затворну раму назад і поставити на затримку затвора.',
+  'Повернути важіль перезаряджання вперед.',
+  'Поставити перемикач на запобіжник.',
+];
+
+// Сержант Андрій — фрази й записи з DigDeep (SgtEvent.brainGood / brainBad).
+const SGT = {
+  good: { mood: 'laugh', clip: 'brainGood', lines: [
+    'Голова працює. Мабуть, каска допомагає.',
+    'Розумник! У штабі такого б оцінили.',
+    'Добре мислиш. Ще трохи швидкості — і буде розвідник.',
+    'Мозок прокачано. Турнік ревнує.',
+    'Отак. Розум — теж зброя.',
+  ] },
+  bad: { mood: 'facepalm', clip: 'brainBad', lines: [
+    'Голова — не тільки щоб каску носити.',
+    'Не біда. Завтра мозок прокинеться раніше.',
+    'Думати важче, ніж віджиматись. Тренуй обидва.',
+    'Слабкувато. Але й генерали не з першого разу ставали генералами.',
+    'Нічого. Помилки — це розвідка боєм.',
+  ] },
+};
+const RIGHT5 = ['П’ять поспіль! Голова працює.', 'Оце розвідка! Так тримати.', 'Розумник. У штаб би взяли.', 'Мозок прогрівся. Продовжуй, боєць.'];
+const WRONG3 = ['Голова — не тільки щоб каску носити.', 'Три мимо. Вдих. Спершу думай, потім тисни.', 'Не поспішай, боєць. Мозок — не кулемет.', 'Стоп. Перечитай умову. Повільно.'];
+
+// ═════════ Збереження (лише в цьому браузері) ═════════
+const store = {
+  get(k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { window.localStorage.setItem(k, v); } catch (e) { /* немає сховища — прогрес живе до закриття сторінки */ } },
+};
+const K_CARDS = 'uar15_v1', K_BEST = 'uar15_order_best_v2_', K_VOICE = 'uar15_web_voice';
+let memCards = null; // запасний варіант, якщо сховище недоступне
+
+function loadCards() {
+  try {
+    const raw = JSON.parse(store.get(K_CARDS) || 'null');
+    if (raw && typeof raw === 'object') {
+      const m = {};
+      for (const [k, v] of Object.entries(raw)) if (v && Number.isInteger(v.b) && typeof v.d === 'string') m[k] = { b: v.b, d: v.d };
+      return m;
+    }
+  } catch (e) { /* пошкоджені дані — починаємо з нуля */ }
+  return memCards ? { ...memCards } : {};
+}
+function saveCards(m) { memCards = { ...m }; store.set(K_CARDS, JSON.stringify(m)); keepData(); }
+const memBest = {};
+function getBest(key) { const v = parseInt(store.get(K_BEST + key), 10); return Number.isFinite(v) ? v : (memBest[key] ?? null); }
+function setBest(key, sec) { const old = getBest(key); if (old == null || sec < old) { memBest[key] = sec; store.set(K_BEST + key, String(sec)); keepData(); } }
+
+// ═════════ Логіка повтору: 1, 3, 7 днів ═════════
+const pad = n => String(n).padStart(2, '0');
+const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const plusDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const ITEMS = [...FACTS.map(f => 'f:' + f.id), ...ON_DIAGRAM.map(n => 'p:' + n)];
+
+function grade(m, item, ok, now) {
+  const c = m[item] || { b: 0, d: dayKey(now) };
+  if (ok) { c.b = Math.min(c.b + 1, 3); c.d = dayKey(plusDays(now, [1, 3, 7][c.b - 1])); }
+  else { c.b = 0; c.d = dayKey(plusDays(now, 1)); }
+  m[item] = c;
+}
+function dueItems(m, now) { const t = dayKey(now); return ITEMS.filter(i => m[i] && m[i].d <= t); }
+function progress(m, prefix) {
+  const it = ITEMS.filter(i => i.startsWith(prefix));
+  return Math.round(it.reduce((a, i) => a + (m[i] ? m[i].b : 0), 0) / (it.length * 3) * 100);
+}
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function pickItems(m, now, dueOnly) {
+  const due = shuffle(dueItems(m, now));
+  if (dueOnly) return due.slice(0, 10);
+  const fresh = shuffle(ITEMS.filter(i => !m[i]));
+  const rest = shuffle(ITEMS.filter(i => !due.includes(i) && !fresh.includes(i)));
+  return [...due, ...fresh, ...rest].slice(0, 10);
+}
+function question(item) {
+  if (item.startsWith('f:')) {
+    const f = FACTS.find(x => 'f:' + x.id === item);
+    const opts = shuffle([f.a, ...f.w]);
+    return { item, img: false, prompt: f.q, options: opts, answer: opts.indexOf(f.a), note: f.note || null };
+  }
+  const n = parseInt(item.slice(2), 10), name = PARTS[n];
+  if (Math.random() < 0.5) {
+    const others = shuffle(Object.keys(PARTS).map(Number).filter(k => k !== n).map(k => PARTS[k]));
+    const opts = shuffle([name, ...others.slice(0, 3)]);
+    return { item, img: true, prompt: `Що на схемі під номером ${n}?`, options: opts, answer: opts.indexOf(name), note: null };
+  }
+  const others = shuffle(ON_DIAGRAM.filter(x => x !== n));
+  const opts = shuffle([String(n), ...others.slice(0, 3).map(String)]);
+  return { item, img: true, prompt: `Під яким номером на схемі «${name.toLowerCase()}»?`, options: opts, answer: opts.indexOf(String(n)), note: null };
+}
+
+// ═════════ Дрібниці інтерфейсу ═════════
+const $ = id => document.getElementById(id);
+const app = $('app');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = s => `${Math.floor(s / 60)}:${pad(s % 60)}`;
+const ICON = {
+  cards: '<rect x="3" y="7" width="13" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>',
+  table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/>',
+  parts: '<circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7.4 8.3l3.4 7.4M16.6 8.3l-3.4 7.4"/>',
+  quiz: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.7.3-1 .8-1 1.5v.6"/><path d="M12 17h.01"/>',
+  replay: '<path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v5h5"/>',
+  photo: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  watch: '<circle cx="12" cy="14" r="7"/><path d="M12 14v-4M10 3h4M12 3v4M18.5 7.5l1.5-1.5"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  zoom: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5M11 8.5v5M8.5 11h5"/>',
+  voiceOn: '<path d="M4 9.5v5h3.5l5 4v-13l-5 4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
+  voiceOff: '<path d="M4 9.5v5h3.5l5 4v-13l-5 4H4z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  save: '<path d="M12 3v11M7.5 9.5L12 14l4.5-4.5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+  phones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/>',
+  play: '<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+  cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+};
+const svg = name => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+const zimg = (src, photo, size, alt) =>
+  `<button class="zimg${photo ? ' photo' : ''}${size ? ' ' + size : ''}" data-act="zoom" data-src="${src}" data-photo="${photo ? 1 : 0}" aria-label="Збільшити: ${esc(alt)}">`
+  + `<img src="${src}" alt="${esc(alt)}" loading="lazy"><span class="zbadge">${svg('zoom')}Збільшити</span></button>`;
+const stepImg = n => `img/step_${pad(n)}.jpg`;
+const SCHEME = 'img/scheme.jpg';
+
+function setBar(title) {
+  $('title').textContent = title;
+  $('back').hidden = view === '';
+}
+function buzz() { try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) { /* немає вібрації */ } }
+
+// ═════════ Сержант: текст, фото, голос ═════════
+let voiceOn = store.get(K_VOICE) !== '0';
+function paintVoice() {
+  const b = $('voice');
+  b.innerHTML = svg(voiceOn ? 'voiceOn' : 'voiceOff');
+  b.setAttribute('aria-pressed', String(voiceOn));
+  b.title = voiceOn ? 'Звук увімкнено: голос сержанта й ефекти' : 'Звук вимкнено';
+}
+
+// Звукові ефекти з DigDeep (гучність — як у додатку). Web Audio: без затримки й накладання.
+const SFX = { click: 0.7, whoosh: 0.2, rep: 1.0, miss: 0.7, goal: 1.0 };
+const sfxBuf = {};
+let actx = null;
+function sfxInit() {
+  if (actx) { if (actx.state === 'suspended') actx.resume().catch(() => {}); return; }
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    actx = new Ctx();
+    for (const n of Object.keys(SFX)) {
+      fetch(`sfx/${n}.mp3`).then(r => r.arrayBuffer())
+        .then(buf => new Promise((res, rej) => actx.decodeAudioData(buf, res, rej)))
+        .then(decoded => { sfxBuf[n] = decoded; }).catch(() => {});
+    }
+  } catch (e) { actx = null; }
+}
+function sfx(name) {
+  if (!voiceOn) return;
+  try {
+    sfxInit();
+    const buf = sfxBuf[name];
+    if (!actx || !buf) return;
+    const src = actx.createBufferSource(), gain = actx.createGain();
+    src.buffer = buf; gain.gain.value = SFX[name];
+    src.connect(gain); gain.connect(actx.destination);
+    src.start();
+  } catch (e) { /* без звуку — не критично */ }
+}
+// Перший дотик розблоковує звук (iPhone дозволяє Web Audio лише після дії людини).
+document.addEventListener('pointerdown', sfxInit, { once: true, capture: true });
+let audio = null, sgtTimer = null;
+const recent = { good: [], bad: [] };
+function showSgt(text, mood, ms) {
+  $('sgt-img').src = `img/sgt/${mood}.png`;
+  $('sgt-text').textContent = text;
+  $('sgt').hidden = false;
+  clearTimeout(sgtTimer);
+  sgtTimer = setTimeout(hideSgt, ms || 6000);
+}
+function hideSgt() { $('sgt').hidden = true; clearTimeout(sgtTimer); }
+function say(kind) {
+  const e = SGT[kind];
+  const free = e.lines.map((_, i) => i).filter(i => !recent[kind].includes(i));
+  const i = free[Math.floor(Math.random() * free.length)];
+  recent[kind] = [i, ...recent[kind]].slice(0, 2);
+  showSgt(e.lines[i], e.mood, 7000);
+  if (!voiceOn) return;
+  try {
+    if (audio) audio.pause();
+    audio = new Audio(`voice/${e.clip}_${pad(i + 1)}.mp3`);
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (err) { /* звук недоступний — лишається текст */ }
+}
+let rightRun = 0, wrongRun = 0;
+function streak(ok) {
+  if (ok) {
+    wrongRun = 0;
+    if (++rightRun >= 5) { rightRun = 0; showSgt(RIGHT5[Math.floor(Math.random() * RIGHT5.length)], 'laugh', 4500); }
+  } else {
+    rightRun = 0;
+    if (++wrongRun >= 3) { wrongRun = 0; showSgt(WRONG3[Math.floor(Math.random() * WRONG3.length)], 'facepalm', 4500); }
+  }
+}
+
+// ═════════ Екрани ═════════
+let view = '';
+
+function home() {
+  setBar('UAR-15S');
+  const m = loadCards(), due = dueItems(m, new Date()).length;
+  const bd = getBest('dis'), ba = getBest('as');
+  const best = s => s == null ? 'розстав кроки по порядку на час' : `найкраще без помилок: ${fmt(s)}`;
+  const tile = (icon, to, title, sub, off, badge) =>
+    `<button class="tile" data-act="go" data-to="${to}"${off ? ' disabled' : ''}>${svg(icon)}<span class="t"><b>${title}</b><small>${sub}</small></span>`
+    + `${badge ? `<span class="badge">${badge}</span>` : ''}${off ? '' : `<span class="chev">${svg('chev')}</span>`}</button>`;
+  app.innerHTML = `
+    <section class="hero">
+      <figure class="hero-img"><img src="img/view.jpg" alt="Гвинтівка UAR-15S, загальний вигляд" width="950" height="296"></figure>
+      <div><div class="eyebrow">5,56 мм автоматична гвинтівка</div><h2>UAR-15S</h2></div>
+    </section>
+    <div class="prog">
+      <div><span>ТТХ ${progress(m, 'f:')}%</span><div class="meter"><i style="--p:${progress(m, 'f:')}%"></i></div></div>
+      <div><span>Будова ${progress(m, 'p:')}%</span><div class="meter"><i style="--p:${progress(m, 'p:')}%"></i></div></div>
+    </div>
+    <div class="coach">
+      <video id="coach-v" src="img/sgt/idle.mp4" poster="img/sgt/idle.jpg" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-label="Сержант Андрій"></video>
+      <div><div class="who">Сержант Андрій</div>
+      <p>Помилки повторюємо завтра, правильні відповіді — через 1, 3 і 7 днів. Прогрес зберігається в цьому браузері.</p></div>
+    </div>
+    <div class="tiles">
+      ${tile('cards', 'ttx', 'Вчити ТТХ', 'картки: питання — відповідь')}
+      ${tile('table', 'table', 'Таблиця ТТХ', 'усі характеристики з примітками')}
+      ${tile('cube', 'model', '3D-модель', 'оглянь з усіх боків, розклади на частини')}
+      ${tile('parts', 'parts', 'Будова', '3D-модель, схема й назви частин')}
+      ${tile('quiz', 'test', 'Тест · 10 питань', 'ТТХ і будова, 4 варіанти')}
+      ${tile('replay', 'review', 'Повтор помилок', due > 0 ? `пора повторити: ${due}` : 'поки нічого — повтор через 1, 3 і 7 днів', due === 0, due > 0 ? due : 0)}
+      ${tile('photo', 'guide', 'Порядок неповного розбирання', '5 етапів, 12 фото, озвучка, показ на 3D-моделі')}
+      ${tile('list', 'guide-as', 'Порядок збирання', '11 кроків з озвучкою і показом на 3D-моделі')}
+      ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
+      ${tile('watch', 'drill-as', 'Збирання на час', best(ba))}
+      ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
+    </div>
+    <div class="srcs">
+      <p class="src">ТТХ і будова: ${esc(SRC_TTX)}.</p>
+      <p class="src">Неповне розбирання: ${esc(SRC_DIS)}.</p>
+      <p class="src">Збирання: ${esc(SRC_AS)}. Звір з інструктором.</p>
+    </div>`;
+  // Живий сержант: відео без звуку по колу; якщо не грає (економія заряду, «менше руху») — лишається кадр-постер.
+  const v = $('coach-v');
+  if (v) {
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* немає matchMedia */ }
+    v.muted = true;
+    if (still) v.removeAttribute('autoplay');
+    else { try { const p = v.play(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* лишається постер */ } }
+  }
+}
+
+// — Картки ТТХ —
+const C = { i: 0, open: new Set(), seen: new Set() };
+function cards() {
+  const f = FACTS[C.i], shown = C.open.has(C.i), last = C.i === FACTS.length - 1;
+  C.seen.add(C.i);
+  setBar(`ТТХ · ${C.i + 1} / ${FACTS.length}`);
+  app.innerHTML = `
+    <button class="card${shown ? ' open' : ''}" id="card" data-act="flip" aria-live="polite">
+      <span class="q">${esc(f.q)}</span>
+      ${shown ? `<span class="a">${esc(f.a)}</span>${f.note ? `<span class="note">${esc(f.note)}</span>` : ''}`
+        : '<span class="muted small">Торкнись, щоб побачити відповідь</span>'}
+    </button>
+    <div class="dots" aria-hidden="true">${FACTS.map((_, k) => `<i class="${k === C.i ? 'on' : C.seen.has(k) ? 'seen' : ''}"></i>`).join('')}</div>
+    <div class="row2">
+      <button class="btn" data-act="card-prev"${C.i === 0 ? ' disabled' : ''}>Назад</button>
+      <button class="btn primary" data-act="${last ? 'go' : 'card-next'}" data-to="">${last ? 'Готово' : 'Далі'}</button>
+    </div>
+    <p class="src">Свайп вліво/вправо або стрілки на клавіатурі. Джерело: ${esc(SRC_TTX)}.</p>`;
+  bindSwipe($('card'));
+}
+function cardGo(d) { const n = Math.min(FACTS.length - 1, Math.max(0, C.i + d)); if (n !== C.i) { C.i = n; sfx('whoosh'); cards(); } }
+let swiped = false;
+function bindSwipe(el) {
+  let x0 = null, y0 = 0;
+  el.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; });
+  el.addEventListener('pointerup', e => {
+    if (x0 == null) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0; x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { swiped = true; cardGo(dx < 0 ? 1 : -1); }
+  });
+  el.addEventListener('pointercancel', () => { x0 = null; });
+}
+
+// — Таблиця —
+function table() {
+  setBar('ТТХ UAR-15S');
+  app.innerHTML = `
+    <dl class="ttx">${FACTS.map(f => `<div><dt>${esc(f.q)}</dt><dd>${esc(f.a)}${f.note ? `<small>${esc(f.note)}</small>` : ''}</dd></div>`).join('')}</dl>
+    <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
+}
+
+// — Будова —
+function parts() {
+  setBar('Будова UAR-15S');
+  app.innerHTML = `
+    <h3 class="h">3D-модель</h3>
+    ${m3d('view', 'view')}
+    <p class="muted small">Крути пальцем, розклади повзунком. Торкнись деталі — побачиш назву.</p>
+    <h3 class="h">Схема неповного розбирання</h3>
+    ${zimg(SCHEME, false, '', 'Схема неповного розбирання з номерами частин')}
+    <h3 class="h">Назви частин</h3>
+    <ul class="parts">${Object.entries(PARTS).map(([n, t]) => `<li><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
+    <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
+}
+
+// — Тест і повтор —
+let Q = null;
+function quiz(review) {
+  const m = loadCards();
+  const items = pickItems(m, new Date(), review);
+  Q = { review, m, qs: items.map(question), i: 0, chosen: null, ok: [], done: false };
+  renderQuiz();
+}
+function renderQuiz(keepScroll) {
+  if (!Q.qs.length) {
+    setBar('Повтор');
+    app.innerHTML = `<div class="empty"><p class="muted">Повторювати поки нічого.</p><button class="btn" data-act="go" data-to="">До розділу</button></div>`;
+    return;
+  }
+  if (Q.done) return renderResults();
+  const q = Q.qs[Q.i], answered = Q.chosen != null, last = Q.i === Q.qs.length - 1;
+  setBar(`${Q.review ? 'Повтор' : 'Тест'} · ${Q.i + 1} / ${Q.qs.length}`);
+  const cls = k => !answered ? '' : k === q.answer ? ' right' : k === Q.chosen ? ' wrong' : '';
+  const mark = k => !answered ? '' : k === q.answer ? '<span class="mk" aria-label="правильно">✓</span>' : k === Q.chosen ? '<span class="mk" aria-label="помилка">✗</span>' : '';
+  app.innerHTML = `
+    ${q.img ? zimg(SCHEME, false, 'q', 'Схема неповного розбирання з номерами частин') : ''}
+    <div><h2 class="prompt">${esc(q.prompt)}</h2>${q.note && answered ? `<p class="muted small" style="margin-top:4px">${esc(q.note)}</p>` : ''}</div>
+    <div class="opts">${q.options.map((o, k) => `<button class="opt${cls(k)}" data-act="opt" data-k="${k}"${answered ? ' aria-disabled="true"' : ''}><span>${esc(o)}</span>${mark(k)}</button>`).join('')}</div>
+    ${answered ? `<button class="btn primary" id="qnext" data-act="quiz-next">${last ? 'Підсумок' : 'Далі'}</button>` : ''}`;
+  if (answered) { const b = $('qnext'); b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  if (!keepScroll) window.scrollTo(0, 0);
+}
+function answer(k) {
+  if (!Q || Q.chosen != null || Q.done) return;
+  const q = Q.qs[Q.i], ok = k === q.answer;
+  sfx(ok ? 'rep' : 'miss');
+  if (!ok) buzz();
+  streak(ok);
+  grade(Q.m, q.item, ok, new Date());
+  saveCards(Q.m);
+  Q.chosen = k; Q.ok.push(ok);
+  renderQuiz(true);
+}
+function quizNext() {
+  if (Q.i < Q.qs.length - 1) { Q.i++; Q.chosen = null; renderQuiz(); return; }
+  Q.done = true;
+  const share = Q.ok.filter(Boolean).length / Q.qs.length;
+  if (share >= 0.8) say('good'); else if (share < 0.5) say('bad');
+  renderQuiz();
+}
+function renderResults() {
+  const n = Q.ok.filter(Boolean).length;
+  setBar('Підсумок');
+  const miss = Q.qs.map((q, i) => Q.ok[i] ? '' : `<div><p>${esc(q.prompt)}</p><p>${esc(q.options[q.answer])}</p></div>`).join('');
+  app.innerHTML = `
+    <div><p class="score">${n} / ${Q.qs.length}</p><p class="muted center">правильних відповідей</p></div>
+    ${n < Q.qs.length ? `<h3 class="h">Помилки — повтор завтра</h3><div class="miss">${miss}</div>` : ''}
+    <button class="btn primary" data-act="quiz-again">Ще 10 питань</button>
+    <button class="btn" data-act="go" data-to="">До розділу</button>`;
+  window.scrollTo(0, 0);
+}
+
+// — Неповне розбирання: етапи, кроки, фото —
+// 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
+const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}" title="3D-модель UAR-15S"></iframe>`;
+let modelWant = 0;
+function modelStep(n) {
+  modelWant = n;
+  const f = $('m3d');
+  try { if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'uar-step', n }, location.origin); } catch (e) { /* модель ще вантажиться */ }
+}
+const stickModel = (start = 0) => { modelWant = start; return `<div class="m3d-stick">${m3d('steps', '')}
+  <div class="m3d-cap"><span>Модель показує крок, який звучить. Її можна крутити.</span><button data-act="model-reset" data-n="${start}">спочатку</button></div></div>`; };
+// Збирання: стан моделі після кожного з 11 кроків (номер кроку розбирання, до якого повертаємось)
+const AS_STATE = [14, 13, 11, 10, 9, 8, 6, 3, 2, 3, 3];
+function modelView() {
+  setBar('3D-модель');
+  app.innerHTML = m3d('full', 'full');
+}
+const listenBtn = kind => `<button class="btn primary" id="listen" data-act="listen-all" data-kind="${kind}">${svg('phones')}<span>Слухати все</span></button>`;
+const stepRow = (kind, n, text, extra) =>
+  `<li class="step" data-step="${n}"><b>${n}.</b><div><span>${esc(text)}</span>${extra || ''}</div>`
+  + `<button class="play" data-act="play-step" data-kind="${kind}" data-n="${n}" aria-label="Слухати крок ${n}">${svg('play')}</button></li>`;
+
+function guide() {
+  setBar('Неповне розбирання');
+  let n = 0;
+  app.innerHTML = `
+    ${stickModel()}
+    ${listenBtn('dis')}
+    <p class="muted small">▶ — озвучити крок і показати його на моделі. Торкнись фото, щоб збільшити.</p>
+    ${SECTIONS.map(sec => `
+      <h3 class="h">${esc(sec.t)}</h3>
+      <ol class="steps voiced">${sec.s.map(st => { n++; return stepRow('dis', n, st.x, st.p ? zimg(stepImg(st.p), true, '', `Малюнок ${st.p}: ${st.x}`) : ''); }).join('')}</ol>
+      ${sec.note ? `<p class="note">${esc(sec.note)}</p>` : ''}`).join('')}
+    <p class="src">Джерело: ${esc(SRC_DIS)}.</p>`;
+}
+
+function guideAs() {
+  setBar('Порядок збирання');
+  app.innerHTML = `
+    ${stickModel(AS_STATE[0] + 2)}
+    ${listenBtn('as')}
+    <p class="muted small">▶ — озвучити крок і показати його на моделі.</p>
+    <ol class="steps voiced">${ASM.map((s, i) => stepRow('as', i + 1, s)).join('')}</ol>
+    <p class="src">Джерело: ${esc(SRC_AS)}. Звір з інструктором.</p>`;
+}
+
+// — Озвучка кроків: один аудіоелемент на всі кроки (так iPhone дозволяє грати кроки підряд) —
+const VOICE_STEPS = { dis: DIS.length, as: ASM.length };
+const stepAudio = new Audio();
+stepAudio.preload = 'auto';
+const P = { kind: null, n: 0, all: false, wait: null, token: 0 };
+function markStep(n, on) {
+  const el = app.querySelector(`[data-step="${n}"]`);
+  if (!el) return null;
+  el.classList.toggle('playing', on);
+  const b = el.querySelector('.play');
+  if (b) { b.innerHTML = svg(on ? 'stop' : 'play'); b.setAttribute('aria-label', `${on ? 'Зупинити' : 'Слухати'} крок ${n}`); }
+  return el;
+}
+function paintListen() {
+  const b = $('listen');
+  if (b) b.innerHTML = `${svg(P.all ? 'stop' : 'phones')}<span>${P.all ? 'Зупинити' : 'Слухати все'}</span>`;
+}
+function stopSteps() {
+  P.token++;
+  clearTimeout(P.wait);
+  try { stepAudio.pause(); } catch (e) { /* немає звуку */ }
+  if (P.n) markStep(P.n, false);
+  P.kind = null; P.n = 0; P.all = false;
+  $('player').hidden = true;
+  paintListen();
+}
+function playStep(kind, n, all) {
+  stopSteps();
+  if (audio) audio.pause();
+  hideSgt();
+  const tok = ++P.token;
+  P.kind = kind; P.n = n; P.all = all;
+  const el = markStep(n, true);
+  if (el) el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
+  modelStep(kind === 'dis' ? n : AS_STATE[n - 1]);
+  $('player-text').textContent = `${kind === 'dis' ? 'Розбирання' : 'Збирання'} · крок ${n} з ${VOICE_STEPS[kind]}`;
+  $('player').hidden = false;
+  paintListen();
+  stepAudio.onended = () => {
+    if (tok !== P.token) return;
+    markStep(n, false);
+    if (P.all && n < VOICE_STEPS[kind]) P.wait = setTimeout(() => { if (tok === P.token) playStep(kind, n + 1, true); }, 500);
+    else stopSteps();
+  };
+  stepAudio.src = `voice/${kind}_${pad(n)}.mp3`;
+  try {
+    const p = stepAudio.play();
+    if (p && p.catch) p.catch(() => { if (tok === P.token) stopSteps(); });
+  } catch (e) { stopSteps(); }
+}
+
+// — Збереження прогресу: резервний код —
+function exportCode() {
+  const c = {};
+  for (const [k, v] of Object.entries(loadCards())) c[k] = [v.b, v.d];
+  const b = {};
+  for (const key of ['dis', 'as']) { const v = getBest(key); if (v != null) b[key] = v; }
+  return 'UAR1.' + btoa(JSON.stringify({ c, b }));
+}
+function parseCode(s) {
+  s = String(s || '').replace(/\s+/g, '');
+  if (!s.startsWith('UAR1.')) return null;
+  try {
+    const o = JSON.parse(atob(s.slice(5)));
+    const cards = {}, best = {};
+    for (const [k, v] of Object.entries(o.c || {})) {
+      if (ITEMS.includes(k) && Array.isArray(v) && Number.isInteger(v[0]) && v[0] >= 0 && v[0] <= 3 && /^\d{4}-\d{2}-\d{2}$/.test(v[1])) cards[k] = { b: v[0], d: v[1] };
+    }
+    for (const key of ['dis', 'as']) { const v = o.b && o.b[key]; if (Number.isInteger(v) && v >= 0 && v < 86400) best[key] = v; }
+    return { cards, best };
+  } catch (e) { return null; }
+}
+let pending = null;
+function saveView() {
+  setBar('Збереження прогресу');
+  pending = null;
+  app.innerHTML = `
+    <p>Прогрес зберігається лише в браузері цього телефону. Режим інкогніто, очищення даних браузера або інший телефон — і прогрес почнеться з нуля.</p>
+    <h3 class="h">Іконка на головному екрані</h3>
+    <div class="note">
+      <p><b>Android, Chrome:</b> меню ⋮ → «Додати на головний екран» або «Установити додаток».</p>
+      <p><b>iPhone, Safari:</b> кнопка «Поділитися» → «На початковий екран».</p>
+      <p>Відкривай навчання з іконки. На iPhone дані іконки окремі від Safari: перенеси прогрес кодом нижче.</p>
+    </div>
+    <h3 class="h">Резервний код</h3>
+    <p class="muted small">Скопіюй код і збережи, наприклад, у «Збережене» в Telegram. На іншому телефоні або після очищення встав його нижче.</p>
+    <button class="btn primary" data-act="backup-copy">Скопіювати код</button>
+    <textarea id="code-out" class="code" rows="3" readonly hidden aria-label="Код прогресу"></textarea>
+    <p id="copy-status" class="small" hidden></p>
+    <h3 class="h">Відновити з коду</h3>
+    <textarea id="code-in" class="code" rows="3" placeholder="Встав код сюди" autocomplete="off" spellcheck="false" aria-label="Код для відновлення"></textarea>
+    <button class="btn" data-act="backup-check">Відновити</button>
+    <div id="restore-confirm" class="note" hidden>
+      <p id="restore-msg"></p>
+      <div class="row2" style="margin-top:10px"><button class="btn primary" data-act="backup-apply">Замінити</button><button class="btn" data-act="backup-cancel">Скасувати</button></div>
+    </div>
+    <p id="restore-status" class="small" hidden></p>`;
+}
+function status(id, text, ok) { const el = $(id); el.textContent = text; el.className = 'small ' + (ok ? 'ok-t' : 'bad-t'); el.hidden = false; }
+function backupCopy() {
+  const code = exportCode(), out = $('code-out');
+  out.value = code; out.hidden = false;
+  const manual = () => { out.focus(); out.select(); status('copy-status', 'Не вдалося скопіювати автоматично: код виділено, скопіюй його вручну.', false); };
+  try {
+    navigator.clipboard.writeText(code).then(() => status('copy-status', 'Код скопійовано. Встав його в «Збережене» в Telegram.', true), manual);
+  } catch (e) { manual(); }
+}
+function backupCheck() {
+  $('restore-status').hidden = true;
+  pending = parseCode($('code-in').value);
+  if (!pending) { $('restore-confirm').hidden = true; status('restore-status', 'Код не підходить. Скопіюй його повністю, він починається з UAR1.', false); return; }
+  const t = progress(pending.cards, 'f:'), p = progress(pending.cards, 'p:');
+  const b = k => pending.best[k] != null ? fmt(pending.best[k]) : '—';
+  $('restore-msg').textContent = `У коді: ТТХ ${t}%, будова ${p}%, рекорди: розбирання ${b('dis')}, збирання ${b('as')}. Замінити прогрес на цьому телефоні?`;
+  $('restore-confirm').hidden = false;
+}
+function backupApply() {
+  if (!pending) return;
+  saveCards(pending.cards);
+  for (const [k, v] of Object.entries(pending.best)) { memBest[k] = v; store.set(K_BEST + k, String(v)); }
+  pending = null;
+  $('restore-confirm').hidden = true;
+  $('code-in').value = '';
+  status('restore-status', 'Прогрес відновлено.', true);
+}
+let persistAsked = false;
+function keepData() {
+  if (persistAsked) return;
+  persistAsked = true;
+  try {
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
+  } catch (e) { /* браузер не підтримує */ }
+}
+
+// — Розбирання / збирання на час —
+let D = null, drillTick = null;
+function drill(assembly) {
+  const steps = assembly ? ASM : DIS;
+  D = { assembly, key: assembly ? 'as' : 'dis', steps, pool: shuffle([...steps]), done: 0, mistakes: 0, wrong: null, t0: performance.now(), sec: 0, finished: false };
+  D.best = getBest(D.key);
+  clearInterval(drillTick);
+  drillTick = setInterval(() => {
+    if (!D || D.finished) return;
+    D.sec = Math.floor((performance.now() - D.t0) / 1000);
+    const t = $('timer'); if (t) t.textContent = fmt(D.sec);
+  }, 250);
+  renderDrill();
+  window.scrollTo(0, 0);
+}
+function renderDrill() {
+  const fin = D.finished;
+  setBar(D.assembly ? 'Збирання' : 'Неповне розбирання');
+  const done = D.steps.slice(0, D.done).map((s, i) => {
+    const p = D.assembly ? null : picFor(s);
+    return `<li class="step ok"><b>${i + 1}.</b><div><span>${esc(s)}</span>${p ? zimg(stepImg(p), true, 'thumb', `Малюнок ${p}: ${s}`) : ''}</div></li>`;
+  }).join('');
+  app.innerHTML = `
+    <div class="drill-head"><span class="timer" id="timer" role="timer">${fmt(D.sec)}</span>
+      <span class="${D.mistakes ? 'bad-t' : 'muted'}">помилок: ${D.mistakes}</span></div>
+    ${D.best != null ? `<p class="muted small" style="margin-top:-8px">найкраще без помилок: ${fmt(D.best)}</p>` : ''}
+    ${zimg(SCHEME, false, 'mini', 'Схема частин')}
+    ${D.done ? `<ol class="steps">${done}</ol>` : ''}
+    ${!fin ? `
+      <h3 class="h">Крок ${D.done + 1} з ${D.steps.length} — що далі?</h3>
+      <div class="pool">${D.pool.map((s, i) => `<button class="pick${s === D.wrong ? ' wrong' : ''}" data-act="pick" data-i="${i}">${esc(s)}</button>`).join('')}</div>`
+    : `
+      <p class="verdict">${D.mistakes === 0 ? `Без помилок за ${fmt(D.sec)}.` : `Готово за ${fmt(D.sec)}, помилок: ${D.mistakes}. Ще раз — без помилок.`}</p>
+      <button class="btn primary" data-act="drill-again">Ще раз</button>`}
+    <p class="src">Джерело: ${D.assembly ? `${esc(SRC_AS)}. Звір з інструктором.` : `${esc(SRC_DIS)}.`}</p>`;
+}
+function pickStep(i) {
+  if (!D || D.finished) return;
+  const s = D.pool[i];
+  if (s === undefined) return;
+  if (s === D.steps[D.done]) {
+    D.pool.splice(i, 1); D.done++; D.wrong = null;
+    sfx(D.done === D.steps.length ? 'goal' : 'click');
+    if (D.done === D.steps.length) {
+      D.finished = true;
+      D.sec = Math.floor((performance.now() - D.t0) / 1000);
+      clearInterval(drillTick);
+      if (D.mistakes === 0) { setBest(D.key, D.sec); D.best = getBest(D.key); }
+      say(D.mistakes === 0 ? 'good' : 'bad');
+    }
+  } else {
+    D.mistakes++; D.wrong = s; sfx('miss'); buzz();
+  }
+  renderDrill();
+}
+
+// ═════════ Перегляд на весь екран: пальці, подвійний дотик, коліщатко ═════════
+const Z = { el: $('zoom'), stage: $('zoom-stage'), img: $('zoom-img'), s: 1, tx: 0, ty: 0, ptrs: new Map(), g: null, tap: null, opener: null };
+function zClamp() {
+  const W = Z.stage.clientWidth, H = Z.stage.clientHeight;
+  Z.s = Math.min(6, Math.max(1, Z.s));
+  Z.tx = Math.min(0, Math.max(W - W * Z.s, Z.tx));
+  Z.ty = Math.min(0, Math.max(H - H * Z.s, Z.ty));
+}
+function zApply() { zClamp(); Z.img.style.transform = `translate(${Z.tx}px, ${Z.ty}px) scale(${Z.s})`; }
+function zAt(px, py, ns) {
+  ns = Math.min(6, Math.max(1, ns));
+  const cx = (px - Z.tx) / Z.s, cy = (py - Z.ty) / Z.s;
+  Z.s = ns; Z.tx = px - cx * ns; Z.ty = py - cy * ns; zApply();
+}
+function openZoom(src, photo, opener) {
+  Z.opener = opener || null;
+  Z.img.src = src;
+  Z.img.alt = opener ? (opener.querySelector('img')?.alt || '') : '';
+  Z.el.classList.toggle('photo', !!photo);
+  Z.s = 1; Z.tx = 0; Z.ty = 0; Z.ptrs.clear(); Z.g = null;
+  Z.el.hidden = false;
+  document.documentElement.classList.add('lock');
+  zApply();
+  Z.el.querySelector('[data-act="zoom-close"]').focus();
+}
+function closeZoom() {
+  if (Z.el.hidden) return;
+  Z.el.hidden = true;
+  document.documentElement.classList.remove('lock');
+  if (Z.opener && document.body.contains(Z.opener)) Z.opener.focus({ preventScroll: true });
+}
+const local = e => { const r = Z.stage.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+function zStartGesture() {
+  const pts = [...Z.ptrs.values()];
+  if (pts.length >= 2) {
+    const [a, b] = pts, mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    Z.g = { pinch: true, d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: Z.s, cx: (mid.x - Z.tx) / Z.s, cy: (mid.y - Z.ty) / Z.s };
+  } else if (pts.length === 1) {
+    Z.g = { pinch: false, x0: pts[0].x, y0: pts[0].y, tx0: Z.tx, ty0: Z.ty };
+  } else Z.g = null;
+}
+Z.stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('button')) return;
+  Z.stage.setPointerCapture(e.pointerId);
+  const p = local(e);
+  Z.ptrs.set(e.pointerId, p);
+  if (Z.ptrs.size === 1) Z.down = { x: p.x, y: p.y, t: performance.now(), moved: false };
+  else Z.down = null;
+  zStartGesture();
+});
+Z.stage.addEventListener('pointermove', e => {
+  if (!Z.ptrs.has(e.pointerId) || !Z.g) return;
+  const p = local(e);
+  Z.ptrs.set(e.pointerId, p);
+  if (Z.down && Math.hypot(p.x - Z.down.x, p.y - Z.down.y) > 10) Z.down.moved = true;
+  if (Z.g.pinch && Z.ptrs.size >= 2) {
+    const [a, b] = [...Z.ptrs.values()], mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const ns = Math.min(6, Math.max(1, Z.g.s0 * Math.hypot(a.x - b.x, a.y - b.y) / Z.g.d0));
+    Z.s = ns; Z.tx = mid.x - Z.g.cx * ns; Z.ty = mid.y - Z.g.cy * ns; zApply();
+  } else if (!Z.g.pinch) {
+    Z.tx = Z.g.tx0 + p.x - Z.g.x0; Z.ty = Z.g.ty0 + p.y - Z.g.y0; zApply();
+  }
+});
+function zEnd(e) {
+  if (!Z.ptrs.has(e.pointerId)) return;
+  const p = Z.ptrs.get(e.pointerId);
+  Z.ptrs.delete(e.pointerId);
+  zStartGesture();
+  if (e.type === 'pointerup' && Z.down && !Z.down.moved && performance.now() - Z.down.t < 300) {
+    const now = performance.now();
+    if (Z.tap && now - Z.tap.t < 320 && Math.hypot(p.x - Z.tap.x, p.y - Z.tap.y) < 30) {
+      Z.tap = null;
+      if (Z.s > 1.01) { Z.s = 1; Z.tx = 0; Z.ty = 0; zApply(); } else zAt(p.x, p.y, 2.5);
+    } else Z.tap = { x: p.x, y: p.y, t: now };
+  }
+  if (!Z.ptrs.size) Z.down = null;
+}
+Z.stage.addEventListener('pointerup', zEnd);
+Z.stage.addEventListener('pointercancel', zEnd);
+Z.stage.addEventListener('wheel', e => { e.preventDefault(); const p = local(e); zAt(p.x, p.y, Z.s * Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+window.addEventListener('resize', () => { if (!Z.el.hidden) zApply(); });
+
+// ═════════ Події й маршрути ═════════
+const ROUTES = {
+  '': home, ttx: cards, table, parts,
+  test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView,
+};
+function route() {
+  closeZoom();
+  stopSteps();
+  modelWant = 0;
+  clearInterval(drillTick); D = null;
+  const h = decodeURIComponent(location.hash.slice(1));
+  view = Object.prototype.hasOwnProperty.call(ROUTES, h) ? h : '';
+  ROUTES[view]();
+  window.scrollTo(0, 0);
+}
+function go(to) {
+  if ((location.hash.slice(1) || '') === to) { route(); return; }
+  location.hash = to;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  switch (t.dataset.act) {
+    case 'go': go(t.dataset.to); break;
+    case 'zoom': openZoom(t.dataset.src, t.dataset.photo === '1', t); break;
+    case 'zoom-close': closeZoom(); break;
+    case 'zoom-in': zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s * 1.6); break;
+    case 'zoom-out': zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s / 1.6); break;
+    case 'flip':
+      if (swiped) { swiped = false; break; }
+      if (C.open.has(C.i)) C.open.delete(C.i); else { C.open.add(C.i); sfx('click'); }
+      cards(); $('card').focus({ preventScroll: true }); break;
+    case 'card-prev': cardGo(-1); break;
+    case 'card-next': cardGo(1); break;
+    case 'opt': answer(parseInt(t.dataset.k, 10)); break;
+    case 'quiz-next': quizNext(); break;
+    case 'quiz-again': quiz(Q ? Q.review : false); break;
+    case 'pick': pickStep(parseInt(t.dataset.i, 10)); break;
+    case 'drill-again': drill(D ? D.assembly : false); break;
+    case 'sgt-close': hideSgt(); break;
+    case 'listen-all': P.all ? stopSteps() : playStep(t.dataset.kind, 1, true); break;
+    case 'play-step': {
+      const n = parseInt(t.dataset.n, 10);
+      if (P.n === n && P.kind === t.dataset.kind) stopSteps(); else playStep(t.dataset.kind, n, P.all);
+      break;
+    }
+    case 'player-stop': stopSteps(); break;
+    case 'model-reset': stopSteps(); modelStep(parseInt(t.dataset.n, 10)); break;
+    case 'backup-copy': backupCopy(); break;
+    case 'backup-check': backupCheck(); break;
+    case 'backup-apply': backupApply(); break;
+    case 'backup-cancel': pending = null; $('restore-confirm').hidden = true; break;
+    case 'voice':
+      voiceOn = !voiceOn; store.set(K_VOICE, voiceOn ? '1' : '0'); paintVoice();
+      if (!voiceOn && audio) audio.pause();
+      break;
+  }
+});
+document.addEventListener('keydown', e => {
+  if (!Z.el.hidden) {
+    if (e.key === 'Escape') closeZoom();
+    else if (e.key === '+' || e.key === '=') zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s * 1.6);
+    else if (e.key === '-') zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s / 1.6);
+    return;
+  }
+  if (view === 'ttx' && !e.altKey && !e.ctrlKey && !e.metaKey) {
+    if (e.key === 'ArrowRight') cardGo(1);
+    else if (e.key === 'ArrowLeft') cardGo(-1);
+  }
+});
+window.addEventListener('hashchange', route);
+document.addEventListener('load', e => { if (e.target && e.target.id === 'm3d' && modelWant) setTimeout(() => modelStep(modelWant), 400); }, true);
+
+paintVoice();
+route();
+window.__uar = { FACTS, PARTS, ON_DIAGRAM, DIS, ASM, ITEMS, question, grade, dueItems, pickItems, progress, picFor, exportCode, parseCode };
+})();
+</script>
+
+</body>
+</html>

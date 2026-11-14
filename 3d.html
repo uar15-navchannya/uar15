@@ -37,7 +37,18 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .note { font-size:12px; line-height:1.4; color:var(--muted); margin:0; }
 :focus-visible { outline:3px solid var(--violet); outline-offset:2px; }
+/* Вбудована в навчальну сторінку: без заголовка й примітки */
+[data-embed] h1, [data-embed] .wrap > .note { display:none; }
+[data-embed] .wrap { padding:0; gap:8px; max-width:none; }
+[data-embed] .stage { min-height:0; border-radius:14px; }
+[data-embed="steps"] .tabs, [data-embed="steps"] .panel { display:none !important; }
+[data-embed="steps"] .stage { height:100vh; }
+[data-embed="steps"] .hint { display:none; }
+[data-embed="view"] .tabs { display:none; }
+[data-embed="view"] .stage { height:calc(100vh - 118px); }
+[data-embed="full"] .stage { height:calc(100vh - 200px); }
 </style>
+<script>try { const e = new URLSearchParams(location.search).get('embed'); if (e) document.documentElement.dataset.embed = e; } catch (e) {}</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 </head>
 <body>
@@ -277,7 +288,8 @@ const STEPS = [
 ];
 
 // ── Стан ──
-let mode = 'view', explode = 0, explodeB = 0, step = 0, picked = null;
+const EMB = document.documentElement.dataset.embed || '';
+let mode = EMB === 'steps' ? 'steps' : 'view', explode = 0, explodeB = 0, step = 0, picked = null;
 const BCG_EXPLODE = { bolt: [5.5, 0, 0], fpin: [-9, -3.2, 0], cam: [0, 4.5, 0], rpin: [0, -1.5, 5], carrier: [0, 0, 0] };
 let frame = { t: [22, -3, 0], w: 47, h: 27 };
 function setTargets() {
@@ -350,6 +362,11 @@ renderer.setAnimationLoop(() => {
   for (const p of Object.values(parts)) p.group.position.lerp(p.target, 0.14);
   controls.update();
   renderer.render(scene, camera);
+});
+// Навчальна сторінка керує кроком розбирання
+window.addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || e.data.type !== 'uar-step') return;
+  mode = 'steps'; step = Math.max(0, Math.min(STEPS.length, e.data.n | 0)); paint();
 });
 window.__3d = { parts, STEPS, get step() { return step; } };
 </script>
