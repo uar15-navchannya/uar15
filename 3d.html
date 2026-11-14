@@ -174,7 +174,7 @@ part('barrel', 'Ствол', [
   cylX(0.2, 15.5, 27.8, 1.35), box(1.4, 0.7, 0.8, 35.1, 1.35),
   [lathe([[57, 0.4], [57, 1.0], [57.3, 1.1], [58.6, 1.1], [58.8, 1.0], [62.6, 1.0], [62.9, 0.85], [62.9, 0.45]]), SCREW],
   ...[0, 1, 2, 3, 4, 5].map(i => { const g = new THREE.BoxGeometry(3.0, 0.3, 0.36); g.translate(60.6, 0.92, 0); g.rotateX(i * Math.PI / 3); return [g, HOLE]; }),
-], M(0x2b2d31, { metalness: 0.65, roughness: 0.45 }), [16, 10, 0]);
+], M(0x2b2d31, { metalness: 0.65, roughness: 0.45 }), [16, 6, 0]);
 
 part('handguard', 'Цівка', [
   hgFace(0, true), hgFace(1, true), hgFace(2, true), hgFace(3, true), hgFace(4, true), hgFace(5, true), hgFace(6, false), hgFace(7, true),
@@ -276,8 +276,8 @@ part('mag', 'Магазин', [
   ...[13.6, 15.2, 16.8].map(x => extr([[x, -6], [x + 0.35, -6], [x + 1.9, -19.4], [x + 1.55, -19.4]], 2.42)),
 ], M(0x1d1f22, { roughness: 0.85, metalness: 0.05 }), [6, -12, 0]);
 part('buffer', 'Буфер', [lathe([[0, 0], [0, 1.05], [-0.1, 1.15], [-0.6, 1.15], [-0.65, 0.95], [-2.6, 0.95], [-2.65, 0.88], [-2.75, 0.88], [-2.8, 0.95], [-4.8, 0.95], [-4.85, 0.88], [-4.95, 0.88], [-5.0, 0.95], [-7.0, 0.95], [-7.05, 1.0], [-7.3, 1.0], [-7.35, 0.6], [-7.35, 0]]),
-  [lathe([[-7.35, 0.72], [-8.0, 0.72], [-8.25, 0.55], [-8.3, 0.3], [-8.3, 0]]), BLUE]], M(0xa0a6ac, { metalness: 0.75, roughness: 0.35 }), [14, 5, 0]);
-part('spring', 'Зворотна пружина', [helixX(-17.2, -0.7, 1.08, 34, 0)], M(0xc3c8cd, { metalness: 0.8, roughness: 0.3 }), [24, 9.5, 0]);
+  [lathe([[-7.35, 0.72], [-8.0, 0.72], [-8.25, 0.55], [-8.3, 0.3], [-8.3, 0]]), BLUE]], M(0xa0a6ac, { metalness: 0.75, roughness: 0.35 }), [36, -6, 0]);
+part('spring', 'Зворотна пружина', [helixX(-17.2, -0.7, 1.08, 34, 0)], M(0xc3c8cd, { metalness: 0.8, roughness: 0.3 }), [58, -9, 0]);
 part('sling', 'Антабка', [torus(0.85, 0.16, -1.0, -2.6, 1.8)], M(DARK, { metalness: 0.6 }), [-2, -5, 4]);
 part('rearpin', 'Задня вісь', [cylZ(0.3, 3.3, 1.5, -2.3), cylZ(0.5, 0.2, 1.5, -2.3, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
 part('frontpin', 'Передня вісь', [cylZ(0.3, 3.3, 18.5, -2.5), cylZ(0.5, 0.2, 18.5, -2.5, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
@@ -418,7 +418,7 @@ if (EMB === 'labels') {
   const lead = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); $('labels').appendChild(lead);
   // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
   const LAY = { ch: [0, 28, 0], barrel: [-8, 21, 0], upper: [0, 12.5, 0], handguard: [5, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
-    buffer: [33, 6, 0], spring: [53, 6, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [-3, -7, 0], mag: [8, -9, 0], sling: [-7, -13, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
+    buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [-3, -7, 0], mag: [8, -9, 0], sling: [-7, -13, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
   for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
   for (const [id, n] of Object.entries(NUM)) {
     const c = new THREE.Box3().setFromObject(parts[id].group).getCenter(new THREE.Vector3());
