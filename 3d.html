@@ -285,8 +285,8 @@ const STEPS = [
   ['Натиснути кнопку фіксатора магазина й вийняти магазин.', [[['mag'], 3, -14, 0]]],
   ['Важелем перезаряджання відтягнути затворну раму назад і оглянути патронник.', [[['ch', ...BCG], -7, 0, 0]]],
   ['Відпустити важіль — затворна рама йде вперед. Спустити курок, натиснувши спусковий гачок.', [[['ch', ...BCG], 7, 0, 0]]],
-  ['Витиснути задню вісь.', [[['rearpin'], 0, 0, 2]]],
-  ['Витиснути передню вісь.', [[['frontpin'], 0, 0, 2]]],
+  ['Витиснути задню вісь.', [[['rearpin'], 0, 0, 2.3]]],
+  ['Витиснути передню вісь.', [[['frontpin'], 0, 0, 2.3]]],
   ['Роз’єднати верхню й нижню рами.', [[UPPER, 0, 14, 0]]],
   ['Відтягнути важіль перезаряджання назад.', [[['ch', ...BCG], -7, 0, 0]]],
   ['Витягнути затворну раму в зборі із затвором.', [[BCG, -22, -5, 0]]],
@@ -304,7 +304,17 @@ const STEPS = [
 const BOX = {}; for (const [id, p] of Object.entries(parts)) BOX[id] = new THREE.Box3().setFromObject(p.group);
 const ASM_FOCUS = [null, ['buffer', 'spring'], ['bolt', 'carrier'], ['cam', 'carrier'], ['fpin', 'carrier'], ['rpin', 'carrier'], ['ch', 'upper'], ['carrier', 'ch', 'upper'],
   ['upper', 'lower', 'handguard', 'stock'], ['carrier', 'ch', 'upper', 'lower'], ['ch', 'upper', 'lower'], ['upper', 'lower', 'handguard', 'stock']];
-let auto = false; const dT = new THREE.Vector3(); let dDist = 100;
+let auto = false; const dT = new THREE.Vector3(), dDir = new THREE.Vector3(); let dDist = 100;
+const SIDE = new THREE.Vector3(0.33, 0.2, 0.92).normalize(), PINVIEW = new THREE.Vector3(0.62, 0.5, 0.6).normalize();
+const ASM_ACT = [[], ['buffer', 'spring'], ['bolt'], ['cam'], ['fpin'], ['rpin'], ['ch'], ['carrier', 'bolt', 'fpin', 'cam', 'rpin', 'ch'], ['rearpin', 'frontpin'], ['ch', 'carrier', 'bolt'], ['ch'], []];
+let lit = [];
+// Деталі, що рухаються на цьому кроці, підсвічуємо
+function lightStep() {
+  for (const id of lit) if (id !== picked) parts[id].mat.emissive.setHex(0x000000);
+  lit = mode !== 'steps' || step === 0 ? [] : asm ? ASM_ACT[step] : [...new Set(STEPS[step - 1][1].flatMap(m => m[0]))];
+  if (lit.length > 6) lit = [];
+  for (const id of lit) parts[id].mat.emissive.setHex(0x7a3200);
+}
 function focusStep() {
   let ids = null;
   if (step > 0) ids = asm ? ASM_FOCUS[step] : [...new Set(STEPS[step - 1][1].flatMap(m => m[0]))];
@@ -312,7 +322,12 @@ function focusStep() {
   if (ids) for (const id of ids) b.union(BOX[id].clone().translate(parts[id].target));
   else b.set(new THREE.Vector3(-19, -22, -2), new THREE.Vector3(63, 4, 2));
   const c = b.getCenter(new THREE.Vector3()), sz = b.getSize(new THREE.Vector3());
-  const w = Math.max(sz.x / 2 + 5, 11), h = Math.max(sz.y / 2 + 4, 7.5), half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  // Осі виходять убік, тому на цих кроках дивимось під кутом і ближче
+  const pins = !asm && (step === 4 || step === 5) || asm && step === 8;
+  if (asm && step === 8) b.set(new THREE.Vector3(0, -5, -2), new THREE.Vector3(20, 1, 4));
+  if (pins) { b.getCenter(c); b.getSize(sz); }
+  dDir.copy(pins ? PINVIEW : SIDE);
+  const w = Math.max(sz.x / 2 + (pins ? 3 : 5), pins ? 6 : 11), h = Math.max(sz.y / 2 + (pins ? 2.5 : 4), pins ? 4.5 : 7.5), half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   dT.copy(c); dDist = Math.max(w / (half * camera.aspect), h / half); auto = true;
 }
 controls.addEventListener('start', () => { auto = false; });
@@ -365,6 +380,9 @@ function paint() {
     $('prev').disabled = step === 0; $('next').disabled = step === STEPS.length;
     setXray(asm || step >= 7 || $('xray').checked);
     setTargets(); focusStep();
+  }
+  lightStep();
+  if (mode === 'steps') {
   } else setXray($('xray').checked || EMB === 'dims');
   setTargets();
 }
@@ -472,8 +490,9 @@ renderer.setAnimationLoop(() => {
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
     const dir = camera.position.clone().sub(controls.target), len = dir.length();
-    camera.position.copy(controls.target).add(dir.multiplyScalar((len + (dDist - len) * 0.09) / len));
-    if (controls.target.distanceTo(dT) < 0.02 && Math.abs(len - dDist) < 0.05) auto = false;
+    dir.normalize().lerp(dDir, 0.07).normalize();
+    camera.position.copy(controls.target).add(dir.multiplyScalar(len + (dDist - len) * 0.09));
+    if (controls.target.distanceTo(dT) < 0.02 && Math.abs(len - dDist) < 0.05 && dir.angleTo(dDir) < 0.01) auto = false;
   }
   controls.update();
   renderer.render(scene, camera);
