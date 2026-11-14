@@ -16,11 +16,12 @@ html, body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 v
 .wrap { max-width:900px; margin:0 auto; padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px)); display:flex; flex-direction:column; gap:12px; }
 h1 { margin:0; font:600 19px/1.2 var(--display); letter-spacing:1px; text-transform:uppercase; }
 h1 small { font:500 12px/1 var(--display); letter-spacing:1.5px; color:var(--orange); margin-left:8px; }
-.stage { position:relative; height:min(58svh,560px); min-height:300px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 50% 40%, #1f2a1b 0%, #10150D 75%); border:1px solid var(--line); touch-action:none; }
+.stage { position:relative; height:min(58svh,560px); min-height:300px; border-radius:16px; overflow:hidden; background:radial-gradient(ellipse at 50% 45%, #46503f 0%, #232b1f 55%, #141a11 100%); border:1px solid var(--line); touch-action:none; }
 .stage canvas { display:block; width:100%; height:100%; }
 .chip { position:absolute; left:10px; top:10px; padding:6px 12px; border-radius:20px; background:rgba(16,21,13,.85); border:1px solid var(--line); font:600 15px/1.2 var(--display); letter-spacing:.5px; }
 .hint { position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--muted); pointer-events:none; }
-.tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tabs { display:grid; grid-template-columns:1fr 1.5fr 1.2fr; gap:8px; }
+.tab { font-size:14px !important; padding:0 4px; }
 .tab, .btn { min-height:50px; border:1.5px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:500 16px/1 var(--display); letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .tab[aria-pressed="true"] { background:var(--violet); border-color:var(--violet); color:#fff; font-weight:600; }
 .btn.primary { background:var(--orange); border-color:var(--orange); color:#000; font-weight:600; }
@@ -48,11 +49,16 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
   </div>
   <div class="tabs">
     <button class="tab" id="tab-view" aria-pressed="true">Огляд</button>
+    <button class="tab" id="tab-bcg" aria-pressed="false">Затворна група</button>
     <button class="tab" id="tab-steps" aria-pressed="false">Розбирання</button>
   </div>
   <div class="panel" id="panel-view">
     <div class="row"><label for="explode">Розкласти</label><input type="range" id="explode" min="0" max="100" value="0"></div>
     <label class="check"><input type="checkbox" id="xray"> Прозорий корпус — видно затвор, буфер і пружину</label>
+  </div>
+  <div class="panel" id="panel-bcg" hidden>
+    <div class="row"><label for="explode-b">Розкласти</label><input type="range" id="explode-b" min="0" max="100" value="0"></div>
+    <p class="note">Затворна рама, затвор, ударник, палець затвора, шплінт. Торкнись деталі — побачиш назву.</p>
   </div>
   <div class="panel" id="panel-steps" hidden>
     <div class="stepn" id="stepn"></div>
@@ -73,15 +79,18 @@ stage.prepend(renderer.domElement);
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(36, 1, 1, 1000);
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.enablePan = false; controls.minDistance = 12; controls.maxDistance = 400;
+controls.enableDamping = true; controls.enablePan = false; controls.minDistance = 5; controls.maxDistance = 400;
 controls.target.set(22, -3, 0);
 camera.position.set(22 + 40, 22, 110);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x2a3324, 1.15));
+scene.add(new THREE.HemisphereLight(0xffffff, 0x556050, 1.5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+// «ліхтар» на камері: деталь освітлена з будь-якого боку
+const head = new THREE.DirectionalLight(0xffffff, 1.4); head.position.set(0.3, 0.5, 1); camera.add(head); scene.add(camera);
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(30, 50, 60); scene.add(sun);
 const rim = new THREE.DirectionalLight(0xffb070, 0.6); rim.position.set(-40, 10, -50); scene.add(rim);
 
 // ── Матеріали ──
-const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.25, ...o });
+const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.25, side: THREE.DoubleSide, ...o });
 const TAN = 0x8f7650, BLACK = 0x23262a, STEEL = 0x8d9399, DARK = 0x3a3d42;
 
 // ── Геометрія: вісь X — від приклада (−) до дула (+) ──
@@ -95,6 +104,15 @@ function helixX(x0, x1, r, turns, y) {
   return new THREE.TubeGeometry(new H(), turns * 14, 0.14, 6, false);
 }
 
+// Тіло обертання навколо осі ствола: pts = [[x, радіус], …]
+const lathe = (pts, x0 = 0, y = 0, seg = 40) => { const g = new THREE.LatheGeometry(pts.map(p => new THREE.Vector2(Math.max(p[1], 0.0001), p[0])), seg); g.rotateZ(-Math.PI / 2); g.translate(x0, y, 0); return g; };
+// Переріз (z, y), витягнутий уздовж осі x від x0 до x1
+const xsec = (shape, x0, x1) => { const g = new THREE.ExtrudeGeometry(shape, { depth: x1 - x0, bevelEnabled: false, curveSegments: 24 }); g.rotateY(Math.PI / 2); g.translate(x0, 0, 0); return g; };
+const ring = (R, r) => { const s = new THREE.Shape(); s.absarc(0, 0, R, 0, Math.PI * 2, false); if (r) { const h = new THREE.Path(); h.absarc(0, 0, r, 0, Math.PI * 2, true); s.holes.push(h); } return s; };
+const slotted = (R, w, top) => { const a = Math.asin(w / R), s = new THREE.Shape(); s.moveTo(w, -Math.sqrt(R * R - w * w)); s.absarc(0, 0, R, -Math.PI / 2 + a, Math.PI * 1.5 - a, false); s.lineTo(-w, top); s.lineTo(w, top); s.closePath(); return s; };
+const flatted = (R, flat, r) => { const s = new THREE.Shape(); for (let i = 0; i <= 64; i++) { const t = i / 64 * Math.PI * 2, z = Math.max(-flat, Math.min(flat, R * Math.cos(t))), y = R * Math.sin(t); i ? s.lineTo(z, y) : s.moveTo(z, y); } if (r) { const h = new THREE.Path(); h.absarc(0, 0, r, 0, Math.PI * 2, true); s.holes.push(h); } return s; };
+const plateXZ = (pts, th, y) => { const sh = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))); const g = new THREE.ExtrudeGeometry(sh, { depth: th, bevelEnabled: false }); g.rotateX(-Math.PI / 2); g.translate(0, y, 0); return g; };
+const wire = (pts, r) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), 80, r, 8, false);
 const parts = {};
 // Деталь: список геометрій; елемент [геометрія, матеріал] — інший колір у межах тієї самої деталі.
 function part(id, name, geoms, mat, explode, shell = false) {
@@ -106,7 +124,7 @@ function part(id, name, geoms, mat, explode, shell = false) {
 const oct = (r, len, x, y) => { const g = new THREE.CylinderGeometry(r, r, len, 8); g.rotateY(Math.PI / 8); g.rotateZ(Math.PI / 2); g.translate(x, y, 0); return g; };
 const torus = (R, r, x, y, z) => { const g = new THREE.TorusGeometry(R, r, 8, 20); g.translate(x, y, z); return g; };
 const BLK = M(BLACK, { roughness: 0.8 }), BLUE = M(0x2f6fd0, { roughness: 0.7, metalness: 0 });
-const PHOS = 0x33363a; // чорне фосфатоване покриття затворної групи
+const PHOS = 0x4b4f55; // чорне фосфатоване покриття затворної групи
 
 // Одиниця — сантиметр. x = 0 — задній зріз верхньої рами, вісь ствола y = 0. Розміри — з фото з лінійкою.
 part('barrel', 'Ствол', [cylX(0.9, 40, 38, 0), cylX(1.3, 2.2, 18.6, 0), cylX(1.1, 6, 61, 0, 0, 12)], M(DARK, { metalness: 0.6 }), [16, 10, 0]);
@@ -114,22 +132,62 @@ part('handguard', 'Цівка', [oct(2.35, 34, 37, 0), box(34, 0.5, 2.1, 37, 2.4
   [box(3, 0.8, 2, 51, 3.1), BLK], [box(5, 0.8, 2.4, 40, -2.6), BLK], [box(2.6, 7.5, 2.6, 40, -6.4), BLK]], M(TAN), [8, 20, 0], true);
 part('upper', 'Рама верхня', [box(20, 4.0, 3.2, 10, 0.2), box(20, 0.5, 2.1, 10, 2.45), box(7, 1.7, 0.3, 12, -0.3, 1.7), box(1.2, 1.2, 0.6, 7.3, 0.3, 1.8),
   box(1.6, 1.2, 1.4, 1.5, -2.1), box(1.6, 1.2, 1.4, 18.5, -2.3), [box(3.5, 0.8, 2, 2.6, 3.1), BLK]], M(TAN), [0, 14, 0], true);
-part('ch', 'Рукоятка перезаряджання', [box(16, 0.3, 1.3, 7.6, 2.0), box(0.6, 1.2, 1.0, 15.3, 1.5), box(1.4, 1.0, 5.0, -0.8, 2.0)], M(BLACK), [-10, 24, 0]);
-part('carrier', 'Затворна рама', [cylX(1.25, 5, 2.8, 0), cylX(1.0, 6, 8.3, 0), cylX(1.2, 5.9, 14.25, 0),
-  box(2.6, 0.9, 1.0, 10.8, 1.5), cylX(0.4, 2.2, 13.2, 1.7)], M(PHOS, { metalness: 0.5, roughness: 0.5 }), [-24, 9, 0]);
-part('bolt', 'Затвор', [cylX(0.33, 1.3, 12.35, 0), cylX(0.55, 0.3, 13.15, 0), cylX(0.65, 4.0, 15.3, 0), cylX(0.95, 1.4, 18.0, 0, 0, 7)],
-  M(0x55595e, { metalness: 0.6, roughness: 0.45 }), [-14, 9, 0]);
-part('fpin', 'Ударник', [cylX(0.3, 0.5, 9.85, 0), cylX(0.2, 0.9, 10.5, 0), cylX(0.45, 0.25, 11.0, 0), cylX(0.22, 5.2, 13.7, 0), cylX(0.1, 1.6, 17.1, 0)],
-  M(0xd9dde2, { metalness: 0.85, roughness: 0.25 }), [-30, 5, 0]);
-part('cam', 'Палець затвора', [cylY(0.4, 1.8, 14.9, 0.6), box(1.0, 0.25, 0.8, 14.9, 1.55)], M(0x6b6f74, { metalness: 0.7, roughness: 0.4 }), [-22, 13, 0]);
-part('rpin', 'Шплінт фіксації ударника', [cylZ(0.1, 2.4, 10.6, 0), torus(0.2, 0.07, 10.6, 0, 1.4)], M(0x8a8f95, { metalness: 0.8 }), [-28, 5, 5]);
+const HOLE = M(0x08090a, { roughness: 1, metalness: 0 }), SCREW = M(0x1b1d20, { metalness: 0.6, roughness: 0.4 });
+// Рукоятка перезаряджання: П-подібний стрижень, гачок спереду, двобічна ручка із засувками
+part('ch', 'Рукоятка перезаряджання', [
+  box(15.6, 0.16, 1.3, 7.8, 2.1), box(15.6, 0.34, 0.16, 7.8, 1.92, 0.57), box(15.6, 0.34, 0.16, 7.8, 1.92, -0.57),
+  box(0.5, 1.25, 1.0, 15.45, 1.5), box(0.9, 0.5, 1.0, 15.0, 1.85),
+  plateXZ([[0.1, -0.65], [0.1, -2.1], [-0.3, -2.6], [-1.3, -2.6], [-1.5, -2.2], [-1.0, -1.1], [-1.25, -0.6], [-1.25, 0.6], [-1.0, 1.1], [-1.5, 2.2], [-1.3, 2.6], [-0.3, 2.6], [0.1, 2.1], [0.1, 0.65]], 0.9, 1.55),
+  [box(0.9, 0.5, 0.35, -0.35, 2.0, 2.05), SCREW], [box(0.9, 0.5, 0.35, -0.35, 2.0, -2.05), SCREW],
+  [cylY(0.12, 0.94, -0.75, 2.0, 1.6), HOLE], [cylY(0.12, 0.94, -0.75, 2.0, -1.6), HOLE]], M(BLACK, { roughness: 0.7 }), [-10, 24, 0]);
+
+// Затворна рама: задній циліндр, середня частина з прорізом знизу, передня з лисками й напрямними, газовий ключ
+const teeth = []; for (let i = 0; i < 22; i++) { const g = new THREE.CylinderGeometry(0.17, 0.17, 0.5, 3); g.rotateX(Math.PI / 2); g.rotateZ(Math.PI / 6); g.translate(5.0 + i * 0.29, 0.1, 0.93); teeth.push(g); }
+part('carrier', 'Затворна рама', [
+  lathe([[0.3, 0.62], [0.3, 1.12], [0.45, 1.25], [4.5, 1.25], [4.8, 1.02], [4.8, 0.62]]), xsec(ring(1.25, 0.62), 0.3, 0.32),
+  xsec(slotted(1.0, 0.47, 0.25), 4.8, 11.3),
+  xsec(flatted(1.2, 1.08, 0.68), 11.3, 17.0), lathe([[17.0, 0.68], [17.0, 1.08], [17.2, 0.98], [17.2, 0.68]]),
+  box(5.5, 0.14, 0.28, 14.2, 1.2, 0.5), box(5.5, 0.14, 0.28, 14.2, 1.2, -0.5), box(5.5, 0.14, 0.28, 14.2, -1.2, 0.5), box(5.5, 0.14, 0.28, 14.2, -1.2, -0.5),
+  ...teeth,
+  [box(1.5, 0.12, 0.62, 14.75, 1.2), HOLE],
+  [(() => { const g = new THREE.CapsuleGeometry(0.42, 1.0, 4, 16); g.rotateZ(Math.PI / 2); g.scale(1, 1, 0.08); g.translate(12.6, 0.1, -1.09); return g; })(), M(0x2a2c30, { roughness: 0.9 })],
+  [cylZ(0.11, 0.1, 12.3, 0.25, -1.1), HOLE], [cylZ(0.11, 0.1, 12.9, -0.05, -1.1), HOLE], [cylZ(0.2, 0.1, 10.9, -0.3, -1.01), HOLE],
+  // газовий ключ
+  [extr([[9.4, 0.95], [12.0, 0.95], [12.0, 1.35], [12.5, 1.42], [12.5, 2.05], [12.0, 2.05], [11.6, 1.75], [9.4, 1.75]], 0.95), M(0x3d4045, { metalness: 0.55, roughness: 0.5 })],
+  [lathe([[12.4, 0.2], [12.4, 0.36], [14.1, 0.36], [14.2, 0.3], [14.2, 0.2]], 0, 1.72, 20), M(0x3d4045, { metalness: 0.55, roughness: 0.5 })],
+  [cylX(0.2, 0.02, 14.2, 1.72), HOLE],
+  [cylY(0.27, 0.08, 10.0, 1.78), SCREW], [cylY(0.27, 0.08, 11.0, 1.78), SCREW], [cylY(0.12, 0.1, 10.0, 1.79), HOLE], [cylY(0.12, 0.1, 11.0, 1.79), HOLE],
+], M(PHOS, { metalness: 0.5, roughness: 0.55 }), [-24, 9, 0]);
+
+// Затвор: хвостовик, газові кільця, корпус з отвором під палець, сім бойових упорів, викидач
+const lugs = []; for (let i = 0; i < 8; i++) { if (i === 2) continue; const g = new THREE.BoxGeometry(1.0, 0.36, 0.36); g.translate(18.2, 0.84, 0); g.rotateX(i * Math.PI / 4); lugs.push(g); }
+part('bolt', 'Затвор', [
+  lathe([[11.7, 0.2], [11.7, 0.3], [11.8, 0.33], [12.9, 0.33], [13.05, 0.5], [13.08, 0.56], [13.14, 0.56], [13.14, 0.5], [13.18, 0.5], [13.18, 0.56], [13.24, 0.56], [13.24, 0.5], [13.28, 0.5], [13.28, 0.56], [13.34, 0.56], [13.4, 0.5],
+    [13.75, 0.4], [14.2, 0.52], [14.5, 0.66], [16.0, 0.66], [16.0, 0.7], [16.3, 0.7], [16.3, 0.66], [17.5, 0.66], [17.6, 0.7], [18.7, 0.7], [18.7, 0.52], [18.5, 0.52], [18.5, 0.1]]),
+  ...lugs,
+  [(() => { const g = new THREE.BoxGeometry(3.3, 0.3, 0.42); g.translate(17.05, 0.74, 0); g.rotateX(2 * Math.PI / 4); return g; })(), M(0x3b3e43, { metalness: 0.6, roughness: 0.5 })],
+  [(() => { const g = new THREE.BoxGeometry(0.5, 0.4, 0.42); g.translate(18.45, 0.84, 0); g.rotateX(2 * Math.PI / 4); return g; })(), M(0x3b3e43, { metalness: 0.6, roughness: 0.5 })],
+  [cylY(0.36, 1.34, 14.9, 0), HOLE], [cylX(0.5, 0.02, 18.5, 0), M(0x9a9ea3, { metalness: 0.7, roughness: 0.4 })], [cylX(0.07, 0.04, 18.5, 0), HOLE], [cylX(0.1, 0.04, 18.5, 0.3, 0.15), M(0xc8ccd0, { metalness: 0.8 })],
+], M(0x5d6167, { metalness: 0.6, roughness: 0.45 }), [-14, 9, 0]);
+
+// Ударник: головка, шийка, буртик, стрижень, тонкий бойок
+part('fpin', 'Ударник', [lathe([[9.6, 0.0], [9.6, 0.22], [9.68, 0.3], [9.95, 0.3], [10.05, 0.19], [10.75, 0.19], [10.8, 0.45], [11.05, 0.45], [11.1, 0.22], [15.9, 0.22], [15.95, 0.11], [17.7, 0.11], [17.8, 0.07], [17.9, 0.05], [17.9, 0.0]], 0, 0, 24)],
+  M(0xd9dde2, { metalness: 0.9, roughness: 0.22 }), [-30, 5, 0]);
+
+// Палець затвора: циліндр з наскрізним отвором під ударник і прямокутною головкою
+part('cam', 'Палець затвора', [cylY(0.4, 1.8, 14.9, 0.55), box(1.0, 0.26, 0.8, 14.9, 1.55), [cylX(0.17, 0.84, 14.9, 0.0), HOLE]], M(0x62666b, { metalness: 0.75, roughness: 0.35 }), [-22, 13, 0]);
+
+// Шплінт: зігнутий дріт із петлею
+part('rpin', 'Шплінт фіксації ударника', [wire([[10.6, 0.06, -1.15], [10.6, 0.06, 0.2], [10.6, 0.07, 0.95], [10.6, 0.2, 1.2], [10.6, 0.2, 1.45], [10.6, 0, 1.6], [10.6, -0.2, 1.45], [10.6, -0.2, 1.2], [10.6, -0.07, 0.95], [10.6, -0.06, 0.2], [10.6, -0.06, -1.15]], 0.05)],
+  M(0x2c2e31, { metalness: 0.7, roughness: 0.4 }), [-28, 5, 5]);
 part('lower', 'Рама нижня в зборі', [
   extr([[-1, -1.8], [20, -1.8], [20, -3.2], [17.6, -3.6], [18.0, -8.2], [11.2, -8.6], [11.0, -5.2], [7.5, -5.2], [6.5, -4.3], [1.5, -4.4], [-1, -3.5]], 3.0),
   cylX(1.95, 1.6, -0.8, 0), cylX(1.5, 16, -9.6, 0), box(5.5, 0.3, 1.2, 8.6, -7.4), [box(0.5, 1.8, 0.5, 8.2, -6.0), BLK]], M(TAN), [0, 0, 0], true);
 part('stock', 'Приклад', [extr([[-18, 2.0], [-2.5, 2.0], [-2.5, -2.2], [-9, -2.6], [-15, -6], [-17.2, -9.5], [-18.4, -9.5], [-18.4, 1.5]], 3.6)], M(BLACK), [-12, 0, 0], true);
 part('grip', 'Пістолетне руків’я', [extr([[2.2, -4.3], [6.4, -4.3], [4.6, -15.8], [0.4, -15.2]], 2.8)], M(BLACK), [3, -9, 0]);
 part('mag', 'Магазин', [extr([[11.5, -2.2], [17.3, -2.2], [18.6, -13], [20.2, -20.5], [14.6, -21.5], [12.6, -13]], 2.3)], M(BLACK, { roughness: 0.8 }), [6, -12, 0]);
-part('buffer', 'Буфер', [cylX(1.15, 0.6, -0.3, 0), cylX(0.95, 6.7, -3.95, 0), [cylX(0.75, 1.0, -7.8, 0), BLUE]], M(0xa0a6ac, { metalness: 0.7, roughness: 0.4 }), [14, 5, 0]);
+part('buffer', 'Буфер', [lathe([[0, 0], [0, 1.05], [-0.1, 1.15], [-0.6, 1.15], [-0.65, 0.95], [-2.6, 0.95], [-2.65, 0.88], [-2.75, 0.88], [-2.8, 0.95], [-4.8, 0.95], [-4.85, 0.88], [-4.95, 0.88], [-5.0, 0.95], [-7.0, 0.95], [-7.05, 1.0], [-7.3, 1.0], [-7.35, 0.6], [-7.35, 0]]),
+  [lathe([[-7.35, 0.72], [-8.0, 0.72], [-8.25, 0.55], [-8.3, 0.3], [-8.3, 0]]), BLUE]], M(0xa0a6ac, { metalness: 0.75, roughness: 0.35 }), [14, 5, 0]);
 part('spring', 'Зворотна пружина', [helixX(-17.2, -0.7, 1.1, 34, 0)], M(0xc3c8cd, { metalness: 0.8, roughness: 0.3 }), [24, 9.5, 0]);
 part('sling', 'Антабка', [torus(0.85, 0.16, -1.0, -2.6, 1.8)], M(DARK, { metalness: 0.6 }), [-2, -5, 4]);
 part('rearpin', 'Задня вісь', [cylZ(0.32, 3.4, 1.5, -2.3)], M(0xd0d4d8, { metalness: 0.8 }), [0, 0, 6]);
@@ -158,10 +216,13 @@ const STEPS = [
 ];
 
 // ── Стан ──
-let mode = 'view', explode = 0, step = 0, picked = null;
+let mode = 'view', explode = 0, explodeB = 0, step = 0, picked = null;
+const BCG_EXPLODE = { bolt: [5.5, 0, 0], fpin: [-9, -3.2, 0], cam: [0, 4.5, 0], rpin: [0, -1.5, 5], carrier: [0, 0, 0] };
+let frame = { t: [22, -3, 0], w: 47, h: 27 };
 function setTargets() {
   for (const p of Object.values(parts)) p.target.set(0, 0, 0);
   if (mode === 'view') { for (const p of Object.values(parts)) p.target.copy(p.explode).multiplyScalar(explode); }
+  else if (mode === 'bcg') { for (const [id, v] of Object.entries(BCG_EXPLODE)) parts[id].target.set(...v).multiplyScalar(explodeB); }
   else for (let i = 0; i < step; i++) for (const [ids, x, y, z] of STEPS[i][1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
 }
 function setXray(on) {
@@ -171,7 +232,11 @@ const $ = id => document.getElementById(id);
 function paint() {
   $('tab-view').setAttribute('aria-pressed', String(mode === 'view'));
   $('tab-steps').setAttribute('aria-pressed', String(mode === 'steps'));
-  $('panel-view').hidden = mode !== 'view'; $('panel-steps').hidden = mode !== 'steps';
+  $('tab-bcg').setAttribute('aria-pressed', String(mode === 'bcg'));
+  $('panel-view').hidden = mode !== 'view'; $('panel-steps').hidden = mode !== 'steps'; $('panel-bcg').hidden = mode !== 'bcg';
+  for (const p of Object.values(parts)) p.group.visible = mode !== 'bcg' || p.id in BCG_EXPLODE;
+  const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : { t: [22, -3, 0], w: 47, h: 27 };
+  if (f.w !== frame.w) { frame = f; controls.target.set(...f.t); resize(); }
   if (mode === 'steps') {
     $('stepn').textContent = step === 0 ? 'Зібрана гвинтівка' : `Крок ${step} з ${STEPS.length}`;
     $('stept').textContent = step === 0 ? 'Натисни «Далі», щоб почати неповне розбирання. «Назад» — збирає у зворотному порядку.' : STEPS[step - 1][0];
@@ -182,6 +247,8 @@ function paint() {
 }
 $('tab-view').onclick = () => { mode = 'view'; paint(); };
 $('tab-steps').onclick = () => { mode = 'steps'; paint(); };
+$('tab-bcg').onclick = () => { mode = 'bcg'; paint(); };
+$('explode-b').oninput = e => { explodeB = e.target.value / 100; setTargets(); };
 $('explode').oninput = e => { explode = e.target.value / 100; setTargets(); };
 $('xray').onchange = paint;
 $('prev').onclick = () => { if (step > 0) { step--; paint(); } };
@@ -196,7 +263,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   const r = renderer.domElement.getBoundingClientRect();
   ptr.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ptr, camera);
-  const hits = ray.intersectObjects(scene.children, true).filter(h => h.object.userData.part);
+  const hits = ray.intersectObjects(scene.children, true).filter(h => h.object.userData.part && parts[h.object.userData.part].group.visible);
   // крізь прозорий корпус — спершу внутрішні деталі
   const hit = hits.find(h => !(parts[h.object.userData.part].shell && parts[h.object.userData.part].mat.transparent)) || hits[0];
   if (picked) parts[picked].mat.emissive.setHex(0x000000);
@@ -210,7 +277,7 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
   const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  const dist = Math.max(47 / (half * camera.aspect), 27 / half);   // вмістити ~94 по ширині й ~54 по висоті
+  const dist = Math.max(frame.w / (half * camera.aspect), frame.h / half);
   const dir = camera.position.clone().sub(controls.target);
   if (dir.lengthSq() < 1) dir.set(0.35, 0.22, 1);
   camera.position.copy(controls.target).add(dir.normalize().multiplyScalar(dist));
