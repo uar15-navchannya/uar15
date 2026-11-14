@@ -685,25 +685,29 @@ function cards() {
     <p class="src">Свайп вліво/вправо або стрілки на клавіатурі. Джерело: ${esc(SRC_TTX)}.</p>`;
   bindSwipe($('card'));
 }
+function flipCard() { if (C.open.has(C.i)) C.open.delete(C.i); else { C.open.add(C.i); sfx('click'); } cards(); $('card').focus({ preventScroll: true }); }
 function cardGo(d) { const n = Math.min(FACTS.length - 1, Math.max(0, C.i + d)); if (n !== C.i) { C.i = n; sfx('whoosh'); cards(); } }
 let swiped = false;
 // Картка їде за пальцем; відпустив після 40 px (або швидкий змах) — наступна/попередня
 let slideFrom = 0;
 function bindSwipe(el) {
-  let x0 = null, y0 = 0, t0 = 0, dx = 0, horiz = null, pid = null;
+  let x0 = null, y0 = 0, t0 = 0, dx = 0, dy = 0, horiz = null, pid = null;
   if (slideFrom) { el.classList.add(slideFrom > 0 ? 'in-r' : 'in-l'); slideFrom = 0; }
   const reset = () => { x0 = null; horiz = null; el.style.transition = 'transform .18s ease-out'; el.style.transform = ''; };
-  el.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); dx = 0; horiz = null; pid = e.pointerId; el.style.transition = 'none'; });
+  el.addEventListener('pointerdown', e => { x0 = e.clientX; y0 = e.clientY; t0 = performance.now(); dx = 0; dy = 0; horiz = null; pid = e.pointerId; el.style.transition = 'none'; });
   el.addEventListener('pointermove', e => {
     if (x0 == null || e.pointerId !== pid) return;
-    dx = e.clientX - x0; const dy = e.clientY - y0;
+    dx = e.clientX - x0; dy = e.clientY - y0;
     if (horiz == null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) { horiz = Math.abs(dx) > Math.abs(dy); if (horiz) try { el.setPointerCapture(pid); } catch (err) { /* без захоплення */ } }
     if (horiz) { const edge = (dx > 0 && C.i === 0) || (dx < 0 && C.i === FACTS.length - 1); el.style.transform = `translateX(${edge ? dx * 0.25 : dx}px) rotate(${dx / 60}deg)`; }
   });
   el.addEventListener('pointerup', e => {
     if (x0 == null) return;
     const v = Math.abs(dx) / Math.max(1, performance.now() - t0), go = horiz && (Math.abs(dx) > 40 || (Math.abs(dx) > 20 && v > 0.4));
-    if (horiz) { swiped = true; setTimeout(() => { swiped = false; }, 0); }
+    // Тап обробляємо самі: браузер інколи не дає click, якщо палець трохи зсунувся
+    if (Math.hypot(dx, dy) < 12) { x0 = null; el.style.transform = ''; swiped = true; setTimeout(() => { swiped = false; }, 400); flipCard(); return; }
+    if (!horiz) { reset(); return; }
+    swiped = true; setTimeout(() => { swiped = false; }, 400);
     const d = dx < 0 ? 1 : -1, n = C.i + d;
     if (go && n >= 0 && n < FACTS.length) { slideFrom = d; cardGo(d); return; }
     reset();
@@ -1189,8 +1193,7 @@ document.addEventListener('click', e => {
     case 'zoom-out': zAt(Z.stage.clientWidth / 2, Z.stage.clientHeight / 2, Z.s / 1.6); break;
     case 'flip':
       if (swiped) { swiped = false; break; }
-      if (C.open.has(C.i)) C.open.delete(C.i); else { C.open.add(C.i); sfx('click'); }
-      cards(); $('card').focus({ preventScroll: true }); break;
+      flipCard(); break;
     case 'card-prev': cardGo(-1); break;
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
