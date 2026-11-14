@@ -550,6 +550,7 @@ const ICON = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  alert: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/>',
   shield: '<path d="M12 3l7 3v6c0 4.2-3 7.6-7 9-4-1.4-7-4.8-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
   cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
@@ -691,6 +692,7 @@ function home() {
       ${tile('list', 'guide-as', 'Порядок збирання', '11 кроків з озвучкою і показом на 3D-моделі')}
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
       ${tile('watch', 'drill-as', 'Збирання на час', best(ba))}
+      ${tile('alert', 'safe', 'Безпечне поводження', '5 основних правил поводження зі зброєю')}
       ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
     </div>
@@ -1169,6 +1171,21 @@ Z.stage.addEventListener('wheel', e => { e.preventDefault(); const p = local(e);
 window.addEventListener('resize', () => { if (!Z.el.hidden) zApply(); });
 
 
+// — Безпечне поводження зі зброєю (текст надав командир підрозділу) —
+const SAFE = [
+  { t: 'Зброя завжди заряджена', b: 'Завжди ставтеся до зброї так, ніби вона <mark>заряджена</mark>. Навіть якщо ви особисто перевірили патронники й магазин, не змінюйте своє ставлення.' },
+  { t: 'Ствол — у безпечний бік', b: 'Ніколи не спрямовуйте ствол туди, <mark>куди не плануєте стріляти</mark>. Він має бути направлений у безпечну сторону (униз, у бік мішені або в іншу заздалегідь визначену зону).' },
+  { t: 'Ціль і простір за нею', b: 'Контролюйте ціль і <mark>простір за нею</mark>. Перед пострілом упевніться, що позаду мішені немає людей, тварин або об’єктів, які можуть постраждати.' },
+  { t: 'Палець поза гачком', b: 'Тримайте палець <mark>поза спусковим гачком</mark>, доки не вирішили стріляти. Він має знаходитися вздовж рамки або на запобіжнику до моменту прицілювання.' },
+  { t: 'Перевірка перед заняттям', b: 'Завжди <mark>перевіряйте технічний стан зброї</mark> перед заняттями. Її ствол повинен бути чистим, механізми справними, а магазин встановлений правильно.' },
+];
+function safeView() {
+  setBar('Безпечне поводження');
+  app.innerHTML = `<div class="law">
+    <h2 class="h" style="margin:0">Основні правила безпечного поводження зі зброєю</h2>
+    ${SAFE.map((r, i) => `<section class="art"><h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p></section>`).join('')}</div>`;
+}
+
 // — Застосування зброї: текст статей і перевірка —
 const LAW_SRC = 'Статут внутрішньої служби ЗС України, ст. 20–22 (текст для навчання; звір з офіційною редакцією)';
 const LAW = [
@@ -1244,7 +1261,7 @@ function lawAnswer(k) {
 const ROUTES = {
   '': home, ttx: cards, table, parts,
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
-  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, law: lawView, 'law-test': lawTest,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
 function route() {
   closeZoom();
@@ -1331,7 +1348,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261114-200120';
+const APP_V = '20261114-200304';
 let updWarned = false;
 async function checkUpdate() {
   try {
