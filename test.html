@@ -147,6 +147,20 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .sp .aim { transform:rotate(32deg); } .sp .fing { transform:none; } .sp .A1, .sp .walk { opacity:0; } .sp .A2, .sp .ck { opacity:1; transform:none; }
 }
+
+.sp text.sm { font-size:9px; letter-spacing:.5px; }
+.sp .sq { opacity:.25; animation:sp-sq 6s ease-in-out infinite; } .sp .sq.q2 { animation-delay:1.3s; } .sp .sq.q3 { animation-delay:2.6s; }
+@keyframes sp-sq { 0% { opacity:.25; } 8%,70% { opacity:1; } 85%,100% { opacity:.25; } }
+.sp .late { opacity:.22; animation:sp-late 6s ease-in-out infinite; }
+@keyframes sp-late { 0%,42% { opacity:.22; } 52%,92% { opacity:1; } 100% { opacity:.22; } }
+.sp .run { animation:sp-run 3s ease-in infinite; }
+@keyframes sp-run { 0% { transform:translateX(0); opacity:1; } 80% { transform:translateX(46px); opacity:1; } 100% { transform:translateX(52px); opacity:0; } }
+.sp .push { animation:sp-push 1.8s ease-in-out infinite; }
+@keyframes sp-push { 0%,100% { transform:translateX(0); } 50% { transform:translateX(-9px); } }
+.sp .up { animation:sp-up 6s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes sp-up { 0%,28% { opacity:0; transform:scale(.4); } 34%,46% { opacity:1; transform:scale(1.2); } 56%,100% { opacity:0; transform:scale(.4); } }
+@media (prefers-reduced-motion: reduce) { .sp .sq, .sp .late { opacity:1; } .sp .run, .sp .push { transform:none; } .sp .up { opacity:1; transform:none; } }
+.art-h { margin:10px 0 -4px; font:600 17px/1.2 var(--display); letter-spacing:2px; text-transform:uppercase; color:var(--violet); }
 .law { display:flex; flex-direction:column; gap:12px; }
 .art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
 .art h3 { margin:0 0 8px; font:600 15px/1.25 var(--display); letter-spacing:1.5px; text-transform:uppercase; color:var(--violet); }
@@ -1286,6 +1300,80 @@ const LAW = [
     + '<li>для відбиття нападу на обʼєкти, що охороняються військовослужбовцями, а також для звільнення цих обʼєктів у разі захоплення;</li>'
     + '<li>у разі спроби насильного заволодіння зброєю, бойовою та іншою технікою, якщо іншими способами і засобами неможливо припинити цю спробу.</li></ul>' },
 ];
+
+// Малюнки до статей 20–22 (власні схеми, той самий стиль, що й у правилах безпеки)
+const spMan = (x, y, fill = 'var(--sp-dim)', cls = '') => `<g class="${cls}" fill="${fill}"><circle cx="${x}" cy="${y}" r="7"/><path d="M${x - 9} ${y + 44} L${x - 8} ${y + 12} Q${x} ${y + 7} ${x + 8} ${y + 12} L${x + 9} ${y + 44} Z"/></g>`;
+const spSoldier = (x, y, cls = '') => `<g class="${cls}">${spMan(x, y, 'var(--sp-ink)')}<path d="M${x - 9} ${y - 1} a9 9 0 0 1 18 0 Z" fill="var(--sp-tan)"/>
+  <rect x="${x - 13}" y="${y + 21}" width="30" height="4" rx="1.5" fill="var(--sp-gun)" stroke="var(--sp-tan)" stroke-width=".8" transform="rotate(-24 ${x} ${y + 23})"/></g>`;
+const spArrow = (x1, y, x2, color = 'var(--bad)', cls = '') => `<g class="${cls}" stroke="${color}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${x1} ${y} H${x2}"/><path d="M${x2 + (x2 < x1 ? 7 : -7)} ${y - 6} L${x2} ${y} L${x2 + (x2 < x1 ? 7 : -7)} ${y + 6}"/></g>`;
+const spChip = (x, y, w, t, cls = '') => `<g class="${cls}"><rect x="${x}" y="${y}" width="${w}" height="20" rx="10" fill="none" stroke="var(--sp-dim)" stroke-width="1.5"/><text class="sm" x="${x + w / 2}" y="${y + 13.5}" text-anchor="middle">${t}</text></g>`;
+const LAW_PIC = {
+  20: [`<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Військовослужбовець зі зброєю діє в порядку, встановленому законодавством">
+    ${spSoldier(74, 38)}
+    ${spArrow(112, 66, 150, 'var(--sp-dim)')}
+    <g transform="translate(172 26)"><rect width="62" height="78" rx="6" fill="none" stroke="var(--sp-ink)" stroke-width="2.5"/>
+      <path d="M12 20 H50 M12 34 H50 M12 48 H38" stroke="var(--sp-dim)" stroke-width="3" stroke-linecap="round"/>
+      <circle class="pulse" cx="46" cy="62" r="10" class="ok" fill="var(--good)"/><path d="M41 62 l3.5 4 l6.5 -8" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <text x="250" y="62">ЗА</text><text x="250" y="78">ЗАКОНОМ</text></svg>`],
+  21: [
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Зброя — крайній захід: лише коли інші заходи неефективні або неможливі">
+      ${['ІНШІ ЗАХОДИ НЕЕФЕКТИВНІ', 'АБО НЕМОЖЛИВІ'].map((t, i) => `<g transform="translate(14 ${30 + i * 40})">
+        <rect width="180" height="26" rx="13" fill="none" stroke="var(--sp-dim)" stroke-width="1.5"/><text class="sm" x="32" y="17">${t}</text>
+        <g class="sq q${i + 1}"><circle cx="14" cy="13" r="9" fill="var(--bad)"/><path d="M10 9 l8 8 M18 9 l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></g></g>`).join('')}
+      ${spArrow(200, 62, 214, 'var(--sp-dim)')}
+      <g class="late">${spRifle('translate(224 46) scale(0.45)')}<text x="268" y="96" text-anchor="middle" style="fill:var(--orange)">КРАЙНІЙ ЗАХІД</text></g></svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Перед застосуванням зброї — попередження і постріл угору; винятки: раптовий напад, техніка, втеча з-під варти">
+      <g class="sq q1"><path d="M14 12 h74 a8 8 0 0 1 8 8 v22 a8 8 0 0 1 -8 8 h-44 l-12 10 v-10 h-18 a8 8 0 0 1 -8 -8 v-22 a8 8 0 0 1 8 -8 Z" fill="none" stroke="var(--sp-ink)" stroke-width="2"/>
+        <text class="sm" x="51" y="28" text-anchor="middle">СТІЙ!</text><text class="sm" x="51" y="41" text-anchor="middle">СТРІЛЯТИМУ!</text><text class="sm" x="51" y="76" text-anchor="middle" style="fill:var(--sp-dim)">1 · ПОПЕРЕДЖЕННЯ</text></g>
+      ${spArrow(104, 34, 122, 'var(--sp-dim)')}
+      <g class="sq q2"><g transform="rotate(-62 160 44)">${spRifle('translate(126 34) scale(0.36)')}</g>
+        <path class="up" d="M176 4 l3 6 l6 -3 l-3 6 l6 3 l-6 2 l2 6 l-6 -3 l-3 6 l-2 -6 l-6 2 l3 -6 l-6 -3 l6 -2 l-2 -6 l6 3 Z" fill="var(--orange)"/>
+        <text class="sm" x="160" y="76" text-anchor="middle" style="fill:var(--sp-dim)">2 · ПОСТРІЛ УГОРУ</text></g>
+      ${spArrow(204, 34, 222, 'var(--sp-dim)')}
+      <g class="sq q3">${spRifle('translate(232 26) scale(0.4)')}<text class="sm" x="270" y="76" text-anchor="middle" style="fill:var(--sp-dim)">3 · ЗБРОЯ</text></g>
+      <text class="sm" x="14" y="98" style="fill:var(--orange)">БЕЗ ПОПЕРЕДЖЕННЯ:</text>
+      ${spChip(8, 104, 100, 'РАПТОВИЙ НАПАД')}${spChip(112, 104, 96, 'НАПАД ТЕХНІКОЮ')}${spChip(212, 104, 102, 'ВТЕЧА З-ПІД ВАРТИ')}</svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Застосовуючи зброю, не можна завдати шкоди стороннім особам">
+      ${spRifle('translate(8 62) scale(0.5)')}
+      <line x1="108" y1="70" x2="262" y2="70" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="5 4"/>
+      ${spMan(278, 46, 'var(--bad)')}
+      <rect x="150" y="80" width="80" height="44" rx="10" fill="none" stroke="var(--good)" stroke-width="2" stroke-dasharray="5 4"/>
+      <g transform="translate(174 90) scale(.68)">${spMan(0, 0)}</g><g transform="translate(206 90) scale(.68)">${spMan(0, 0)}</g>
+      ${spMark('', true, 22, 18, 'НЕ ЗАШКОДИТИ СТОРОННІМ')}</svg>`],
+  22: [null,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Захист життя і здоров’я — свого, інших військовослужбовців і цивільних — від нападу">
+      ${spSoldier(54, 44)}${spMan(88, 50)}${spMan(24, 50)}
+      <path class="pulse" d="M134 30 q22 36 0 72" fill="none" stroke="var(--good)" stroke-width="5" stroke-linecap="round" style="transform-origin:134px 66px"/>
+      ${spArrow(232, 66, 160, 'var(--bad)', 'push')}
+      ${spMan(262, 44, 'var(--bad)')}<path d="M270 62 l22 -26" stroke="var(--bad)" stroke-width="4" stroke-linecap="round"/>
+      <text class="sm" x="14" y="16">ЗАХИСТ ЖИТТЯ І ЗДОРОВ’Я</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД</text></svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Затримання особи, яка вчинила тяжкий злочин і тікає, чинить збройний опір або загрожує зброєю">
+      ${spSoldier(46, 44)}
+      ${spArrow(84, 66, 128, 'var(--sp-ink)')}
+      <path d="M150 104 h120" stroke="var(--bad)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/>
+      <g class="run">${spMan(176, 44, 'var(--bad)')}<rect x="184" y="62" width="22" height="4" rx="1.5" fill="var(--sp-gun)" stroke="var(--bad)" stroke-width=".8" transform="rotate(-18 184 64)"/></g>
+      <text class="sm" x="14" y="16">ЗАТРИМАННЯ</text>
+      <text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">ТЯЖКИЙ ЗЛОЧИН · ЗБРОЙНИЙ ОПІР · ВТЕЧА</text></svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Відбиття нападу на об’єкт, що охороняється, і звільнення захопленого об’єкта">
+      <g transform="translate(22 30)" fill="none" stroke="var(--sp-ink)" stroke-width="2.5" stroke-linejoin="round"><path d="M0 76 V26 L44 6 L88 26 V76 Z"/><rect x="34" y="46" width="20" height="30"/>
+        <path d="M-10 76 H98" stroke-linecap="round"/><path d="M44 6 V-7 h14 l-4 4 l4 4 h-14" stroke="var(--sp-tan)" fill="var(--sp-tan)" stroke-width="1.5"/></g>
+      ${spSoldier(140, 50)}
+      ${spArrow(262, 52, 196, 'var(--bad)', 'push')}${spArrow(262, 84, 196, 'var(--bad)', 'push')}
+      ${spMan(288, 46, 'var(--bad)')}
+      <text class="sm" x="14" y="16">ОБ’ЄКТ ПІД ОХОРОНОЮ</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД · ЗАХОПЛЕННЯ</text></svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Спроба насильно заволодіти зброєю, бойовою чи іншою технікою">
+      ${spSoldier(40, 46)}
+      ${spRifle('translate(74 40) scale(0.42)')}
+      <g transform="translate(74 76)"><path d="M6 26 L14 8 H66 L80 16 V26 Z" fill="var(--sp-tan)"/><rect x="34" y="0" width="22" height="9" rx="2" fill="var(--sp-tan)"/><rect x="54" y="3" width="26" height="3" fill="var(--sp-gun)"/>
+        ${[16, 34, 52, 70].map(cx => `<circle cx="${cx}" cy="29" r="7" fill="var(--sp-gun)" stroke="var(--sp-tan)" stroke-width="1.5"/>`).join('')}</g>
+      ${spArrow(250, 66, 184, 'var(--bad)', 'push')}
+      ${spMan(280, 44, 'var(--bad)')}<path d="M272 62 l-20 4" stroke="var(--bad)" stroke-width="4" stroke-linecap="round"/>
+      <text class="sm" x="14" y="16">ЗБРОЯ І ТЕХНІКА</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">СПРОБА ЗАВОЛОДІТИ</text></svg>`],
+};
+function lawCards(a) {
+  const blocks = a.body.match(/<p>.*?<\/p>|<li>.*?<\/li>/g) || [], pics = LAW_PIC[a.n] || [];
+  return `<h3 class="art-h">Стаття ${a.n}</h3>` + blocks.map((b, i) => `<section class="art">${pics[i] || ''}${b.replace(/^<li>/, '<p>').replace(/<\/li>$/, '</p>')}</section>`).join('');
+}
 // Питання — лише за текстом статей вище
 const LAW_Q = [
   { prompt: 'Що має передувати застосуванню зброї (крім передбачених винятків)?', right: 'Попередження про намір застосувати зброю і постріл угору', wrong: ['Доповідь командиру й очікування наказу', 'Лише усне попередження', 'Постріл у ноги'], art: 21 },
@@ -1303,7 +1391,7 @@ function lawView() {
   setBar('Застосування зброї');
   let best = null; try { best = localStorage.getItem(LAW_BEST); } catch (e) { /* без сховища */ }
   app.innerHTML = `<div class="law">
-    ${LAW.map(a => `<section class="art"><h3>Стаття ${a.n}</h3>${a.body}</section>`).join('')}
+    ${LAW.map(lawCards).join('')}
     <button class="btn primary" data-act="go" data-to="law-test">Перевір себе · ${LAW_Q.length} питань</button>
     ${best ? `<p class="muted small center">Найкраще: ${esc(best)} / ${LAW_Q.length}</p>` : ''}
     <p class="src">Джерело: ${esc(LAW_SRC)}.</p></div>`;
@@ -1435,7 +1523,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-120708';
+const APP_V = '20261115-124043';
 let updWarned = false;
 async function checkUpdate() {
   try {
