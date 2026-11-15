@@ -164,6 +164,12 @@ p { margin: 0; }
 .sp .up { animation:sp-up 6s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
 @keyframes sp-up { 0%,28% { opacity:0; transform:scale(.4); } 34%,46% { opacity:1; transform:scale(1.2); } 56%,100% { opacity:0; transform:scale(.4); } }
 @media (prefers-reduced-motion: reduce) { .sp .sq, .sp .late { opacity:1; } .sp .run, .sp .push { transform:none; } .sp .up { opacity:1; transform:none; } }
+
+:root { --sp-ground:#1b2117; --sp-paper:#2c3527; }
+:root[data-theme="light"] { --sp-ground:#d0d6c0; --sp-paper:#f4f5ee; }
+.sp .early { animation:sp-early 6s ease-in-out infinite; }
+@keyframes sp-early { 0%,42% { opacity:1; } 52%,92% { opacity:0; } 100% { opacity:1; } }
+@media (prefers-reduced-motion: reduce) { .sp .early { opacity:0; } }
 .art-h { margin:10px 0 -4px; font:600 17px/1.2 var(--display); letter-spacing:2px; text-transform:uppercase; color:var(--violet); }
 .law { display:flex; flex-direction:column; gap:12px; }
 .art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
@@ -1311,68 +1317,111 @@ const spSoldier = (x, y, cls = '') => `<g class="${cls}">${spMan(x, y, 'var(--sp
   <rect x="${x - 13}" y="${y + 21}" width="30" height="4" rx="1.5" fill="var(--sp-gun)" stroke="var(--sp-tan)" stroke-width=".8" transform="rotate(-24 ${x} ${y + 23})"/></g>`;
 const spArrow = (x1, y, x2, color = 'var(--bad)', cls = '') => `<g class="${cls}" stroke="${color}" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${x1} ${y} H${x2}"/><path d="M${x2 + (x2 < x1 ? 7 : -7)} ${y - 6} L${x2} ${y} L${x2 + (x2 < x1 ? 7 : -7)} ${y + 6}"/></g>`;
 const spChip = (x, y, w, t, cls = '') => `<g class="${cls}"><rect x="${x}" y="${y}" width="${w}" height="20" rx="10" fill="none" stroke="var(--sp-dim)" stroke-width="1.5"/><text class="sm" x="${x + w / 2}" y="${y + 13.5}" text-anchor="middle">${t}</text></g>`;
+// Фігури людей у позах (ноги на лінії землі, обличчям праворуч; flip — ліворуч)
+const FIG_C = {
+  sol: { cloth: '#5d6b47', back: '#46523a', gear: '#748259', helm: '#4f5b3d', line: '#2c3324' },
+  civ: { cloth: '#8b939a', back: '#6c747b', line: '#4a5056', hair: '#4b3a2c' },
+  bad: { cloth: '#2b2e34', back: '#1d1f24', line: 'var(--bad)' },
+};
+const FIG_P = {
+  stand: { lb: [[-3, -30], [-4, -15], [-5, 0]], lf: [[3, -30], [4, -15], [6, 0]], ab: [[-2, -50], [-6, -38], [-6, -27]], af: [[2, -50], [5, -38], [6, -27]] },
+  ready: { lb: [[-3, -30], [-4, -15], [-5, 0]], lf: [[3, -30], [4, -15], [6, 0]], ab: [[-1, -50], [-4, -40], [3, -37]], af: [[2, -50], [9, -44], [15, -39]], gun: [-6, -47, 30, -30] },
+  aim: { lb: [[-3, -30], [-7, -15], [-11, 0]], lf: [[3, -30], [8, -15], [10, 0]], ab: [[-1, -51], [-5, -43], [2, -47]], af: [[2, -51], [10, -46], [18, -48]], gun: [-7, -50, 36, -49] },
+  up: { lb: [[-3, -30], [-7, -15], [-11, 0]], lf: [[3, -30], [8, -15], [10, 0]], ab: [[-1, -51], [-5, -43], [1, -48]], af: [[2, -51], [9, -56], [10, -63]], gun: [-4, -42, 16, -84] },
+  run: { lb: [[-2, -31], [-7, -17], [-17, -9]], lf: [[3, -31], [12, -21], [9, -2]], ab: [[-1, -51], [-9, -44], [-14, -36]], af: [[2, -51], [9, -44], [16, -47]], lean: 10 },
+  runGun: { lb: [[-2, -31], [-7, -17], [-17, -9]], lf: [[3, -31], [12, -21], [9, -2]], ab: [[-1, -51], [-4, -42], [3, -40]], af: [[2, -51], [9, -45], [14, -42]], gun: [-5, -47, 28, -36], lean: 10 },
+  reach: { lb: [[-3, -30], [-9, -16], [-15, 0]], lf: [[3, -30], [10, -16], [13, 0]], ab: [[-1, -51], [-8, -42], [-10, -32]], af: [[2, -51], [14, -50], [27, -49]], lean: 8 },
+  walk: { lb: [[-3, -30], [-6, -15], [-10, 0]], lf: [[3, -30], [6, -15], [8, 0]], ab: [[-2, -50], [-7, -39], [-9, -29]], af: [[2, -50], [6, -38], [9, -29]] },
+};
+const spLimb = (pts, w, c) => `<path d="M${pts.map(p => p.join(' ')).join(' L')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const spGun = ([x0, y0, x1, y1]) => { const L = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI; return spRifle(`translate(${x0} ${y0}) rotate(${a.toFixed(1)}) scale(${(L / 196).toFixed(3)}) translate(0 -17)`); };
+function spFig({ x, y = 116, s = 1, kind = 'sol', pose = 'stand', flip = false, cls = '' }) {
+  const c = FIG_C[kind], p = FIG_P[pose], skin = '#c99b7a';
+  const head = kind === 'sol'
+    ? `<circle cx="0" cy="-61" r="6.2" fill="${skin}"/><path d="M-7.2 -61.5 a7.2 7.2 0 0 1 14.4 0 l1.6 0.6 h-17.4 Z" fill="${c.helm}" stroke="${c.line}" stroke-width=".8"/>`
+    : kind === 'bad'
+      ? `<circle cx="0" cy="-61" r="6.4" fill="${c.cloth}" stroke="${c.line}" stroke-width="1.2"/><rect x="0.5" y="-63" width="5.5" height="3" rx="1.5" fill="${skin}"/>`
+      : `<circle cx="0" cy="-61" r="6.2" fill="${skin}"/><path d="M-6.3 -61 a6.3 6.3 0 0 1 12.6 -1 q-4 -2 -7 1 q-3 2 -5.6 0 Z" fill="${c.hair}"/>`;
+  const torso = `<path d="M-7 -53 Q0 -56 7 -53 L6.5 -30 Q0 -28 -6.5 -30 Z" fill="${c.cloth}" stroke="${kind === 'bad' ? c.line : c.line}" stroke-width="${kind === 'bad' ? 1.2 : .8}"/>`
+    + (kind === 'sol' ? `<rect x="-6.2" y="-50" width="12.4" height="15" rx="2" fill="${c.gear}" stroke="${c.line}" stroke-width=".7"/><path d="M-4 -44 h8 M-4 -40 h8" stroke="${c.line}" stroke-width=".8"/>` : '');
+  const hands = p.gun ? `<circle cx="${p.ab[2][0]}" cy="${p.ab[2][1]}" r="2.2" fill="${skin}"/><circle cx="${p.af[2][0]}" cy="${p.af[2][1]}" r="2.2" fill="${skin}"/>` : `<circle cx="${p.af[2][0]}" cy="${p.af[2][1]}" r="2.1" fill="${skin}"/>`;
+  const out = kind === 'bad' ? `<g opacity=".9">${spLimb(p.lb, 8.6, c.line)}${spLimb(p.lf, 8.6, c.line)}${spLimb(p.af, 7, c.line)}</g>` : '';
+  return `<g class="${cls}"><g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})">
+    <ellipse cx="0" cy="1" rx="13" ry="2.4" fill="#000" opacity=".22"/>
+    <g transform="rotate(${p.lean || 0} 0 -30)">${out}
+    ${spLimb(p.ab, 5.5, c.back)}${spLimb(p.lb, 6.6, c.back)}${spLimb(p.lf, 6.6, c.cloth)}
+    <path d="M${p.lf[2][0] - 1} ${p.lf[2][1] - 1} h7" stroke="#1b1d20" stroke-width="3.6" stroke-linecap="round"/><path d="M${p.lb[2][0] - 1} ${p.lb[2][1] - 1} h7" stroke="#1b1d20" stroke-width="3.6" stroke-linecap="round"/>
+    ${torso}${head}${p.gun ? spGun(p.gun) : ''}${spLimb(p.af, 5.5, c.cloth)}${hands}</g></g></g>`;
+}
+const spGround = (y = 116, w = 320, h = 130) => `<rect x="0" y="${y}" width="${w}" height="${h - y}" fill="var(--sp-ground)"/><path d="M0 ${y} H${w}" stroke="var(--sp-dim)" stroke-width="1" opacity=".5"/>`;
+const spFlash = (x, y, cls = 'up') => `<path class="${cls}" d="M${x} ${y - 9} l3 6 l6 -3 l-3 6 l6 3 l-6 2 l2 6 l-6 -3 l-3 6 l-2 -6 l-6 2 l3 -6 l-6 -3 l6 -2 l-2 -6 l6 3 Z" fill="var(--orange)"/>`;
+const spAPC = (x, y) => `<g transform="translate(${x} ${y})"><path d="M2 -12 L12 -30 H58 L72 -22 L78 -12 Z" fill="#6f7c56" stroke="#2c3324" stroke-width="1"/>
+  <path d="M0 -12 H80 V-6 H0 Z" fill="#56623f" stroke="#2c3324" stroke-width="1"/><rect x="30" y="-38" width="20" height="9" rx="2" fill="#5d6b47" stroke="#2c3324" stroke-width="1"/><rect x="48" y="-35" width="26" height="3" fill="#1b1d20"/>
+  <path d="M16 -26 h10 v7 h-10 Z M60 -26 h7 l3 5 h-10 Z" fill="#2c3324" opacity=".7"/>
+  ${[12, 30, 50, 68].map(cx => `<circle cx="${cx}" cy="-4" r="7" fill="#1b1d20"/><circle cx="${cx}" cy="-4" r="3" fill="#56623f"/>`).join('')}</g>`;
 const LAW_PIC = {
   20: [`<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Військовослужбовець зі зброєю діє в порядку, встановленому законодавством">
-    ${spSoldier(74, 38)}
-    ${spArrow(112, 66, 150, 'var(--sp-dim)')}
-    <g transform="translate(172 26)"><rect width="62" height="78" rx="6" fill="none" stroke="var(--sp-ink)" stroke-width="2.5"/>
-      <path d="M12 20 H50 M12 34 H50 M12 48 H38" stroke="var(--sp-dim)" stroke-width="3" stroke-linecap="round"/>
-      <circle class="pulse" cx="46" cy="62" r="10" class="ok" fill="var(--good)"/><path d="M41 62 l3.5 4 l6.5 -8" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
-    <text x="250" y="62">ЗА</text><text x="250" y="78">ЗАКОНОМ</text></svg>`],
+    ${spGround()}${spFig({ x: 62, pose: 'ready', s: 1.25 })}
+    ${spArrow(108, 66, 134, 'var(--sp-dim)')}
+    <g transform="translate(146 22)"><path d="M0 4 Q0 0 4 0 H58 V84 H4 Q0 84 0 80 Z" fill="var(--sp-paper)" stroke="var(--sp-ink)" stroke-width="2"/><path d="M58 0 V84" stroke="var(--sp-ink)" stroke-width="3"/>
+      <text x="29" y="34" text-anchor="middle" style="font-size:24px;fill:var(--sp-ink)">§</text>
+      <path d="M12 48 H46 M12 56 H46 M12 64 H36" stroke="var(--sp-dim)" stroke-width="2.4" stroke-linecap="round"/>
+      <g class="pulse"><circle cx="54" cy="78" r="11" fill="var(--good)"/><path d="M49 78 l3.5 4 l6.5 -8" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></g>
+    <text class="sm" x="218" y="58">У ПОРЯДКУ,</text><text class="sm" x="218" y="71">ВСТАНОВЛЕНОМУ</text><text class="sm" x="218" y="84">ЗАКОНОДАВСТВОМ</text></svg>`],
   21: [
     `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Зброя — крайній захід: лише коли інші заходи неефективні або неможливі">
-      ${['ІНШІ ЗАХОДИ НЕЕФЕКТИВНІ', 'АБО НЕМОЖЛИВІ'].map((t, i) => `<g transform="translate(14 ${30 + i * 40})">
-        <rect width="180" height="26" rx="13" fill="none" stroke="var(--sp-dim)" stroke-width="1.5"/><text class="sm" x="32" y="17">${t}</text>
+      ${spGround(116)}
+      ${['ІНШІ ЗАХОДИ НЕЕФЕКТИВНІ', 'АБО НЕМОЖЛИВІ'].map((t, i) => `<g transform="translate(12 ${26 + i * 40})">
+        <rect width="178" height="26" rx="13" fill="var(--sp-paper)" stroke="var(--sp-dim)" stroke-width="1.5"/><text class="sm" x="32" y="17">${t}</text>
         <g class="sq q${i + 1}"><circle cx="14" cy="13" r="9" fill="var(--bad)"/><path d="M10 9 l8 8 M18 9 l-8 8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></g></g>`).join('')}
-      ${spArrow(200, 62, 214, 'var(--sp-dim)')}
-      <g class="late">${spRifle('translate(224 46) scale(0.45)')}<text x="268" y="96" text-anchor="middle" style="fill:var(--orange)">КРАЙНІЙ ЗАХІД</text></g></svg>`,
-    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Перед застосуванням зброї — попередження і постріл угору; винятки: раптовий напад, техніка, втеча з-під варти">
-      <g class="sq q1"><path d="M14 12 h74 a8 8 0 0 1 8 8 v22 a8 8 0 0 1 -8 8 h-44 l-12 10 v-10 h-18 a8 8 0 0 1 -8 -8 v-22 a8 8 0 0 1 8 -8 Z" fill="none" stroke="var(--sp-ink)" stroke-width="2"/>
-        <text class="sm" x="51" y="28" text-anchor="middle">СТІЙ!</text><text class="sm" x="51" y="41" text-anchor="middle">СТРІЛЯТИМУ!</text><text class="sm" x="51" y="76" text-anchor="middle" style="fill:var(--sp-dim)">1 · ПОПЕРЕДЖЕННЯ</text></g>
-      ${spArrow(104, 34, 122, 'var(--sp-dim)')}
-      <g class="sq q2"><g transform="rotate(-62 160 44)">${spRifle('translate(126 34) scale(0.36)')}</g>
-        <path class="up" d="M176 4 l3 6 l6 -3 l-3 6 l6 3 l-6 2 l2 6 l-6 -3 l-3 6 l-2 -6 l-6 2 l3 -6 l-6 -3 l6 -2 l-2 -6 l6 3 Z" fill="var(--orange)"/>
-        <text class="sm" x="160" y="76" text-anchor="middle" style="fill:var(--sp-dim)">2 · ПОСТРІЛ УГОРУ</text></g>
-      ${spArrow(204, 34, 222, 'var(--sp-dim)')}
-      <g class="sq q3">${spRifle('translate(232 26) scale(0.4)')}<text class="sm" x="270" y="76" text-anchor="middle" style="fill:var(--sp-dim)">3 · ЗБРОЯ</text></g>
-      <text class="sm" x="14" y="98" style="fill:var(--orange)">БЕЗ ПОПЕРЕДЖЕННЯ:</text>
-      ${spChip(8, 104, 100, 'РАПТОВИЙ НАПАД')}${spChip(112, 104, 96, 'НАПАД ТЕХНІКОЮ')}${spChip(212, 104, 102, 'ВТЕЧА З-ПІД ВАРТИ')}</svg>`,
-    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Застосовуючи зброю, не можна завдати шкоди стороннім особам">
-      ${spRifle('translate(8 62) scale(0.5)')}
-      <line x1="108" y1="70" x2="262" y2="70" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="5 4"/>
-      ${spMan(278, 46, 'var(--bad)')}
-      <rect x="150" y="80" width="80" height="44" rx="10" fill="none" stroke="var(--good)" stroke-width="2" stroke-dasharray="5 4"/>
-      <g transform="translate(174 90) scale(.68)">${spMan(0, 0)}</g><g transform="translate(206 90) scale(.68)">${spMan(0, 0)}</g>
-      ${spMark('', true, 22, 18, 'НЕ ЗАШКОДИТИ СТОРОННІМ')}</svg>`],
+      ${spArrow(198, 60, 214, 'var(--sp-dim)')}
+      ${spFig({ x: 250, pose: 'ready', s: 1.2, cls: 'early' })}${spFig({ x: 250, pose: 'aim', s: 1.2, cls: 'late' })}
+      <text class="late" x="262" y="12" text-anchor="middle" style="fill:var(--orange)">КРАЙНІЙ ЗАХІД</text></svg>`,
+    `<svg class="sp" viewBox="0 0 320 162" role="img" aria-label="Перед застосуванням зброї — попередження і постріл угору; винятки: раптовий напад, техніка, втеча з-під варти">
+      ${spGround(104, 320, 162)}
+      <g class="sq q1">${spFig({ x: 30, y: 104, pose: 'ready', s: .95 })}
+        <path d="M44 8 h52 a7 7 0 0 1 7 7 v18 a7 7 0 0 1 -7 7 h-34 l-10 9 v-9 h-8 a7 7 0 0 1 -7 -7 v-18 a7 7 0 0 1 7 -7 Z" fill="var(--sp-paper)" stroke="var(--sp-ink)" stroke-width="1.6"/>
+        <text class="sm" x="70" y="22" text-anchor="middle">СТІЙ!</text><text class="sm" x="70" y="34" text-anchor="middle">СТРІЛЯТИМУ!</text></g>
+      <g class="sq q2">${spFig({ x: 152, y: 104, pose: 'up', s: .95 })}${spFlash(169, 21)}</g>
+      <g class="sq q3">${spFig({ x: 250, y: 104, pose: 'aim', s: .95 })}</g>
+      <g style="fill:var(--sp-dim)"><text class="sm" x="6" y="118" style="fill:var(--sp-dim)">1 · ПОПЕРЕДЖЕННЯ</text><text class="sm" x="122" y="118" style="fill:var(--sp-dim)">2 · ПОСТРІЛ УГОРУ</text><text class="sm" x="232" y="118" style="fill:var(--sp-dim)">3 · ЗБРОЯ</text></g>
+      <text class="sm" x="6" y="132" style="fill:var(--orange)">БЕЗ ПОПЕРЕДЖЕННЯ:</text>
+      <text class="sm" x="6" y="145">РАПТОВИЙ НАПАД · НАПАД ІЗ ЗАСТОСУВАННЯМ ТЕХНІКИ</text><text class="sm" x="6" y="157">ВТЕЧА З-ПІД ВАРТИ ЗІ ЗБРОЄЮ АБО НА ТРАНСПОРТІ</text></svg>`,
+    `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Не можна стріляти, поки на лінії вогню сторонні; стріляти — коли лінія вільна">
+      ${spGround()}
+      ${spFig({ x: 36, pose: 'aim', s: 1.1 })}
+      <line x1="80" y1="62" x2="262" y2="62" stroke="var(--orange)" stroke-width="1.6" stroke-dasharray="5 4"/>
+      ${spFig({ x: 282, pose: 'aim', kind: 'bad', flip: true, s: 1.1 })}
+      ${spFig({ x: 170, pose: 'walk', kind: 'civ', s: 1.05, cls: 'walk' })}
+      ${spMark('A1', false, 22, 16, 'СТОРОННІ НА ЛІНІЇ — НЕ СТРІЛЯТИ')}${spMark('A2', true, 22, 16, 'ЛІНІЯ ВОГНЮ ВІЛЬНА')}</svg>`],
   22: [null,
     `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Захист життя і здоров’я — свого, інших військовослужбовців і цивільних — від нападу">
-      ${spSoldier(54, 44)}${spMan(88, 50)}${spMan(24, 50)}
-      <path class="pulse" d="M134 30 q22 36 0 72" fill="none" stroke="var(--good)" stroke-width="5" stroke-linecap="round" style="transform-origin:134px 66px"/>
-      ${spArrow(232, 66, 160, 'var(--bad)', 'push')}
-      ${spMan(262, 44, 'var(--bad)')}<path d="M270 62 l22 -26" stroke="var(--bad)" stroke-width="4" stroke-linecap="round"/>
-      <text class="sm" x="14" y="16">ЗАХИСТ ЖИТТЯ І ЗДОРОВ’Я</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД</text></svg>`,
+      ${spGround()}
+      ${spFig({ x: 26, pose: 'stand', kind: 'civ', s: 1 })}${spFig({ x: 54, pose: 'ready', s: 1 })}
+      ${spFig({ x: 104, pose: 'aim', s: 1.12 })}
+      <path class="pulse" d="M152 44 q16 34 0 68" fill="none" stroke="var(--good)" stroke-width="5" stroke-linecap="round"/>
+      <g class="push">${spFig({ x: 268, pose: 'aim', kind: 'bad', flip: true, s: 1.12 })}</g>
+      <text class="sm" x="12" y="16">ЗАХИСТ ЖИТТЯ І ЗДОРОВ’Я</text><text class="sm" x="308" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД</text></svg>`,
     `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Затримання особи, яка вчинила тяжкий злочин і тікає, чинить збройний опір або загрожує зброєю">
-      ${spSoldier(46, 44)}
-      ${spArrow(84, 66, 128, 'var(--sp-ink)')}
-      <path d="M150 104 h120" stroke="var(--bad)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/>
-      <g class="run">${spMan(176, 44, 'var(--bad)')}<rect x="184" y="62" width="22" height="4" rx="1.5" fill="var(--sp-gun)" stroke="var(--bad)" stroke-width=".8" transform="rotate(-18 184 64)"/></g>
-      <text class="sm" x="14" y="16">ЗАТРИМАННЯ</text>
-      <text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">ТЯЖКИЙ ЗЛОЧИН · ЗБРОЙНИЙ ОПІР · ВТЕЧА</text></svg>`,
+      ${spGround()}
+      ${spFig({ x: 52, pose: 'aim', s: 1.12 })}
+      <g class="run">${spFig({ x: 196, pose: 'runGun', kind: 'bad', s: 1.12 })}</g>
+      <text class="sm" x="12" y="16">ЗАТРИМАННЯ</text><text class="sm" x="308" y="16" text-anchor="end" style="fill:var(--bad)">ЗЛОЧИН · ЗБРОЙНИЙ ОПІР · ВТЕЧА</text></svg>`,
     `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Відбиття нападу на об’єкт, що охороняється, і звільнення захопленого об’єкта">
-      <g transform="translate(22 30)" fill="none" stroke="var(--sp-ink)" stroke-width="2.5" stroke-linejoin="round"><path d="M0 76 V26 L44 6 L88 26 V76 Z"/><rect x="34" y="46" width="20" height="30"/>
-        <path d="M-10 76 H98" stroke-linecap="round"/><path d="M44 6 V-7 h14 l-4 4 l4 4 h-14" stroke="var(--sp-tan)" fill="var(--sp-tan)" stroke-width="1.5"/></g>
-      ${spSoldier(140, 50)}
-      ${spArrow(262, 52, 196, 'var(--bad)', 'push')}${spArrow(262, 84, 196, 'var(--bad)', 'push')}
-      ${spMan(288, 46, 'var(--bad)')}
-      <text class="sm" x="14" y="16">ОБ’ЄКТ ПІД ОХОРОНОЮ</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД · ЗАХОПЛЕННЯ</text></svg>`,
+      ${spGround()}
+      <g transform="translate(10 40)"><path d="M0 76 V30 L40 10 L80 30 V76 Z" fill="var(--sp-paper)" stroke="var(--sp-ink)" stroke-width="2" stroke-linejoin="round"/><rect x="30" y="48" width="20" height="28" fill="var(--sp-dim)"/>
+        <rect x="10" y="38" width="12" height="10" fill="var(--sp-dim)" opacity=".6"/><rect x="58" y="38" width="12" height="10" fill="var(--sp-dim)" opacity=".6"/>
+        <path d="M40 10 V-14" stroke="var(--sp-ink)" stroke-width="1.5"/><path d="M40 -14 h16 l-4 4 l4 4 h-16 Z" fill="var(--sp-tan)"/></g>
+      <path d="M98 116 V88 M110 116 V88 M122 116 V88 M94 94 H126 M94 106 H126" stroke="var(--sp-dim)" stroke-width="2"/>
+      ${spFig({ x: 146, pose: 'aim', s: 1.1 })}
+      <g class="push">${spFig({ x: 252, pose: 'runGun', kind: 'bad', flip: true, s: 1.05 })}${spFig({ x: 292, pose: 'run', kind: 'bad', flip: true, s: .95 })}</g>
+      <text class="sm" x="12" y="16">ОБ’ЄКТ ПІД ОХОРОНОЮ</text><text class="sm" x="308" y="16" text-anchor="end" style="fill:var(--bad)">НАПАД · ЗАХОПЛЕННЯ</text></svg>`,
     `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Спроба насильно заволодіти зброєю, бойовою чи іншою технікою">
-      ${spSoldier(40, 46)}
-      ${spRifle('translate(74 40) scale(0.42)')}
-      <g transform="translate(74 76)"><path d="M6 26 L14 8 H66 L80 16 V26 Z" fill="var(--sp-tan)"/><rect x="34" y="0" width="22" height="9" rx="2" fill="var(--sp-tan)"/><rect x="54" y="3" width="26" height="3" fill="var(--sp-gun)"/>
-        ${[16, 34, 52, 70].map(cx => `<circle cx="${cx}" cy="29" r="7" fill="var(--sp-gun)" stroke="var(--sp-tan)" stroke-width="1.5"/>`).join('')}</g>
-      ${spArrow(250, 66, 184, 'var(--bad)', 'push')}
-      ${spMan(280, 44, 'var(--bad)')}<path d="M272 62 l-20 4" stroke="var(--bad)" stroke-width="4" stroke-linecap="round"/>
-      <text class="sm" x="14" y="16">ЗБРОЯ І ТЕХНІКА</text><text class="sm" x="306" y="16" text-anchor="end" style="fill:var(--bad)">СПРОБА ЗАВОЛОДІТИ</text></svg>`],
+      ${spGround()}
+      ${spFig({ x: 40, pose: 'aim', s: 1.1 })}
+      ${spAPC(108, 116)}
+      <g class="push">${spFig({ x: 236, pose: 'reach', kind: 'bad', flip: true, s: 1.1 })}</g>
+      <text class="sm" x="12" y="16">ЗБРОЯ І ТЕХНІКА</text><text class="sm" x="308" y="16" text-anchor="end" style="fill:var(--bad)">СПРОБА ЗАВОЛОДІТИ</text></svg>`],
 };
 function lawCards(a) {
   const blocks = a.body.match(/<p>.*?<\/p>|<li>.*?<\/li>/g) || [], pics = LAW_PIC[a.n] || [];
@@ -1527,7 +1576,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-164712';
+const APP_V = '20261115-195159';
 let updWarned = false;
 async function checkUpdate() {
   try {
