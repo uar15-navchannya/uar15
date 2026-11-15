@@ -1252,9 +1252,10 @@ const SAFE_PIC = [
     <path fill="var(--sp-gun)" d="M152.0 73.2 L161.0 73.2 Q157.4 87.6 169.4 94.2 L166.4 98.4 Q148.4 91.2 152.0 73.2 Z"/>
     <circle cx="198.8" cy="54.0" r="5" fill="var(--sp-gun)"/><circle cx="87.2" cy="37.2" r="3.4" fill="var(--sp-gun)"/><circle cx="280.4" cy="38.4" r="3.4" fill="var(--sp-gun)"/>
     <path fill="var(--sp-gun)" d="M122.0 67.2 L122.0 86.4 L117.2 110.4 L110.0 142.8 L44.0 142.8 L57.2 99.6 L64.4 79.2 L62.0 66.0 L69.2 64.8 Z"/>
-    <path fill="#c99b7a" stroke="#8d6a51" stroke-width="1" d="M60.8 61.2 Q93.2 52.8 125.6 57.6 L128.0 72.0 L123.2 112.8 Q88.4 124.8 59.6 110.4 Q52.4 85.2 60.8 61.2 Z"/>
-    <rect x="101.6" y="79.2" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/><rect x="101.6" y="90.6" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/><rect x="101.6" y="102.0" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/>
-    <g class="fing"><rect x="111.7" y="58.1" width="54" height="11" rx="5.5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/></g></g>
+    <g fill="#c99b7a" stroke="#8d6a51" stroke-width="2.2" stroke-linejoin="round"><path d="M122.0 56.4 Q90.8 50.4 63.2 55.2 Q42.8 70.8 39.2 97.2 L6.8 147.6 L72.8 147.6 Q93.2 133.2 106.4 118.8 L128.0 72.0 Q130.4 61.2 122.0 56.4 Z"/><g class="fing"><rect x="111.2" y="58.1" width="55" height="11" rx="5.5"/></g></g>
+    <g fill="#c99b7a"><path d="M122.0 56.4 Q90.8 50.4 63.2 55.2 Q42.8 70.8 39.2 97.2 L6.8 147.6 L72.8 147.6 Q93.2 133.2 106.4 118.8 L128.0 72.0 Q130.4 61.2 122.0 56.4 Z"/><g class="fing"><rect x="111.2" y="58.1" width="55" height="11" rx="5.5"/></g></g>
+    <g fill="#c99b7a" stroke="#8d6a51" stroke-width="1.1"><rect x="103.4" y="77.4" width="32.4" height="10.5" rx="5.2" transform="rotate(8 103.4 77.4)"/><rect x="101.6" y="88.8" width="32.4" height="10.5" rx="5.2" transform="rotate(8 101.6 88.8)"/><rect x="99.8" y="100.2" width="32.4" height="10.5" rx="5.2" transform="rotate(8 99.8 100.2)"/></g>
+    <path d="M112.4 59.4 q4 3 3 8" fill="none" stroke="#8d6a51" stroke-width="1" opacity=".6"/></g></g>
     ${spMark('A1', false, 22, 16, 'НА ГАЧКУ')}${spMark('A2', true, 22, 16, 'УЗДОВЖ РАМКИ')}</svg>`,
   // 5. Перевірка перед заняттям
   `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Чек-лист: ствол чистий, механізми справні, магазин встановлений">
@@ -1433,7 +1434,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-113154';
+const APP_V = '20261115-113501';
 let updWarned = false;
 async function checkUpdate() {
   try {
