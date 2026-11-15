@@ -899,7 +899,8 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}" title="3D-модель UAR-15S"></iframe>`;
+const APP_V = '20261115-210820';
+const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
   modelWant = n; if (kind) modelKind = kind;
@@ -1586,7 +1587,6 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-210543';
 let updWarned = false;
 async function checkUpdate() {
   try {
