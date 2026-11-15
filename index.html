@@ -1263,6 +1263,16 @@ const ROUTES = {
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
   'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
+// Рахуємо перегляд розділу; якщо скрипт лічильника ще вантажиться — пробуємо трохи пізніше
+let gcLast = null;
+function gcCount(tries = 0) {
+  const path = '/uar15/' + (view || '');
+  if (path === gcLast) return;
+  try {
+    if (window.goatcounter && window.goatcounter.count) { gcLast = path; window.goatcounter.count({ path, title: document.title }); }
+    else if (tries < 20) setTimeout(() => gcCount(tries + 1), 500);
+  } catch (e) { /* лічильник недоступний — сайт працює без нього */ }
+}
 function route() {
   closeZoom();
   stopSteps();
@@ -1271,6 +1281,7 @@ function route() {
   const h = decodeURIComponent(location.hash.slice(1));
   view = Object.prototype.hasOwnProperty.call(ROUTES, h) ? h : '';
   ROUTES[view]();
+  gcCount();
   window.scrollTo(0, 0);
 }
 function go(to) {
@@ -1348,7 +1359,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-071816';
+const APP_V = '20261115-111407';
 let updWarned = false;
 async function checkUpdate() {
   try {
@@ -1374,5 +1385,8 @@ window.__uar = { FACTS, PARTS, ON_DIAGRAM, DIS, ASM, ITEMS, question, grade, due
 })();
 </script>
 
+<!-- Статистика відвідувань (GoatCounter: без cookies, IP не зберігається); розділи рахуються вручну за #хешем -->
+<script>window.goatcounter = { no_onload: true };</script>
+<script data-goatcounter="https://ivanruten.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
