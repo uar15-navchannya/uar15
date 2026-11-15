@@ -2,6 +2,9 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ivanruten.goatcounter.com; font-src 'self'; media-src 'self'; connect-src 'self'; frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#10150D">
@@ -20,9 +23,10 @@ document.documentElement.dataset.theme = t === 'light' || t === 'dark' ? t : (ua
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Гвинтівка UAR-15S</title>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap">
+<style>
+@font-face { font-family:"Oswald"; font-style:normal; font-display:swap; font-weight:200 700; src:url(fonts/oswald-cyrillic-wght-normal.woff2) format("woff2-variations"), url(fonts/oswald-cyrillic-wght-normal.woff2) format("woff2"); unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116; }
+@font-face { font-family:"Oswald"; font-style:normal; font-display:swap; font-weight:200 700; src:url(fonts/oswald-latin-wght-normal.woff2) format("woff2-variations"), url(fonts/oswald-latin-wght-normal.woff2) format("woff2"); unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+</style>
 <style>
 /* Layout: одна колонка до 720px, липка шапка; екрани перемикаються за #хешем, як розділ UAR-15S у DigDeep.
    Кольори — DigDeep: темне оливкове тло, помаранчева дія, фіолетовий акцент модуля «Мозок». */
@@ -1447,7 +1451,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-124043';
+const APP_V = '20261115-164712';
 let updWarned = false;
 async function checkUpdate() {
   try {
