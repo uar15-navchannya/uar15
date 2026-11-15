@@ -1263,14 +1263,15 @@ const ROUTES = {
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
   'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
-// Рахуємо перегляд розділу; якщо скрипт лічильника ще вантажиться — пробуємо трохи пізніше
+// Статистика (GoatCounter, без cookies): шлемо перегляд розділу напряму, без стороннього скрипта
 let gcLast = null;
-function gcCount(tries = 0) {
+function gcCount() {
   const path = '/uar15/' + (view || '');
-  if (path === gcLast) return;
+  if (path === gcLast || /^(localhost|127\.)/.test(location.hostname) || location.protocol === 'file:') return;
+  gcLast = path;
   try {
-    if (window.goatcounter && window.goatcounter.count) { gcLast = path; window.goatcounter.count({ path, title: document.title }); }
-    else if (tries < 20) setTimeout(() => gcCount(tries + 1), 500);
+    const q = new URLSearchParams({ p: path, t: document.title, r: document.referrer || '', s: `${screen.width},${screen.height},${devicePixelRatio || 1}`, rnd: Math.random().toString(36).slice(2) });
+    const img = new Image(); img.referrerPolicy = 'no-referrer-when-downgrade'; img.src = 'https://ivanruten.goatcounter.com/count?' + q;
   } catch (e) { /* лічильник недоступний — сайт працює без нього */ }
 }
 function route() {
@@ -1359,7 +1360,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-111407';
+const APP_V = '20261115-111936';
 let updWarned = false;
 async function checkUpdate() {
   try {
@@ -1385,8 +1386,5 @@ window.__uar = { FACTS, PARTS, ON_DIAGRAM, DIS, ASM, ITEMS, question, grade, due
 })();
 </script>
 
-<!-- Статистика відвідувань (GoatCounter: без cookies, IP не зберігається); розділи рахуються вручну за #хешем -->
-<script>window.goatcounter = { no_onload: true };</script>
-<script data-goatcounter="https://ivanruten.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
