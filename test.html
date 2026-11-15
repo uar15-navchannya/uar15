@@ -170,6 +170,10 @@ p { margin: 0; }
 .sp .early { animation:sp-early 6s ease-in-out infinite; }
 @keyframes sp-early { 0%,42% { opacity:1; } 52%,92% { opacity:0; } 100% { opacity:1; } }
 @media (prefers-reduced-motion: reduce) { .sp .early { opacity:0; } }
+
+.art.law-v { position:relative; padding-bottom:60px; transition:box-shadow .2s, border-color .2s; }
+.art.law-v > .play { position:absolute; right:12px; bottom:10px; }
+.art.law-v.playing { border-color:var(--orange); box-shadow:0 0 0 2px color-mix(in srgb, var(--orange) 35%, transparent); }
 .art-h { margin:10px 0 -4px; font:600 17px/1.2 var(--display); letter-spacing:2px; text-transform:uppercase; color:var(--violet); }
 .law { display:flex; flex-direction:column; gap:12px; }
 .art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
@@ -942,7 +946,8 @@ function guideAs() {
 }
 
 // — Озвучка кроків: один аудіоелемент на всі кроки (так iPhone дозволяє грати кроки підряд) —
-const VOICE_STEPS = { dis: DIS.length, as: ASM.length };
+const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9 };
+const VOICE_NAME = { dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина' };
 const stepAudio = new Audio();
 stepAudio.preload = 'auto';
 const P = { kind: null, n: 0, all: false, wait: null, token: 0 };
@@ -980,8 +985,8 @@ function playStep(kind, n, all) {
     if (stick) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - stick.getBoundingClientRect().bottom - 4, behavior: 'smooth' });
     else el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
   }
-  modelStep(n, kind); gStep = n; modelPos();
-  $('player-text').textContent = `${kind === 'dis' ? 'Розбирання' : 'Збирання'} · крок ${n} з ${VOICE_STEPS[kind]}`;
+  if (kind !== 'law') { modelStep(n, kind); gStep = n; modelPos(); }
+  $('player-text').textContent = `${VOICE_NAME[kind]} ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
   stepAudio.onended = () => {
@@ -1423,9 +1428,11 @@ const LAW_PIC = {
       <g class="push">${spFig({ x: 236, pose: 'reach', kind: 'bad', flip: true, s: 1.1 })}</g>
       <text class="sm" x="12" y="16">ЗБРОЯ І ТЕХНІКА</text><text class="sm" x="308" y="16" text-anchor="end" style="fill:var(--bad)">СПРОБА ЗАВОЛОДІТИ</text></svg>`],
 };
+let lawN = 0;
 function lawCards(a) {
   const blocks = a.body.match(/<p>.*?<\/p>|<li>.*?<\/li>/g) || [], pics = LAW_PIC[a.n] || [];
-  return `<h3 class="art-h">Стаття ${a.n}</h3>` + blocks.map((b, i) => `<section class="art">${pics[i] || ''}${b.replace(/^<li>/, '<p>').replace(/<\/li>$/, '</p>')}</section>`).join('');
+  return `<h3 class="art-h">Стаття ${a.n}</h3>` + blocks.map((b, i) => { const n = ++lawN; return `<section class="art law-v" data-step="${n}">${pics[i] || ''}${b.replace(/^<li>/, '<p>').replace(/<\/li>$/, '</p>')}`
+    + `<button class="play" data-act="play-step" data-kind="law" data-n="${n}" aria-label="Слухати частину ${n}">${svg('play')}</button></section>`; }).join('');
 }
 // Питання — лише за текстом статей вище
 const LAW_Q = [
@@ -1444,7 +1451,8 @@ function lawView() {
   setBar('Застосування зброї');
   let best = null; try { best = localStorage.getItem(LAW_BEST); } catch (e) { /* без сховища */ }
   app.innerHTML = `<div class="law">
-    ${LAW.map(lawCards).join('')}
+    ${listenBtn('law')}
+    ${(lawN = 0, LAW.map(lawCards).join(''))}
     <button class="btn primary" data-act="go" data-to="law-test">Перевір себе · ${LAW_Q.length} питань</button>
     ${best ? `<p class="muted small center">Найкраще: ${esc(best)} / ${LAW_Q.length}</p>` : ''}
     <p class="src">Джерело: ${esc(LAW_SRC)}.</p></div>`;
@@ -1576,7 +1584,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-195354';
+const APP_V = '20261115-201511';
 let updWarned = false;
 async function checkUpdate() {
   try {
