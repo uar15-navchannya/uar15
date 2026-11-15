@@ -946,8 +946,8 @@ function guideAs() {
 }
 
 // — Озвучка кроків: один аудіоелемент на всі кроки (так iPhone дозволяє грати кроки підряд) —
-const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9 };
-const VOICE_NAME = { dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина' };
+const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9, safe: 5 };
+const VOICE_NAME = { dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина', safe: 'Безпечне поводження · правило' };
 const stepAudio = new Audio();
 stepAudio.preload = 'auto';
 const P = { kind: null, n: 0, all: false, wait: null, token: 0 };
@@ -985,7 +985,7 @@ function playStep(kind, n, all) {
     if (stick) window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - stick.getBoundingClientRect().bottom - 4, behavior: 'smooth' });
     else el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
   }
-  if (kind !== 'law') { modelStep(n, kind); gStep = n; modelPos(); }
+  if (kind === 'dis' || kind === 'as') { modelStep(n, kind); gStep = n; modelPos(); }
   $('player-text').textContent = `${VOICE_NAME[kind]} ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
@@ -1299,7 +1299,9 @@ function safeView() {
   setBar('Безпечне поводження');
   app.innerHTML = `<div class="law">
     <h2 class="h" style="margin:0">Основні правила безпечного поводження зі зброєю</h2>
-    ${SAFE.map((r, i) => `<section class="art">${SAFE_PIC[i] || ''}<h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p></section>`).join('')}</div>`;
+    ${listenBtn('safe')}
+    ${SAFE.map((r, i) => `<section class="art law-v" data-step="${i + 1}">${SAFE_PIC[i] || ''}<h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p>`
+      + `<button class="play" data-act="play-step" data-kind="safe" data-n="${i + 1}" aria-label="Слухати правило ${i + 1}">${svg('play')}</button></section>`).join('')}</div>`;
 }
 
 // — Застосування зброї: текст статей і перевірка —
@@ -1584,7 +1586,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-201713';
+const APP_V = '20261115-202457';
 let updWarned = false;
 async function checkUpdate() {
   try {
