@@ -138,8 +138,8 @@ p { margin: 0; }
 @keyframes sp-a2 { 0% { opacity:0; } 38% { opacity:1; } 92% { opacity:0; } }
 .sp .walk { animation:sp-walk 6s ease-in-out infinite; }
 @keyframes sp-walk { 0%,25% { transform:translateX(0); opacity:1; } 45%,85% { transform:translateX(70px); opacity:0; } 100% { transform:translateX(0); opacity:1; } }
-.sp .fing { transform-origin:118px 66px; animation:sp-fing 6s ease-in-out infinite; }
-@keyframes sp-fing { 0%,22% { transform:rotate(17deg); } 40%,88% { transform:rotate(0deg); } 100% { transform:rotate(17deg); } }
+.sp .fing { transform-origin:117.2px 63.6px; animation:sp-fing 6s ease-in-out infinite; }
+@keyframes sp-fing { 0%,22% { transform:rotate(29deg); } 40%,88% { transform:rotate(0deg); } 100% { transform:rotate(29deg); } }
 .sp .ck { opacity:0; animation:sp-ck 6s ease-out infinite; }
 .sp .ck.c2 { animation-delay:.9s; } .sp .ck.c3 { animation-delay:1.8s; }
 @keyframes sp-ck { 0%,10% { opacity:0; transform:scale(.4); } 20%,90% { opacity:1; transform:scale(1); } 100% { opacity:0; } }
@@ -1244,15 +1244,18 @@ const SAFE_PIC = [
     <rect x="176" y="102" width="2" height="22" fill="var(--sp-dim)"/>
     ${spPerson(258, 52, 'walk')}
     ${spMark('A1', false, 22, 18, 'ЗА МІШЕННЮ ЛЮДИ — СТОП')}${spMark('A2', true, 22, 18, 'ПРОСТІР ВІЛЬНИЙ')}</svg>`,
-  // 4. Палець поза гачком
-  `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Вказівний палець лежить уздовж рамки, а не на спусковому гачку">
-    <path fill="var(--sp-tan)" d="M40 40 H300 V64 H250 L246 92 H170 L166 64 H40 Z"/>
-    <path fill="none" stroke="var(--sp-tan)" stroke-width="6" d="M150 64 V92 Q150 104 162 104 H200 Q212 104 214 92 L220 70"/>
-    <path fill="var(--sp-gun)" d="M160 64 h7 v12 q2 8 9 12 l-3 4 q-12 -5 -13 -16 Z"/>
-    <path fill="var(--sp-gun)" d="M100 64 H140 L130 128 H84 Z"/>
-    <path fill="#c99b7a" d="M70 50 Q96 44 120 56 L124 78 Q100 92 78 86 Z"/>
-    <g class="fing"><rect x="112" y="60" width="62" height="12" rx="6" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/></g>
-    ${spMark('A1', false, 22, 18, 'НА ГАЧКУ')}${spMark('A2', true, 22, 18, 'УЗДОВЖ РАМКИ')}</svg>`,
+  // 4. Палець поза гачком — нижня рама за бічним фото: скоба, вигнутий гачок, руків'я, магазин
+  `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Вказівний палець лежить уздовж рамки над спусковою скобою, а не на спусковому гачку">
+    <g transform="translate(0 10)"><path fill="var(--sp-gun)" d="M213.2 112.2 L281.6 111.6 L286.4 142.8 L219.2 142.8 Z"/>
+    <path fill="var(--sp-tan)" fill-rule="evenodd" d="M45.2 30.0 L296.0 30.0 L296.0 44.4 L280.4 49.2 L284.0 111.6 L210.8 112.8 L207.2 109.2 L129.2 109.2 L123.2 98.4 L122.0 68.4 L69.2 66.0 L45.2 54.0 Z M142.4 73.2 H196.4 Q203.6 73.2 203.6 80.4 V94.8 Q203.6 102.0 196.4 102.0 H146.0 Q137.6 102.0 136.4 93.6 L135.2 80.4 Q135.2 73.2 142.4 73.2 Z"/>
+    <rect fill="var(--sp-tan)" x="45.2" y="15.6" width="250.8" height="14.4" opacity=".75"/>
+    <path fill="var(--sp-gun)" d="M152.0 73.2 L161.0 73.2 Q157.4 87.6 169.4 94.2 L166.4 98.4 Q148.4 91.2 152.0 73.2 Z"/>
+    <circle cx="198.8" cy="54.0" r="5" fill="var(--sp-gun)"/><circle cx="87.2" cy="37.2" r="3.4" fill="var(--sp-gun)"/><circle cx="280.4" cy="38.4" r="3.4" fill="var(--sp-gun)"/>
+    <path fill="var(--sp-gun)" d="M122.0 67.2 L122.0 86.4 L117.2 110.4 L110.0 142.8 L44.0 142.8 L57.2 99.6 L64.4 79.2 L62.0 66.0 L69.2 64.8 Z"/>
+    <path fill="#c99b7a" stroke="#8d6a51" stroke-width="1" d="M60.8 61.2 Q93.2 52.8 125.6 57.6 L128.0 72.0 L123.2 112.8 Q88.4 124.8 59.6 110.4 Q52.4 85.2 60.8 61.2 Z"/>
+    <rect x="101.6" y="79.2" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/><rect x="101.6" y="90.6" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/><rect x="101.6" y="102.0" width="28.8" height="10" rx="5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/>
+    <g class="fing"><rect x="111.7" y="58.1" width="54" height="11" rx="5.5" fill="#c99b7a" stroke="#8d6a51" stroke-width="1"/></g></g>
+    ${spMark('A1', false, 22, 16, 'НА ГАЧКУ')}${spMark('A2', true, 22, 16, 'УЗДОВЖ РАМКИ')}</svg>`,
   // 5. Перевірка перед заняттям
   `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Чек-лист: ствол чистий, механізми справні, магазин встановлений">
     ${spRifle('translate(176 40) scale(0.66)')}
@@ -1430,7 +1433,7 @@ paintVoice();
 route();
 
 // ── Автооновлення: сторінка сама перевіряє, чи вийшла нова версія сайту ──
-const APP_V = '20261115-112817';
+const APP_V = '20261115-113154';
 let updWarned = false;
 async function checkUpdate() {
   try {
