@@ -182,6 +182,15 @@ p { margin: 0; }
 .codex li { display:grid; grid-template-columns:34px 1fr; gap:10px; align-items:center; padding:10px 0; border-bottom:2px solid #f0a92e; }
 .codex li b { font:700 38px/1 var(--display); color:#f0a92e; text-align:center; }
 .codex li span { font:500 16px/1.3 var(--display); letter-spacing:.2px; }
+
+.codex li .sp { grid-column:1 / -1; margin:4px 0 2px; }
+.sp .sweep { transform-origin:160px 118px; animation:sp-sweep 6s ease-in-out infinite; }
+@keyframes sp-sweep { 0%,8% { transform:rotate(0deg); } 25% { transform:rotate(-70deg); } 40% { transform:rotate(70deg); } 52%,62% { transform:rotate(112deg); } 80%,100% { transform:rotate(0deg); } }
+.sp .B1 { animation:sp-b1 6s step-end infinite; } .sp .B2 { animation:sp-b2 6s step-end infinite; }
+@keyframes sp-b1 { 0% { opacity:1; } 46% { opacity:0; } 68% { opacity:1; } }
+@keyframes sp-b2 { 0% { opacity:0; } 46% { opacity:1; } 68% { opacity:0; } }
+@media (prefers-reduced-motion: reduce) { .sp .B2 { opacity:0; } .sp .B1 { opacity:1; } }
+@media (prefers-reduced-motion: reduce) { .sp .sweep { transform:none; } }
 .art-h { margin:10px 0 -4px; font:600 17px/1.2 var(--display); letter-spacing:2px; text-transform:uppercase; color:var(--violet); }
 .law { display:flex; flex-direction:column; gap:12px; }
 .art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
@@ -907,7 +916,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261116-151311';
+const APP_V = '20261116-151502';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1313,11 +1322,36 @@ const CODEX = [
   'Я ніколи не направлю зброю туди, куди не збираюсь стріляти',
   'Я ніколи не торкнуся пальцем спускового гачка, доки зброю не буде спрямовано на ціль',
 ];
+// Малюнки до кодексу (функція — бо фігури людей оголошені нижче в коді)
+const codexPics = () => [
+  `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Заряджати й розряджати — тільки на стрілецькій позиції за командою інструктора">
+    ${spGround()}
+    <rect x="112" y="112" width="118" height="8" rx="2" fill="var(--orange)" opacity=".8"/><text class="sm" x="171" y="129" text-anchor="middle" style="fill:var(--sp-dim)">СТРІЛЕЦЬКА ПОЗИЦІЯ</text>
+    ${spFig({ x: 150, pose: 'ready', s: 1.05 })}
+    ${spFig({ x: 52, pose: 'stand', s: 1.05 })}<path d="M58 66 l12 -14" stroke="#c99b7a" stroke-width="4.5" stroke-linecap="round"/>
+    <g class="pulse"><path d="M64 12 h70 a7 7 0 0 1 7 7 v16 a7 7 0 0 1 -7 7 h-48 l-14 10 v-10 h-8 a7 7 0 0 1 -7 -7 v-16 a7 7 0 0 1 7 -7 Z" fill="var(--sp-paper)" stroke="var(--sp-ink)" stroke-width="1.6"/>
+      <text class="sm" x="98" y="31" text-anchor="middle">ЗАРЯДИТИ!</text></g>
+    <text class="sm" x="22" y="128" style="fill:var(--sp-dim)">ІНСТРУКТОР</text>
+    <g transform="translate(248 52)"><rect width="56" height="60" rx="4" fill="var(--sp-paper)" stroke="var(--sp-dim)" stroke-width="1.5"/><circle cx="28" cy="28" r="16" fill="none" stroke="var(--sp-ink)" stroke-width="2"/><circle cx="28" cy="28" r="8" fill="none" stroke="var(--sp-ink)" stroke-width="2"/><circle cx="28" cy="28" r="2.6" fill="var(--orange)"/><rect x="25" y="60" width="6" height="4" fill="var(--sp-dim)"/></g></svg>`,
+  SAFE_PIC[0],
+  `<svg class="sp" viewBox="0 0 320 130" role="img" aria-label="Не повертати зброю від стрілецького напрямку більше ніж на 90 градусів (вигляд згори)">
+    <path d="M160 118 L160 8 A110 110 0 0 1 270 118 Z M160 118 L160 8 A110 110 0 0 0 50 118 Z" fill="var(--good)" opacity=".16"/>
+    <path d="M50 118 H270" stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="6 4"/>
+    <path d="M160 118 V10" stroke="var(--orange)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text class="sm" x="166" y="52">СТРІЛЕЦЬКИЙ</text><text class="sm" x="166" y="63">НАПРЯМОК</text>
+    <text class="sm" x="276" y="114" style="fill:var(--bad)">90°</text><text class="sm" x="24" y="114" style="fill:var(--bad)">90°</text>
+    <g class="sweep"><path d="M160 118 V40" stroke="var(--sp-gun)" stroke-width="7" stroke-linecap="round"/><path d="M160 118 V52" stroke="var(--sp-tan)" stroke-width="7"/><path d="M160 40 V30" stroke="var(--sp-gun)" stroke-width="3" stroke-linecap="round"/></g>
+    <circle cx="160" cy="120" r="9" fill="#5d6b47" stroke="#2c3324" stroke-width="1"/>
+    ${spMark('B1', true, 22, 18, 'У МЕЖАХ ±90°')}${spMark('B2', false, 22, 18, 'БІЛЬШЕ 90° — НЕБЕЗПЕЧНО')}</svg>`,
+  SAFE_PIC[2],
+  SAFE_PIC[1],
+  SAFE_PIC[3],
+];
 function safeView() {
   setBar('Безпечне поводження');
   app.innerHTML = `<div class="law">
     <section class="codex"><h2>Кодекс<span>поводження зі зброєю</span></h2>
-      <ol>${CODEX.map((t, i) => `<li><b>${i + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol></section>
+      <ol>${(P => CODEX.map((t, i) => `<li><b>${i + 1}</b><span>${esc(t)}</span>${P[i] || ''}</li>`).join(''))(codexPics())}</ol></section>
     <h2 class="h" style="margin:8px 0 0">Основні правила безпечного поводження зі зброєю</h2>
     ${listenBtn('safe')}
     ${SAFE.map((r, i) => `<section class="art law-v" data-step="${i + 1}">${SAFE_PIC[i] || ''}<h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p>`
