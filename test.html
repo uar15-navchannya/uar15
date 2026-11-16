@@ -183,6 +183,9 @@ p { margin: 0; }
 .codex li b { font:700 38px/1 var(--display); color:#f0a92e; text-align:center; }
 .codex li span { font:500 16px/1.3 var(--display); letter-spacing:.2px; }
 
+.codex li.playing { background:rgba(240,169,46,.12); }
+.codex li .play { grid-column:3; background:transparent; color:#f2f0ea; border-color:#5b6352; }
+.codex li:has(.play) { grid-template-columns:34px 1fr 44px; }
 .codex li .sp { grid-column:1 / -1; margin:4px 0 2px; }
 .sp .sweep { transform-origin:160px 118px; animation:sp-sweep 6s ease-in-out infinite; }
 @keyframes sp-sweep { 0%,8% { transform:rotate(0deg); } 25% { transform:rotate(-70deg); } 40% { transform:rotate(70deg); } 52%,62% { transform:rotate(112deg); } 80%,100% { transform:rotate(0deg); } }
@@ -763,7 +766,7 @@ function home() {
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
       ${tile('watch', 'drill-as', 'Збирання на час', best(ba))}
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
-      ${tile('alert', 'safe', 'Безпечне поводження', '5 основних правил поводження зі зброєю')}
+      ${tile('alert', 'safe', 'Безпечне поводження', 'кодекс поводження зі зброєю: 6 пунктів')}
       ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
     </div>
     <div class="srcs">
@@ -916,7 +919,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261116-151502';
+const APP_V = '20261116-151920';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -964,8 +967,8 @@ function guideAs() {
 }
 
 // — Озвучка кроків: один аудіоелемент на всі кроки (так iPhone дозволяє грати кроки підряд) —
-const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9, safe: 5 };
-const VOICE_NAME = { dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина', safe: 'Безпечне поводження · правило' };
+const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9, safe: 5, codex: 6 };
+const VOICE_NAME = { dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина', safe: 'Безпечне поводження · правило', codex: 'Кодекс · пункт' };
 const stepAudio = new Audio();
 stepAudio.preload = 'auto';
 const P = { kind: null, n: 0, all: false, wait: null, token: 0 };
@@ -1347,15 +1350,15 @@ const codexPics = () => [
   SAFE_PIC[1],
   SAFE_PIC[3],
 ];
+// Озвучка кодексу: файли voice/codex_01…06.mp3; поки їх немає — кнопок не показуємо
+const CODEX_VOICE = false;
 function safeView() {
   setBar('Безпечне поводження');
   app.innerHTML = `<div class="law">
+    ${CODEX_VOICE ? listenBtn('codex') : ''}
     <section class="codex"><h2>Кодекс<span>поводження зі зброєю</span></h2>
-      <ol>${(P => CODEX.map((t, i) => `<li><b>${i + 1}</b><span>${esc(t)}</span>${P[i] || ''}</li>`).join(''))(codexPics())}</ol></section>
-    <h2 class="h" style="margin:8px 0 0">Основні правила безпечного поводження зі зброєю</h2>
-    ${listenBtn('safe')}
-    ${SAFE.map((r, i) => `<section class="art law-v" data-step="${i + 1}">${SAFE_PIC[i] || ''}<h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p>`
-      + `<button class="play" data-act="play-step" data-kind="safe" data-n="${i + 1}" aria-label="Слухати правило ${i + 1}">${svg('play')}</button></section>`).join('')}</div>`;
+      <ol>${(P => CODEX.map((t, i) => `<li data-step="${i + 1}"><b>${i + 1}</b><span>${esc(t)}</span>`
+        + `${CODEX_VOICE ? `<button class="play" data-act="play-step" data-kind="codex" data-n="${i + 1}" aria-label="Слухати пункт ${i + 1}">${svg('play')}</button>` : ''}${P[i] || ''}</li>`).join(''))(codexPics())}</ol></section></div>`;
 }
 
 // — Застосування зброї: текст статей і перевірка —
