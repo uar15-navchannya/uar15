@@ -174,6 +174,14 @@ p { margin: 0; }
 .art.law-v { position:relative; padding-bottom:60px; transition:box-shadow .2s, border-color .2s; }
 .art.law-v > .play { position:absolute; right:12px; bottom:10px; }
 .art.law-v.playing { border-color:var(--orange); box-shadow:0 0 0 2px color-mix(in srgb, var(--orange) 35%, transparent); }
+
+.codex { padding:18px 16px 8px; border-radius:16px; background:#2b3128; color:#f2f0ea; }
+.codex h2 { margin:0 0 10px; font:700 30px/1 var(--display); letter-spacing:1px; text-transform:uppercase; color:#e4e1d6; }
+.codex h2 span { display:block; margin-top:4px; font-size:22px; line-height:1.1; color:#f0a92e; }
+.codex ol { list-style:none; margin:0; padding:0; }
+.codex li { display:grid; grid-template-columns:34px 1fr; gap:10px; align-items:center; padding:10px 0; border-bottom:2px solid #f0a92e; }
+.codex li b { font:700 38px/1 var(--display); color:#f0a92e; text-align:center; }
+.codex li span { font:500 16px/1.3 var(--display); letter-spacing:.2px; }
 .art-h { margin:10px 0 -4px; font:600 17px/1.2 var(--display); letter-spacing:2px; text-transform:uppercase; color:var(--violet); }
 .law { display:flex; flex-direction:column; gap:12px; }
 .art { padding:14px; border-radius:14px; background:var(--surface); border:1px solid var(--line); }
@@ -899,7 +907,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261115-210820';
+const APP_V = '20261116-151311';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1296,10 +1304,21 @@ const SAFE_PIC = [
       <path class="ck c${i + 1}" d="M5 11 l4 5 l8 -10" fill="none" stroke="var(--good)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
       <text x="32" y="15">${t}</text></g>`).join('')}</svg>`,
 ];
+// Кодекс поводження зі зброєю — дослівно з плаката на стрільбищі
+const CODEX = [
+  'Я заряджатиму і розряджатиму зброю тільки на стрілецькій позиції за командою інструктора',
+  'Я завжди буду поводитись зі зброєю як із зарядженою',
+  'Я не повертатиму зброю в сторони від стрілецького напрямку більше 90°',
+  'Перед тим, як вистрілити, я завжди буду впевнений у своїй мішені, перевірю, що знаходиться перед нею та за нею',
+  'Я ніколи не направлю зброю туди, куди не збираюсь стріляти',
+  'Я ніколи не торкнуся пальцем спускового гачка, доки зброю не буде спрямовано на ціль',
+];
 function safeView() {
   setBar('Безпечне поводження');
   app.innerHTML = `<div class="law">
-    <h2 class="h" style="margin:0">Основні правила безпечного поводження зі зброєю</h2>
+    <section class="codex"><h2>Кодекс<span>поводження зі зброєю</span></h2>
+      <ol>${CODEX.map((t, i) => `<li><b>${i + 1}</b><span>${esc(t)}</span></li>`).join('')}</ol></section>
+    <h2 class="h" style="margin:8px 0 0">Основні правила безпечного поводження зі зброєю</h2>
     ${listenBtn('safe')}
     ${SAFE.map((r, i) => `<section class="art law-v" data-step="${i + 1}">${SAFE_PIC[i] || ''}<h3>${i + 1}. ${esc(r.t)}</h3><p>${r.b}</p>`
       + `<button class="play" data-act="play-step" data-kind="safe" data-n="${i + 1}" aria-label="Слухати правило ${i + 1}">${svg('play')}</button></section>`).join('')}</div>`;
