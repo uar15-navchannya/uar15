@@ -766,7 +766,7 @@ function home() {
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
       ${tile('watch', 'drill-as', 'Збирання на час', best(ba))}
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
-      ${tile('alert', 'safe', 'Безпечне поводження', 'кодекс поводження зі зброєю: 6 пунктів')}
+      ${tile('alert', 'safe', 'Кодекс поводження зі зброєю', '6 пунктів з малюнками й озвучкою')}
       ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
     </div>
     <div class="srcs">
@@ -919,7 +919,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261116-161455';
+const APP_V = '20261116-161731';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1246,7 +1246,7 @@ Z.stage.addEventListener('wheel', e => { e.preventDefault(); const p = local(e);
 window.addEventListener('resize', () => { if (!Z.el.hidden) zApply(); });
 
 
-// — Безпечне поводження зі зброєю (текст надав командир підрозділу) —
+// — Кодекс поводження зі зброєю —
 const SAFE = [
   { t: 'Зброя завжди заряджена', b: 'Завжди ставтеся до зброї так, ніби вона <mark>заряджена</mark>. Навіть якщо ви особисто перевірили патронники й магазин, не змінюйте своє ставлення.' },
   { t: 'Ствол — у безпечний бік', b: 'Ніколи не спрямовуйте ствол туди, <mark>куди не плануєте стріляти</mark>. Він має бути направлений у безпечну сторону (униз, у бік мішені або в іншу заздалегідь визначену зону).' },
@@ -1353,7 +1353,7 @@ const codexPics = () => [
 // Озвучка кодексу: файли voice/codex_01…06.mp3; поки їх немає — кнопок не показуємо
 const CODEX_VOICE = true;
 function safeView() {
-  setBar('Безпечне поводження');
+  setBar('Кодекс поводження');
   app.innerHTML = `<div class="law">
     ${CODEX_VOICE ? listenBtn('codex') : ''}
     <section class="codex"><h2>Кодекс<span>поводження зі зброєю</span></h2>
