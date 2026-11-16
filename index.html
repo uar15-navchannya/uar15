@@ -919,7 +919,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261116-182335';
+const APP_V = '20261116-182609';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1331,7 +1331,7 @@ const codexPics = () => [
     ${spGround()}
     <rect x="112" y="112" width="118" height="8" rx="2" fill="var(--orange)" opacity=".8"/><text class="sm" x="171" y="129" text-anchor="middle" style="fill:var(--sp-dim)">СТРІЛЕЦЬКА ПОЗИЦІЯ</text>
     ${spFig({ x: 150, pose: 'ready', s: 1.05 })}
-    ${spFig({ x: 52, pose: 'stand', s: 1.05 })}<path d="M58 66 l12 -14" stroke="#c99b7a" stroke-width="4.5" stroke-linecap="round"/>
+    ${spFig({ x: 52, pose: 'point', s: 1.05 })}
     <g class="pulse"><path d="M64 12 h70 a7 7 0 0 1 7 7 v16 a7 7 0 0 1 -7 7 h-48 l-14 10 v-10 h-8 a7 7 0 0 1 -7 -7 v-16 a7 7 0 0 1 7 -7 Z" fill="var(--sp-paper)" stroke="var(--sp-ink)" stroke-width="1.6"/>
       <text class="sm" x="98" y="31" text-anchor="middle">ЗАРЯДИТИ!</text></g>
     <text class="sm" x="22" y="128" style="fill:var(--sp-dim)">ІНСТРУКТОР</text>
@@ -1395,27 +1395,56 @@ const FIG_P = {
   run: { lb: [[-2, -31], [-7, -17], [-17, -9]], lf: [[3, -31], [12, -21], [9, -2]], ab: [[-1, -51], [-9, -44], [-14, -36]], af: [[2, -51], [9, -44], [16, -47]], lean: 10 },
   runGun: { lb: [[-2, -31], [-7, -17], [-17, -9]], lf: [[3, -31], [12, -21], [9, -2]], ab: [[-1, -51], [-4, -42], [3, -40]], af: [[2, -51], [9, -45], [14, -42]], gun: [-5, -47, 28, -36], lean: 10 },
   reach: { lb: [[-3, -30], [-9, -16], [-15, 0]], lf: [[3, -30], [10, -16], [13, 0]], ab: [[-1, -51], [-8, -42], [-10, -32]], af: [[2, -51], [14, -50], [27, -49]], lean: 8 },
+  point: { lb: [[-3, -30], [-4, -15], [-5, 0]], lf: [[3, -30], [4, -15], [6, 0]], ab: [[-2, -50], [-6, -38], [-6, -27]], af: [[2, -51], [9, -57], [12, -64]] },
   walk: { lb: [[-3, -30], [-6, -15], [-10, 0]], lf: [[3, -30], [6, -15], [8, 0]], ab: [[-2, -50], [-7, -39], [-9, -29]], af: [[2, -50], [6, -38], [9, -29]] },
 };
 const spLimb = (pts, w, c) => `<path d="M${pts.map(p => p.join(' ')).join(' L')}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
 const spGun = ([x0, y0, x1, y1]) => { const L = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0) * 180 / Math.PI; return spRifle(`translate(${x0} ${y0}) rotate(${a.toFixed(1)}) scale(${(L / 196).toFixed(3)}) translate(0 -17)`); };
 function spFig({ x, y = 116, s = 1, kind = 'sol', pose = 'stand', flip = false, cls = '' }) {
-  const c = FIG_C[kind], p = FIG_P[pose], skin = '#c99b7a';
+  // Реалістичніша фігура: пропорції ~1:6,5, сегменти кінцівок звужуються, взуття, обличчя в профіль, спорядження
+  const c = FIG_C[kind], p = FIG_P[pose], skin = '#c99b7a', skinD = '#a5795c', glove = '#33382d', boot = '#1d1f1b';
+  const P = a => `${a[0]} ${a[1]}`;
+  const seg = (a, b, w, col) => `<path d="M${P(a)} L${P(b)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+  const leg = (L, col, front) => {
+    const [h, k, f] = L, d = kind === 'sol' ? `<ellipse cx="${k[0] + .6}" cy="${k[1]}" rx="3" ry="3.4" fill="${front ? c.gear : c.helm}" stroke="${c.line}" stroke-width=".6"/>` : '';
+    // берець: халява, носок, підошва, шнурівка; гомілка закінчується всередині халяви
+    const [fx, fy] = f, an = [fx, fy - 6.4];
+    const bt = `<path d="M${fx - 3.5} ${fy - 8} L${fx + 3.3} ${fy - 8} L${fx + 3.6} ${fy - 3.8} Q${fx + 6} ${fy - 3.6} ${fx + 8} ${fy - 2.6} Q${fx + 9.4} ${fy - 1.8} ${fx + 9.2} ${fy - .9} L${fx - 3.6} ${fy - .9} Q${fx - 4.2} ${fy - 4} ${fx - 3.5} ${fy - 8} Z" fill="${boot}"/>`
+      + `<rect x="${fx - 4}" y="${fy - 1.3}" width="13.6" height="1.6" rx=".6" fill="#3d4138"/>`
+      + `<path d="M${fx + .4} ${fy - 6.6} h2.4 M${fx + .9} ${fy - 5.2} h2.4 M${fx + 1.6} ${fy - 3.9} h2.2" stroke="#4a4f44" stroke-width=".6"/>`;
+    return seg(h, k, 7.8, col) + seg(k, an, 6.2, col) + d + bt;
+  };
+  const arm = (A, col, front) => {
+    const [sh, el, hd] = A, hand = kind === 'sol' ? glove : skin;
+    return seg(sh, el, 5.6, col) + seg(el, hd, 4.7, col) + `<ellipse cx="${hd[0]}" cy="${hd[1]}" rx="2.5" ry="2.2" fill="${hand}"/>`;
+  };
+  const lineW = kind === 'bad' ? 1.3 : .7;
+  const torso = `<path d="M-6.6 -53.6 Q-1 -56 6.4 -54.4 Q8.6 -53 8.2 -49 L7 -31 Q0 -29.4 -6.8 -31 L-7.8 -50 Q-8 -52.8 -6.6 -53.6 Z" fill="${c.cloth}" stroke="${c.line}" stroke-width="${lineW}"/>`
+    + (kind === 'sol'
+      ? `<path d="M-6.4 -52 Q0 -53.6 7 -52 L7.6 -37.5 Q0 -36.2 -6.6 -37.5 Z" fill="${c.gear}" stroke="${c.line}" stroke-width=".7"/>`
+        + `${[-4.8, -1.2, 2.4].map(px => `<rect x="${px}" y="-43" width="3.2" height="5.8" rx=".8" fill="${c.helm}" stroke="${c.line}" stroke-width=".5"/>`).join('')}`
+        + `<path d="M-5.6 -49.6 H6.4 M-5.6 -47.6 H6.4" stroke="${c.line}" stroke-width=".5" opacity=".7"/>`
+        + `<rect x="-7.2" y="-33.6" width="15" height="2.6" rx=".6" fill="${c.line}"/><rect x="-6.8" y="-33.2" width="3.6" height="4.4" rx=".6" fill="${c.helm}"/>`
+      : kind === 'bad'
+        ? `<path d="M-6 -52 L-1 -45 L6.6 -52" fill="none" stroke="${c.back}" stroke-width="1.2"/><path d="M-6.8 -33 H7.4" stroke="${c.back}" stroke-width="2"/>`
+        : `<path d="M-1 -54.6 L1 -50.5 L3 -54.6" fill="none" stroke="${c.line}" stroke-width=".8"/><path d="M-6.8 -32 H7.4" stroke="${c.back}" stroke-width="1.6"/>`);
+  const neck = `<rect x="-1.9" y="-57.6" width="4.2" height="4.6" rx="1.2" fill="${kind === 'bad' ? c.cloth : skinD}"/>`;
+  const face = `<path d="M-4.4 -61.4 Q-4.6 -66.4 0.4 -66.6 Q5 -66.6 5.2 -62 L6.4 -59.6 L5.2 -59.2 Q5.2 -56 1.6 -55.8 Q-3.6 -55.6 -4.4 -61.4 Z" fill="${kind === 'bad' ? c.cloth : skin}" stroke="${kind === 'bad' ? c.line : 'none'}" stroke-width="${lineW}"/>`;
   const head = kind === 'sol'
-    ? `<circle cx="0" cy="-61" r="6.2" fill="${skin}"/><path d="M-7.2 -61.5 a7.2 7.2 0 0 1 14.4 0 l1.6 0.6 h-17.4 Z" fill="${c.helm}" stroke="${c.line}" stroke-width=".8"/>`
+    ? face + `<ellipse cx="-1.2" cy="-60.6" rx="1.1" ry="1.6" fill="${skinD}"/><circle cx="3.4" cy="-61.4" r=".6" fill="#2a221c"/>`
+      + `<path d="M-5.6 -61.2 Q-6.2 -68.8 0.6 -69 Q6.6 -69 6.6 -62.6 L7.8 -62.2 L7.6 -61.4 L-5.8 -60.6 Z" fill="${c.helm}" stroke="${c.line}" stroke-width=".7"/>`
+      + `<path d="M-5.2 -63.6 H6.2" stroke="${c.line}" stroke-width="1" opacity=".55"/><rect x="5.4" y="-67.2" width="1.8" height="2.6" rx=".4" fill="${c.line}"/>`
+      + `<path d="M-1.6 -61 Q0.6 -56.6 3.2 -56.4" fill="none" stroke="${c.line}" stroke-width=".6"/>`
     : kind === 'bad'
-      ? `<circle cx="0" cy="-61" r="6.4" fill="${c.cloth}" stroke="${c.line}" stroke-width="1.2"/><rect x="0.5" y="-63" width="5.5" height="3" rx="1.5" fill="${skin}"/>`
-      : `<circle cx="0" cy="-61" r="6.2" fill="${skin}"/><path d="M-6.3 -61 a6.3 6.3 0 0 1 12.6 -1 q-4 -2 -7 1 q-3 2 -5.6 0 Z" fill="${c.hair}"/>`;
-  const torso = `<path d="M-7 -53 Q0 -56 7 -53 L6.5 -30 Q0 -28 -6.5 -30 Z" fill="${c.cloth}" stroke="${kind === 'bad' ? c.line : c.line}" stroke-width="${kind === 'bad' ? 1.2 : .8}"/>`
-    + (kind === 'sol' ? `<rect x="-6.2" y="-50" width="12.4" height="15" rx="2" fill="${c.gear}" stroke="${c.line}" stroke-width=".7"/><path d="M-4 -44 h8 M-4 -40 h8" stroke="${c.line}" stroke-width=".8"/>` : '');
-  const hands = p.gun ? `<circle cx="${p.ab[2][0]}" cy="${p.ab[2][1]}" r="2.2" fill="${skin}"/><circle cx="${p.af[2][0]}" cy="${p.af[2][1]}" r="2.2" fill="${skin}"/>` : `<circle cx="${p.af[2][0]}" cy="${p.af[2][1]}" r="2.1" fill="${skin}"/>`;
-  const out = kind === 'bad' ? `<g opacity=".9">${spLimb(p.lb, 8.6, c.line)}${spLimb(p.lf, 8.6, c.line)}${spLimb(p.af, 7, c.line)}</g>` : '';
+      ? face + `<path d="M1.4 -62.6 H5.6 V-60.6 H1.4 Z" fill="${skin}"/><circle cx="3.6" cy="-61.6" r=".55" fill="#1a1a1a"/>`
+      : face + `<ellipse cx="-1.2" cy="-60.8" rx="1.1" ry="1.6" fill="${skinD}"/><circle cx="3.4" cy="-61.6" r=".6" fill="#2a221c"/>`
+        + `<path d="M-4.8 -60.6 Q-6 -67.6 0.6 -67.4 Q5.4 -67.2 5.4 -63.4 Q2 -64.8 -0.4 -63.6 Q-2.4 -62.6 -2.6 -59.8 Z" fill="${c.hair}"/>`;
+  const out = kind === 'bad' ? `<g opacity=".85">${seg(p.lb[0], p.lb[1], 9.6, c.line)}${seg(p.lb[1], [p.lb[2][0], p.lb[2][1] - 6.4], 8, c.line)}${seg(p.lf[0], p.lf[1], 9.6, c.line)}${seg(p.lf[1], [p.lf[2][0], p.lf[2][1] - 6.4], 8, c.line)}${seg(p.af[0], p.af[1], 7.4, c.line)}${seg(p.af[1], p.af[2], 6.4, c.line)}</g>` : '';
   return `<g class="${cls}"><g transform="translate(${x} ${y}) scale(${flip ? -s : s} ${s})">
-    <ellipse cx="0" cy="1" rx="13" ry="2.4" fill="#000" opacity=".22"/>
+    <ellipse cx="0" cy="1" rx="13" ry="2.2" fill="#000" opacity=".22"/>
     <g transform="rotate(${p.lean || 0} 0 -30)">${out}
-    ${spLimb(p.ab, 5.5, c.back)}${spLimb(p.lb, 6.6, c.back)}${spLimb(p.lf, 6.6, c.cloth)}
-    <path d="M${p.lf[2][0] - 1} ${p.lf[2][1] - 1} h7" stroke="#1b1d20" stroke-width="3.6" stroke-linecap="round"/><path d="M${p.lb[2][0] - 1} ${p.lb[2][1] - 1} h7" stroke="#1b1d20" stroke-width="3.6" stroke-linecap="round"/>
-    ${torso}${head}${p.gun ? spGun(p.gun) : ''}${spLimb(p.af, 5.5, c.cloth)}${hands}</g></g></g>`;
+    ${arm(p.ab, c.back, false)}${leg(p.lb, c.back, false)}${leg(p.lf, c.cloth, true)}
+    ${torso}${neck}${head}${p.gun ? spGun(p.gun) : ''}${arm(p.af, c.cloth, true)}</g></g></g>`;
 }
 const spGround = (y = 116, w = 320, h = 130) => `<rect x="0" y="${y}" width="${w}" height="${h - y}" fill="var(--sp-ground)"/><path d="M0 ${y} H${w}" stroke="var(--sp-dim)" stroke-width="1" opacity=".5"/>`;
 const spFlash = (x, y, cls = 'up') => `<path class="${cls}" d="M${x} ${y - 9} l3 6 l6 -3 l-3 6 l6 3 l-6 2 l2 6 l-6 -3 l-3 6 l-2 -6 l-6 2 l3 -6 l-6 -3 l6 -2 l-2 -6 l6 3 Z" fill="var(--orange)"/>`;
