@@ -919,7 +919,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261116-182244';
+const APP_V = '20261116-182335';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1406,7 +1406,7 @@ function spFig({ x, y = 116, s = 1, kind = 'sol', pose = 'stand', flip = false, 
   const P = a => `${a[0]} ${a[1]}`;
   const seg = (a, b, w, col) => `<path d="M${P(a)} L${P(b)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
   const leg = (L, col, front) => {
-    const [h, k, f] = L, d = front && kind === 'sol' ? `<ellipse cx="${k[0] + .6}" cy="${k[1]}" rx="3" ry="3.4" fill="${c.gear}" stroke="${c.line}" stroke-width=".6"/>` : '';
+    const [h, k, f] = L, d = kind === 'sol' ? `<ellipse cx="${k[0] + .6}" cy="${k[1]}" rx="3" ry="3.4" fill="${front ? c.gear : c.helm}" stroke="${c.line}" stroke-width=".6"/>` : '';
     // берець: халява, носок, підошва, шнурівка; гомілка закінчується всередині халяви
     const [fx, fy] = f, an = [fx, fy - 6.4];
     const bt = `<path d="M${fx - 3.5} ${fy - 8} L${fx + 3.3} ${fy - 8} L${fx + 3.6} ${fy - 3.8} Q${fx + 6} ${fy - 3.6} ${fx + 8} ${fy - 2.6} Q${fx + 9.4} ${fy - 1.8} ${fx + 9.2} ${fy - .9} L${fx - 3.6} ${fy - .9} Q${fx - 4.2} ${fy - 4} ${fx - 3.5} ${fy - 8} Z" fill="${boot}"/>`
