@@ -251,6 +251,8 @@ part('fsling', 'Передня антабка', [
   // гвинт M-LOK з шестигранником на вузькому кінці
   [cylZ(0.24, 0.06, 44.15, -1.15, -2.57), SCREW], [(() => { const g = new THREE.CylinderGeometry(0.1, 0.1, 0.07, 6); g.rotateX(Math.PI / 2); g.translate(44.15, -1.15, -2.6); return g; })(), HOLE],
 ], M(0x3b3d35, { roughness: 0.7, metalness: 0.2 }), [0, 14, 0]);
+// така сама накладка з правого боку цівки (дзеркально)
+for (const m of [...parts.fsling.group.children]) { const g = m.geometry.clone(); g.translate(0, 1.15, 0); g.rotateX(Math.PI); g.translate(0, -1.15, 0); const c = new THREE.Mesh(g, m.material); c.userData.part = 'fsling'; parts.fsling.group.add(c); }
 let coverOpen = false, coverTouched = null;
 let stockExt = false; const stockTv = new THREE.Vector3();
 // Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
@@ -531,7 +533,7 @@ const CTRL = [
 ];
 const NUMNAME = { carrier: 'Затворна рама з затвором' };
 // Точки кріплення ременя
-const SLING = [[1, 'Передня антабка — гніздо QD на цівці', 'fsling', [45.6, -1.15, -2.6]], [2, 'Задня антабка — вушко на опорній плиті', 'sling', [-1.25, -2.9, 0.6]], [3, 'Гніздо QD у прикладі', 'stock', [-21.3, -6.6, -1.76]], [4, 'Проріз для ременя в прикладі', 'stock', [-24, -1.9, -1.75]]];
+const SLING = [[1, 'Передня антабка — гнізда QD на цівці з обох боків', 'fsling', [45.6, -1.15, -2.6]], [2, 'Задня антабка — вушко на опорній плиті', 'sling', [-1.25, -2.9, 0.6]], [3, 'Гніздо QD у прикладі', 'stock', [-21.3, -6.6, -1.76]], [4, 'Проріз для ременя в прикладі', 'stock', [-24, -1.9, -1.75]]];
 const LISTS = { ctrl: CTRL, sling: SLING };
 let labelSet = 'parts', lead = null;
 function buildLabels(set) {
