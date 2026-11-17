@@ -125,15 +125,27 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.2;
 controls.target.set(22, -3, 0);
 camera.position.set(22 + 40, 22, 110);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x556050, 1.5));
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+// Оточення для відблисків: «студія» з кількома світлими панелями — метал отримує живі блики
+{ const env = new THREE.Scene(), pm = new THREE.PMREMGenerator(renderer);
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(100, 60, 100), new THREE.MeshBasicMaterial({ color: 0x161816, side: THREE.BackSide })));
+  for (const [x, y, z, w, h, c] of [[0, 29, 0, 60, 14, 9], [-49, 10, 10, 24, 10, 4], [49, 6, -15, 24, 8, 3], [12, 12, 49, 50, 6, 3.5], [-15, -4, 49, 30, 4, 1.6], [0, -29, 0, 80, 60, 0.3]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(c, c, c * 0.96), side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m); }
+  scene.environment = pm.fromScene(env, 0.035).texture; pm.dispose(); }
+scene.add(new THREE.HemisphereLight(0xffffff, 0x556050, 0.9));
+scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 // «ліхтар» на камері: деталь освітлена з будь-якого боку
 const head = new THREE.DirectionalLight(0xffffff, 1.4); head.position.set(0.3, 0.5, 1); camera.add(head); scene.add(camera);
 const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(30, 50, 60); scene.add(sun);
 const rim = new THREE.DirectionalLight(0xffb070, 0.6); rim.position.set(-40, 10, -50); scene.add(rim);
 
 // ── Матеріали ──
-const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.25, side: THREE.DoubleSide, ...o });
+// Метал (ствол, затвор, осі) — гладкий з блиском; рами — анодований алюміній з м'яким блиском; полімер — майже матовий
+const M = (color, o = {}) => { const m = new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.25, side: THREE.DoubleSide, ...o });
+  if (m.metalness >= 0.5) { m.roughness = Math.max(0.16, m.roughness - 0.12); m.metalness = Math.min(0.95, m.metalness + 0.15); m.envMapIntensity = 1.25; }
+  else if (color === TAN) { m.metalness = 0.4; m.roughness = 0.38; m.envMapIntensity = 0.8; }
+  else m.envMapIntensity = 0.45;
+  return m; };
 const TAN = 0x8f7650, BLACK = 0x23262a, STEEL = 0x8d9399, DARK = 0x3a3d42;
 
 // ── Геометрія: вісь X — від приклада (−) до дула (+) ──
