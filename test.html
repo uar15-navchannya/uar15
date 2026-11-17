@@ -269,7 +269,9 @@ p { margin: 0; }
 .ttx dd small { display: block; font: 400 12px/1.35 var(--body); color: var(--muted); margin-top: 2px; }
 
 /* ── Будова ── */
-.parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 2px 16px; }
+.parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px 16px; }
+/* дві колонки: рахунок іде згори вниз — ліва 1…7, права 8…13 */
+@media (min-width: 520px) { .parts { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--rows, 7), auto); grid-auto-flow: column; } }
 .parts li { display: grid; grid-template-columns: 38px 1fr; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
 .parts b { font: 700 19px/1 var(--display); color: var(--violet); font-variant-numeric: tabular-nums; }
 
@@ -852,7 +854,7 @@ function parts() {
     ${m3d('labels', 'view')}
     <p class="muted small">Номери на моделі — як у списку. Торкнись номера, деталі або рядка списку. Повзунок збирає автомат назад.</p>
     <h3 class="h">Назви частин</h3>
-    <ul class="parts">${Object.entries(PARTS).map(([n, t]) => `<li data-act="pick-part" data-n="${n}"><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
+    <ul class="parts" style="--rows:${Math.ceil(Object.keys(PARTS).length / 2)}">${Object.entries(PARTS).map(([n, t]) => `<li data-act="pick-part" data-n="${n}"><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
     <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
 }
 function markPart(n) { for (const li of app.querySelectorAll('.parts li')) li.classList.toggle('sel', +li.dataset.n === n); }
@@ -919,7 +921,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261117-060136';
+const APP_V = '20261117-060411';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}&p13=1" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
