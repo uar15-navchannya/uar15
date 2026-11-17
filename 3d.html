@@ -197,14 +197,17 @@ part('handguard', 'Цівка', [
   box(34, 0.3, 2.1, 37, 2.38), ...teethRow(20.2, 53.6, 2.68),
   xsec(ring(2.5, 2.05), 20, 21.6),
   [box(3.2, 0.5, 2.0, 51.4, 3.05), BLK], [box(2.6, 0.45, 1.2, 51.6, 3.45), BLK], [cylZ(0.3, 2.2, 50.1, 3.2), BLK],
-  [box(5.6, 0.5, 2.3, 38.5, -2.55), BLK], [extr([[36.7, -2.8], [40.3, -2.8], [40.1, -9.6], [39.5, -10.1], [37.5, -10.1], [36.8, -9.6]], 2.5), BLK],
-  ...[0, 1, 2, 3, 4].map(i => [box(3.6, 0.22, 2.56, 38.5, -4.4 - i * 1.0), RUB]),
 ], M(TAN), [0, 14, 0], true);
+// Руків'я перенесення вогню під цівкою — окрема деталь (рухається разом з верхньою рамою)
+part('fgrip', 'Руків’я перенесення вогню', [
+  box(5.6, 0.5, 2.3, 38.5, -2.55), extr([[36.7, -2.8], [40.3, -2.8], [40.1, -9.6], [39.5, -10.1], [37.5, -10.1], [36.8, -9.6]], 2.5),
+  ...[0, 1, 2, 3, 4].map(i => [box(3.6, 0.22, 2.56, 38.5, -4.4 - i * 1.0), RUB]),
+], M(BLACK, { roughness: 0.8 }), [0, 14, 0]);
 
 // Передня частина за бічним фото: цівка ≈ 25 см, ствол ≈ 30 см від дзеркала затвора (ТТХ: не менше 289 мм), полум'ягасник ≈ 4,8 см.
 // Передня частина за бічним фото з лінійкою: цівка до x 48,5, полум'ягасник 48,8–54,0 (загальна довжина 81,6 см = ТТХ 816 мм)
-{ const seen = new Set(); const F = { handguard: x => 20 + (x - 20) * (28.5 / 34), barrel: x => x <= 57 ? 20 + (x - 20) * (28.8 / 37) : 48.8 + (x - 57) * (5.2 / 5.9) };
-  for (const id of ['barrel', 'handguard']) parts[id].group.traverse(o => { if (!o.isMesh || seen.has(o.geometry)) return; seen.add(o.geometry); const a = o.geometry.attributes.position; for (let i = 0; i < a.count; i++) { const x = a.getX(i); if (x > 20) a.setX(i, F[id](x)); } a.needsUpdate = true; o.geometry.computeVertexNormals(); o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); }); }
+{ const seen = new Set(); const F = { handguard: x => 20 + (x - 20) * (28.5 / 34), fgrip: x => 20 + (x - 20) * (28.5 / 34), barrel: x => x <= 57 ? 20 + (x - 20) * (28.8 / 37) : 48.8 + (x - 57) * (5.2 / 5.9) };
+  for (const id of ['barrel', 'handguard', 'fgrip']) parts[id].group.traverse(o => { if (!o.isMesh || seen.has(o.geometry)) return; seen.add(o.geometry); const a = o.geometry.attributes.position; for (let i = 0; i < a.count; i++) { const x = a.getX(i); if (x > 20) a.setX(i, F[id](x)); } a.needsUpdate = true; o.geometry.computeVertexNormals(); o.geometry.computeBoundingBox(); o.geometry.computeBoundingSphere(); }); }
 
 part('upper', 'Рама верхня', [
   xsec((() => { const sh = new THREE.Shape([[-1.5, -1.8], [1.5, -1.8], [1.6, 0.7], [1.2, 1.9], [1.05, 2.2], [-1.05, 2.2], [-1.2, 1.9], [-1.6, 0.7]].map(p => new THREE.Vector2(p[0], p[1]))); const h = new THREE.Path(); h.absarc(0, 0, 1.3, 0, Math.PI * 2, true); sh.holes.push(h); return sh; })(), 0, 20),
@@ -312,7 +315,7 @@ part('rearpin', 'Задня вісь', [cylZ(0.3, 3.3, 3.1, -2.2), cylZ(0.5, 0.2
 part('frontpin', 'Передня вісь', [cylZ(0.3, 3.3, 19.2, -2.4), cylZ(0.5, 0.2, 19.2, -2.4, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
 
 // ── Кроки неповного розбирання (як на сторінці навчання) ──
-const UPPER = ['upper', 'handguard', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
+const UPPER = ['upper', 'handguard', 'fgrip', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const BCG = ['carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const STEPS = [
   ['Натиснути кнопку фіксатора магазина й вийняти магазин.', [[['mag'], 3, -14, 0]]],
@@ -442,6 +445,8 @@ $('next').onclick = () => { if (step < STEPS.length) { step++; paint(); } };
 
 // ── Номери частин (як у списку «Будова») і розміри з таблиці ТТХ ──
 const NUM = { barrel: 1, handguard: 2, carrier: 3, upper: 4, ch: 5, stock: 6, lower: 7, grip: 8, buffer: 9, spring: 10, sling: 11, mag: 12 };
+// Пробно (лише тестова сторінка передає p13=1): номер 13 — руків'я перенесення вогню
+try { if (new URLSearchParams(location.search).get('p13') === '1') NUM.fgrip = 13; } catch (e) { /* без параметрів */ }
 const tags = [];   // { el, at() } — підписи, що йдуть за деталями
 function setPicked(id, notify) {
   if (picked) parts[picked].mat.emissive.setHex(0x000000);
@@ -455,7 +460,7 @@ if (EMB === 'labels') {
   $('explode').value = 100;
   const lead = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); $('labels').appendChild(lead);
   // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
-  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
+  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
     buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [0, 0, 0], mag: [8, -9, 0], sling: [0, 0, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
   for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
   for (const [id, n] of Object.entries(NUM)) {

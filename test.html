@@ -463,7 +463,7 @@ const FACTS = [
 
 const PARTS = {
   1: 'Ствол', 2: 'Цівка', 3: 'Затворна рама', 4: 'Рама верхня', 5: 'Рукоятка перезаряджання', 6: 'Приклад',
-  7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка', 12: 'Магазин',
+  7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка', 12: 'Магазин', 13: 'Руків’я перенесення вогню',
 };
 const ON_DIAGRAM = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -919,8 +919,8 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261117-055500';
-const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
+const APP_V = '20261117-060136';
+const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}&p13=1" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
   modelWant = n; if (kind) modelKind = kind;
