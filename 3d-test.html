@@ -140,10 +140,10 @@ const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(30, 50, 
 const rim = new THREE.DirectionalLight(0xffb070, 0.6); rim.position.set(-40, 10, -50); scene.add(rim);
 
 // ── Матеріали ──
-// Метал (ствол, затвор, осі) — гладкий з блиском; рами — анодований алюміній з м'яким блиском; полімер — майже матовий
+// Метал (ствол, затвор, осі) — матовий воронений; рами — матове анодування; полімер — м'які відблиски
 const M = (color, o = {}) => { const m = new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.25, side: THREE.DoubleSide, ...o });
-  if (m.metalness >= 0.5) { m.roughness = Math.max(0.16, m.roughness - 0.12); m.metalness = Math.min(0.95, m.metalness + 0.15); m.envMapIntensity = 1.25; }
-  else if (color === TAN) { m.metalness = 0.4; m.roughness = 0.38; m.envMapIntensity = 0.8; }
+  if (m.metalness >= 0.5) { m.roughness = Math.min(0.62, m.roughness + 0.12); m.envMapIntensity = 0.8; }
+  else if (color === TAN) { m.metalness = 0.3; m.roughness = 0.52; m.envMapIntensity = 0.65; }
   else { m.roughness = Math.min(m.roughness, 0.58); m.envMapIntensity = 0.95; }
   return m; };
 const TAN = 0x8f7650, BLACK = 0x23262a, STEEL = 0x8d9399, DARK = 0x3a3d42;
