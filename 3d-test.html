@@ -111,6 +111,7 @@ uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.
     <div class="row2" hidden><button class="btn" id="shot-prev">‹ Фаза</button><button class="btn" id="shot-next">Фаза ›</button></div>
     <button class="btn primary" id="shot-go">Постріл</button>
     <div class="row"><label for="shot-speed">Швидкість</label><input type="range" id="shot-speed" min="5" max="100" value="100"></div>
+    <label class="check"><input type="checkbox" id="shot-snd" checked> Звук</label>
     <label class="check"><input type="checkbox" id="shot-xray" checked> Прозорий корпус — видно механізм і патрони</label>
     <p class="note" id="shotn" hidden></p>
   </div>
@@ -619,7 +620,9 @@ $('tab-view').onclick = () => { mode = 'view'; viewSync = false; paint(); };
 $('tab-steps').onclick = () => { mode = 'steps'; paint(); };
 $('tab-bcg').onclick = () => { mode = 'bcg'; paint(); };
 $('tab-shot').onclick = () => { mode = 'shot'; paint(); };
+$('shot-snd').onchange = e => { sfxOn = e.target.checked; if (sfxOn) sfxInit(); };
 $('shot-go').onclick = () => {
+  if (sfxOn) sfxInit();
   if (state === 'empty') { shotStart('charge'); state = 'busy'; }
   else if (state === 'ready') { shotStart('fire'); state = 'busy'; }
   else if (state === 'busy' && kind === 'fire') shotGoal = 4;
@@ -867,6 +870,66 @@ function shotStart(k) {
   if (k === 'fire') { shotT = 0; smokeAt = performance.now() / 1000 + SHOT_DUR[0] / shotSpeed; } else if (k === 'charge') shotT = 2; else shotT = 3;
   dFrom = k === 'release' ? HOLD_D : 8; dTo = 0;
 }
+// ── Звук пострілу: синтезується в браузері (Web Audio), без файлів ──
+let AC = null, NOISE = null, OUT = null, sfxOn = true;
+function sfxInit() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    NOISE = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); const d = NOISE.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 6; comp.connect(AC.destination);
+    OUT = AC.createGain(); OUT.gain.value = 0.9; OUT.connect(comp);
+  } catch (e) { AC = null; }
+}
+// шумовий імпульс через фільтр: тип, частота, добротність, гучність, атака, спад, затримка
+function burst(type, f, q, g, att, dec, at = 0, f2) {
+  const t = AC.currentTime + at, s = AC.createBufferSource(); s.buffer = NOISE; s.playbackRate.value = 0.8 + Math.random() * 0.4;
+  const fl = AC.createBiquadFilter(); fl.type = type; fl.frequency.setValueAtTime(f, t); if (f2) fl.frequency.exponentialRampToValueAtTime(f2, t + att + dec); fl.Q.value = q;
+  const gn = AC.createGain(); gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(g, t + att); gn.gain.exponentialRampToValueAtTime(0.0001, t + att + dec);
+  s.connect(fl).connect(gn).connect(OUT); s.start(t, Math.random()); s.stop(t + att + dec + 0.05);
+}
+function tone(f1, f2, g, dec, at = 0, type = 'sine') {
+  const t = AC.currentTime + at, o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dec);
+  const gn = AC.createGain(); gn.gain.setValueAtTime(g, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + dec); o.connect(gn).connect(OUT); o.start(t); o.stop(t + dec + 0.05);
+}
+const SFX = {
+  // металеве клацання (курок, затримка, фіксатор)
+  click: (g = 0.5, f = 3200, at = 0) => { burst('bandpass', f, 6, g, 0.001, 0.035, at); tone(f * 0.6, f * 0.5, g * 0.15, 0.03, at, 'square'); },
+  // постріл: різкий удар, низький «бас» і відлуння
+  shot: () => {
+    burst('lowpass', 9000, 0.7, 1.0, 0.002, 0.09, 0, 2500);
+    burst('lowpass', 2200, 0.8, 0.8, 0.004, 0.35, 0, 300);
+    tone(110, 38, 0.9, 0.22);
+    burst('bandpass', 600, 0.6, 0.18, 0.05, 1.1, 0.06, 180);
+  },
+  // рама вдаряє в буфер / досилає патрон і замикає ствол
+  clack: (g = 0.55, at = 0) => { burst('bandpass', 1800, 2.5, g, 0.002, 0.07, at); burst('lowpass', 700, 1, g * 0.6, 0.002, 0.09, at); tone(260, 180, g * 0.25, 0.06, at, 'triangle'); },
+  // руків’я перезаряджання: ковзання металу
+  slide: (dur = 0.18, at = 0) => burst('bandpass', 2600, 1.2, 0.18, 0.03, dur, at, 1400),
+  // гільза падає й дзенькає
+  brass: (at = 0) => { for (const [k, f] of [[0, 5200], [0.11, 6100], [0.19, 4700]]) { tone(f, f * 0.98, 0.07 / (1 + k * 4), 0.18, at + k, 'sine'); tone(f * 1.51, f * 1.5, 0.03 / (1 + k * 4), 0.12, at + k); burst('highpass', 5000, 1, 0.05 / (1 + k * 3), 0.001, 0.03, at + k); } },
+  // магазин: виймання / вставляння з клацанням фіксатора
+  mag: (inS) => { burst('bandpass', 900, 1.5, 0.3, 0.005, 0.08); if (inS) { SFX.click(0.45, 2400, 0.06); burst('lowpass', 500, 1, 0.35, 0.003, 0.08, 0.06); } },
+};
+let sfxPrevT = 0, sfxPrevR = 0;
+// звуки на позначках шкали часу циклу
+function sfxTick() {
+  if (!AC || !sfxOn || mode !== 'shot') { sfxPrevT = shotT; sfxPrevR = reloadU; return; }
+  const a = sfxPrevT, b = shotT, x = v => a < v && b >= v;
+  if (kind === 'fire' && chamberFull) {
+    if (x(0.3)) SFX.click(0.25, 2600);                 // спусковий гачок вибирає хід
+    if (x(0.57)) SFX.click(0.6, 3600);                 // курок зривається й б’є
+    if (x(1.02)) SFX.shot();
+    if (x(2.85)) SFX.brass(0.35 / shotSpeed);           // гільза падає
+  }
+  if (kind === 'charge' && x(2.02)) SFX.slide(0.22);
+  if (x(2.97) && kind !== 'release') SFX.clack(0.35);      // рама в задньому положенні
+  if (x(3.97)) SFX.clack(0.6);                              // рама вперед — патрон у патроннику
+  if (state === 'reload') { if (sfxPrevR < 0.02 && reloadU >= 0.02) SFX.mag(false); if (sfxPrevR < 0.55 && reloadU >= 0.55) SFX.mag(true); }
+  if (kind === 'release' && x(3.02)) SFX.click(0.5, 2000);   // затримку відпущено
+  if (state === 'hold' && a < 3.97 && b === 0 && sfxPrevT > 3) SFX.clack(0.45);
+  sfxPrevT = shotT; sfxPrevR = reloadU;
+}
 function shotTick(dt) {
   // патрони закінчились: рама на затримці → порожній магазин виймаємо, вставляємо повний → затримку відпускаємо
   if (state === 'hold') { holdT += dt * shotSpeed; if (holdT > 0.5) { holdT = 0; magCount = MAG_N; reloadU = 0; state = 'reload'; shotUI(); } shotApply(); return; }
@@ -991,7 +1054,7 @@ renderer.setAnimationLoop(() => {
     if (p.id === 'stock' && !stockExt && EMB !== 'dims') tgt.x += 2.8;
     p.group.position.copy(tgt);
   }
-  if (mode === 'shot') shotTick(dt);
+  if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
     const dir = camera.position.clone().sub(controls.target), len = dir.length();
