@@ -203,7 +203,9 @@ p { margin: 0; }
 .art ul { margin:0; padding-left:20px; display:flex; flex-direction:column; gap:8px; line-height:1.5; }
 .art mark { color:inherit; font-weight:600; padding:0 2px; margin:0 -2px; border-radius:3px; background:linear-gradient(to top, var(--hl, color-mix(in srgb, var(--violet) 55%, transparent)) 0 42%, transparent 42%); -webkit-box-decoration-break:clone; box-decoration-break:clone; }
 .art .cut { color:var(--muted); font-size:13px; }
-.upd { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; min-height: 52px; border: 0; border-radius: 14px; background: var(--violet); color: #fff; font: 600 15px/1.2 var(--display); letter-spacing: .5px; box-shadow: 0 6px 20px rgba(0,0,0,.35); cursor: pointer; }
+.upd { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; min-height: 52px; border: 0; border-radius: 14px; background: var(--violet); color: #fff; font: 600 15px/1.2 var(--display); letter-spacing: .5px; box-shadow: 0 6px 20px rgba(0,0,0,.35); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 10px 14px; text-align: center; }
+.upd span { font: 500 12px/1.2 var(--display); opacity: .8; }
+.upd.done { background: var(--surface); color: var(--text); border: 1.5px solid var(--violet); }
 .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 10px; }
 .tile {
   display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 10px 12px 10px 14px; text-align: left;
@@ -944,7 +946,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261117-154103';
+const APP_V = '20261117-154647';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1703,13 +1705,14 @@ async function checkUpdate() {
   try {
     const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
     if (!r.ok) return;
-    const { v } = await r.json();
+    const { v, note } = await r.json();
     if (!v || v === APP_V) return;
     // На головному екрані оновлюємо одразу; посеред тесту чи тренування — питаємо
     if (view === '' || view === 'law' || view === 'table') { location.reload(); return; }
     if (updWarned) return; updWarned = true;
     const b = document.createElement('button');
-    b.className = 'upd'; b.textContent = 'Вийшло оновлення — торкнись, щоб оновити';
+    b.className = 'upd'; b.innerHTML = '<b></b><span>Торкнись, щоб оновити</span>';
+    b.querySelector('b').textContent = note ? 'Оновлення: ' + note : 'Вийшло оновлення';
     b.onclick = () => location.reload();
     document.body.appendChild(b);
   } catch (e) { /* немає мережі — спробуємо пізніше */ }
@@ -1719,6 +1722,23 @@ window.addEventListener('focus', checkUpdate);
 window.addEventListener('pageshow', checkUpdate);
 setInterval(checkUpdate, 5 * 60 * 1000);
 setTimeout(checkUpdate, 3000);
+// Після оновлення один раз показуємо, що змінилось (тільки тим, хто вже заходив раніше)
+(async () => {
+  try {
+    let seen = null; try { seen = localStorage.getItem('uar15_seen_v'); } catch (e) {}
+    if (seen === APP_V) return;
+    try { localStorage.setItem('uar15_seen_v', APP_V); } catch (e) {}
+    if (!seen) return;
+    const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const { v, note } = await r.json();
+    if (v !== APP_V || !note || document.querySelector('.upd')) return;
+    const b = document.createElement('button');
+    b.className = 'upd done'; b.innerHTML = '<b></b><span>Торкнись, щоб закрити</span>';
+    b.querySelector('b').textContent = 'Оновлено: ' + note;
+    b.onclick = () => b.remove(); document.body.appendChild(b); setTimeout(() => b.remove(), 10000);
+  } catch (e) {}
+})();
 window.__uar = { FACTS, PARTS, ON_DIAGRAM, DIS, ASM, ITEMS, question, grade, dueItems, pickItems, progress, picFor, exportCode, parseCode };
 })();
 </script>
