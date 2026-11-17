@@ -236,7 +236,10 @@ part('cover', 'Кришка вікна викидання гільз', [
   box(7.4, 1.5, 0.14, 15.9, -0.15, 1.68), box(0.7, 0.55, 0.16, 15.9, -0.15, 1.8), [box(0.5, 0.12, 0.05, 15.9, -0.15, 1.89), RUB],
 ], M(BLACK, { roughness: 0.75 }), [0, 14, 0]);
 for (const m of parts.cover.group.children) { m.geometry.translate(0, 0.98, -1.66); m.position.set(0, -0.98, 1.66); }
-let coverOpen = false, coverTouched = null;   // coverTouched — ручне відкриття/закриття, діє до зміни кроку
+let coverOpen = false, coverTouched = null;
+// Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
+const PORT_IN = M(PHOS, { metalness: 0.5, roughness: 0.55 });
+const portPlate = parts.upper.group.children.find(m => m.material === HOLE && (m.geometry.computeBoundingBox(), Math.abs(m.geometry.boundingBox.getCenter(new THREE.Vector3()).x - 15.9) < 0.2));   // coverTouched — ручне відкриття/закриття, діє до зміни кроку
 
 // Рукоятка перезаряджання: П-подібний стрижень, гачок спереду, двобічна ручка із засувками
 part('ch', 'Рукоятка перезаряджання', [
@@ -273,6 +276,10 @@ part('bolt', 'Затвор', [
   ...lugs,
   [(() => { const g = new THREE.BoxGeometry(3.3, 0.3, 0.42); g.translate(17.05, 0.74, 0); g.rotateX(2 * Math.PI / 4); return g; })(), M(0x3b3e43, { metalness: 0.6, roughness: 0.5 })],
   [(() => { const g = new THREE.BoxGeometry(0.5, 0.4, 0.42); g.translate(18.45, 0.84, 0); g.rotateX(2 * Math.PI / 4); return g; })(), M(0x3b3e43, { metalness: 0.6, roughness: 0.5 })],
+  // виступи біля отвору під палець з протилежного від викидача боку — не дають зібрати затвор навпаки (рис. 18)
+  ...[[14.25, 0.62], [15.55, 0.62]].map(([x, r]) => { const g = new THREE.BoxGeometry(0.32, 0.16, 0.42); g.translate(x, r + 0.04, 0); g.rotateX(-Math.PI / 2); return g; }),
+  // розрізи газових кілець рознесені по колу (рис. 19)
+  ...[[13.11, 0], [13.21, 2.1], [13.31, 4.2]].map(([x, a]) => { const g = new THREE.BoxGeometry(0.06, 0.12, 0.14); g.translate(x, 0.54, 0); g.rotateX(a); return [g, HOLE]; }),
   [cylY(0.36, 1.34, 14.9, 0), HOLE], [cylX(0.5, 0.02, 18.5, 0), M(0x9a9ea3, { metalness: 0.7, roughness: 0.4 })], [cylX(0.07, 0.04, 18.5, 0), HOLE], [cylX(0.1, 0.04, 18.5, 0.3, 0.15), M(0xc8ccd0, { metalness: 0.8 })],
 ], M(0x5d6167, { metalness: 0.6, roughness: 0.45 }), [-14, 9, 0]);
 
@@ -602,6 +609,8 @@ resize(); paint();
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 2.6 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
+  if (portPlate) { const d = parts.carrier.group.position.clone().sub(parts.upper.group.position); const inside = Math.abs(d.y) < 0.6 && Math.abs(d.z) < 0.6 && d.x > -4 && d.x < 1;
+    const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   for (const p of Object.values(parts)) if (!busy.has(p.id)) p.group.position.lerp(p.target, 0.14);
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
