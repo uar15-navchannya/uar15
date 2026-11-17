@@ -30,7 +30,8 @@ h1 small { font:500 12px/1 var(--display); letter-spacing:1.5px; color:var(--ora
 .stage canvas { display:block; width:100%; height:100%; }
 .chip { position:absolute; left:10px; top:10px; padding:6px 12px; border-radius:20px; background:rgba(16,21,13,.85); border:1px solid var(--line); font:600 15px/1.2 var(--display); letter-spacing:.5px; }
 .hint { position:absolute; right:10px; bottom:8px; font-size:12px; color:var(--muted); pointer-events:none; }
-.tabs { display:grid; grid-template-columns:1fr 1.5fr 1.2fr; gap:8px; }
+.tabs { display:grid; grid-template-columns:1fr 1.5fr 1.25fr 1.05fr; gap:8px; }
+@media (max-width:560px) { .tabs { grid-template-columns:1fr 1fr; } .tab, .btn { min-height:44px; } }
 .tab { font-size:14px !important; padding:0 4px; }
 .tab, .btn { min-height:50px; border:1.5px solid var(--line); border-radius:10px; background:transparent; color:var(--text); font:500 16px/1 var(--display); letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
 .tab[aria-pressed="true"] { background:var(--violet); border-color:var(--violet); color:#fff; font-weight:600; }
@@ -94,6 +95,7 @@ uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.
     <button class="tab" id="tab-view" aria-pressed="true">Огляд</button>
     <button class="tab" id="tab-bcg" aria-pressed="false">Затворна група</button>
     <button class="tab" id="tab-steps" aria-pressed="false">Розбирання</button>
+    <button class="tab" id="tab-shot" aria-pressed="false">Постріл</button>
   </div>
   <div class="panel" id="panel-view">
     <div class="row"><label for="explode">Розкласти</label><input type="range" id="explode" min="0" max="100" value="0"></div>
@@ -102,6 +104,14 @@ uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.
   <div class="panel" id="panel-bcg" hidden>
     <div class="row"><label for="explode-b">Розкласти</label><input type="range" id="explode-b" min="0" max="100" value="0"></div>
     <p class="note">Затворна рама, затвор, ударник, палець затвора, шплінт. Торкнись деталі — побачиш назву.</p>
+  </div>
+  <div class="panel" id="panel-shot" hidden>
+    <div class="stepn" id="shotp"></div>
+    <div class="stept" id="shott"></div>
+    <div class="row2"><button class="btn" id="shot-prev">‹ Фаза</button><button class="btn" id="shot-next">Фаза ›</button></div>
+    <button class="btn primary" id="shot-go">Постріл</button>
+    <div class="row"><label for="shot-speed">Швидкість</label><input type="range" id="shot-speed" min="10" max="150" value="60"></div>
+    <p class="note" id="shotn">У магазині 29 патронів, один — у патроннику</p>
   </div>
   <div class="panel" id="panel-steps" hidden>
     <div class="stepn" id="stepn"></div>
@@ -332,8 +342,8 @@ part('lower', 'Рама нижня в зборі', [
   extrH([[-0.4, -1.8], [20, -1.8], [20, -3.0], [19.2, -3.4], [19.5, -8.6], [13.4, -8.7], [13.0, -8.0], [12.4, -7.6], [12.3, -6.6], [12.1, -6.0], [11.7, -5.6], [11.1, -5.4],
     [8.6, -5.4], [8.0, -5.6], [7.7, -6.0], [7.6, -6.6], [7.6, -7.9], [7.3, -8.5], [6.8, -8.5], [6.8, -5.1], [1.6, -4.8], [-0.4, -3.8]], [], 3.0),
   // спускова скоба — окрема чорна дуга знизу (фото), на двох осях
-  [extr([[7.3, -8.0], [7.7, -8.35], [9.0, -8.45], [10.4, -8.4], [11.7, -7.95], [12.8, -7.6], [13.1, -8.05], [12.0, -8.55], [10.4, -8.95], [8.35, -9.05], [7.65, -8.75], [7.2, -8.3]], 2.6), BLK],
-  ...[[7.79, -8.3], [12.73, -7.9]].map(([x, y]) => [cylZ(0.17, 3.1, x, y), SCREW]),
+  [Object.assign(extr([[7.3, -8.0], [7.7, -8.35], [9.0, -8.45], [10.4, -8.4], [11.7, -7.95], [12.8, -7.6], [13.1, -8.05], [12.0, -8.55], [10.4, -8.95], [8.35, -9.05], [7.65, -8.75], [7.2, -8.3]], 2.6), { userData: { keep: true } }), BLK],
+  ...[[7.79, -8.3], [12.73, -7.9]].map(([x, y]) => [Object.assign(cylZ(0.17, 3.1, x, y), { userData: { keep: true } }), SCREW]),
   box(6.2, 0.25, 3.3, 16.4, -8.7), box(0.3, 4.6, 3.2, 19.35, -6.0), box(0.25, 3.0, 3.16, 17.8, -5.6), box(0.25, 3.0, 3.16, 15.6, -5.6),
   lathe([[-1.4, 1.5], [-1.4, 1.95], [0, 1.95], [0, 1.5]]),
   [lathe([[-17.6, 0], [-17.6, 1.42], [-2.6, 1.42], [-2.6, 1.9], [-2.3, 2.05], [-1.7, 2.05], [-1.7, 1.42], [-1.4, 1.42]]), BLK], 
@@ -557,6 +567,7 @@ function setXray(on) {
     p.mat.transparent = on; p.mat.opacity = on ? 0.28 : 1; p.mat.depthWrite = !on; p.mat.side = on ? THREE.FrontSide : THREE.DoubleSide; p.mat.needsUpdate = true;
     for (const m of p.group.children) if (m.material !== p.mat) {
       // великі деталі (труба приклада) лишаємо напівпрозорими, дрібні накладки ховаємо
+      if (m.geometry.userData.keep) continue; // скоба та інші робочі деталі лишаються видимими
       if (!m.userData.big) { m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox; m.userData.big = b.max.x - b.min.x > 10 ? 1 : -1; }
       if (m.userData.big > 0) { if (!m.userData.mat0) { m.userData.mat0 = m.material; m.userData.matX = m.material.clone(); Object.assign(m.userData.matX, { transparent: true, opacity: 0.28, depthWrite: false, side: THREE.FrontSide }); } m.material = on ? m.userData.matX : m.userData.mat0; }
       else m.visible = !on;
@@ -568,9 +579,11 @@ function paint() {
   $('tab-view').setAttribute('aria-pressed', String(mode === 'view'));
   $('tab-steps').setAttribute('aria-pressed', String(mode === 'steps'));
   $('tab-bcg').setAttribute('aria-pressed', String(mode === 'bcg'));
+  $('tab-shot').setAttribute('aria-pressed', String(mode === 'shot')); $('panel-shot').hidden = mode !== 'shot';
+  shotMode(mode === 'shot');
   $('panel-view').hidden = mode !== 'view'; $('panel-steps').hidden = mode !== 'steps'; $('panel-bcg').hidden = mode !== 'bcg';
   for (const p of Object.values(parts)) p.group.visible = mode !== 'bcg' || p.id in BCG_EXPLODE;
-  const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : BASE;
+  const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : mode === 'shot' ? { t: [9, -6, 0], w: 27, h: 13 } : BASE;
   if (f.w !== frame.w) { frame = f; controls.target.set(...f.t); resize(); }
   if (mode === 'steps') {
     $('stepn').textContent = step === 0 ? 'Зібрана гвинтівка' : `Крок ${step} з ${STEPS.length}`;
@@ -581,12 +594,19 @@ function paint() {
   }
   lightStep(); stepAnims();
   if (mode === 'steps') {
-  } else setXray($('xray').checked || EMB === 'dims');
+  } else setXray($('xray').checked || EMB === 'dims' || mode === 'shot');
   setTargets();
 }
 $('tab-view').onclick = () => { mode = 'view'; viewSync = false; paint(); };
 $('tab-steps').onclick = () => { mode = 'steps'; paint(); };
 $('tab-bcg').onclick = () => { mode = 'bcg'; paint(); };
+$('tab-shot').onclick = () => { mode = 'shot'; paint(); };
+$('shot-go').onclick = () => {
+  if (!chamberFull) { magCount = MAG_N; chamberFull = true; shotT = 0; shotGoal = 0; $('shotn').textContent = 'Новий магазин: 29 патронів, один — у патроннику'; return; }
+  if (shotT >= shotGoal) shotGoal = 4; };
+$('shot-next').onclick = () => { if (!chamberFull) return; shotGoal = Math.min(4, Math.floor(shotT + 1e-6) + 1); };
+$('shot-prev').onclick = () => { shotT = Math.max(0, Math.ceil(shotT - 1e-6) - 1); shotGoal = shotT; };
+$('shot-speed').oninput = e => { shotSpeed = e.target.value / 100; };
 $('explode-b').oninput = e => { explodeB = e.target.value / 100; setTargets(); };
 $('explode').oninput = e => { explode = e.target.value / 100; setTargets(); };
 $('xray').onchange = paint;
@@ -769,6 +789,107 @@ function runAnims(now) {
   }
   return busy;
 }
+// ── Постріл: робота автоматики (настанова, п. 2.2, рис. 5–6) ──
+// Шкала часу t: 0–1 спуск і удар курка, 1–2 куля в стволі й гази, 2–3 рама назад, 3–4 рама вперед
+const SHOT_TEXT = [
+  ['Фаза 1 з 4 · Спуск', 'Натискаємо на спусковий гачок: курок зривається з шептала й під дією бойової пружини б’є по ударнику. Ударник розбиває капсуль — постріл.'],
+  ['Фаза 2 з 4 · Гази', 'Куля рухається каналом ствола. Після того як куля пройде газовий отвір, порохові гази через газовідвідний блок і газову трубку потрапляють у газоприймач на затворній рамі, а звідти — у газову камору між затвором і рамою.'],
+  ['Фаза 3 з 4 · Рама назад', 'Під тиском газів затворна рама йде назад: палець затвора повертає затвор і відмикає канал ствола, затвор витягає гільзу, і вона вилітає у вікно. Рама через буфер стискає зворотну пружину й ставить курок на звід шептала одиночного вогню.'],
+  ['Фаза 4 з 4 · Рама вперед', 'Зворотна пружина повертає раму вперед. Затвор бере патрон із магазина й досилає його в патронник, потім повертається ліворуч і замикає канал ствола — бойові упори затвора заходять за упори муфти.'],
+];
+const ammo = new THREE.Group(); ammo.visible = false; scene.add(ammo);
+const BRASS = M(0xb08a45, { metalness: 0.75, roughness: 0.4 }), COPPER = M(0xa8653a, { metalness: 0.7, roughness: 0.4 });
+// патрон 5,56×45: дно гільзи в x = 0, куля вперед по +x
+const CASE_G = lathe([[0, 0], [0, 0.48], [0.11, 0.48], [0.13, 0.4], [0.2, 0.4], [0.24, 0.48], [3.6, 0.45], [3.95, 0.32], [4.47, 0.31], [4.47, 0]], 0, 0, 20);
+const BUL_G = lathe([[4.3, 0], [4.3, 0.285], [4.9, 0.285], [5.4, 0.2], [5.74, 0.03], [5.74, 0]], 0, 0, 16);
+function makeRound() { const g = new THREE.Group(); const c = new THREE.Mesh(CASE_G, BRASS), b = new THREE.Mesh(BUL_G, COPPER); g.add(c, b); g.userData = { c, b }; ammo.add(g); return g; }
+const FACE = 18.5;                       // дзеркало затвора в зімкнутому стані
+const chamberRound = makeRound();        // патрон у патроннику; його куля летить, гільза викидається
+const MAG_N = 29, magRounds = Array.from({ length: MAG_N }, makeRound);
+// місце i-го патрона в магазині (дворядне розташування, слідом за вигином магазина)
+function slot(i, out) {
+  const y = -2.65 - 0.34 * i, wall = y > -13 ? 13.3 + (-2.2 - y) * 0.0926 : 14.3 + (-13 - y) * 0.2195;
+  const slope = y > -13 ? 0.0926 : 0.2195;
+  out.pos.set(wall + 0.2, y, i % 2 ? 0.45 : -0.45); out.rot = Math.atan(slope); return out;
+}
+// гази: від газового отвору вгору в блок, назад трубкою до газоприймача й у камору між затвором і рамою
+const GAS_PTS = [[31.75, 0.25], [31.75, 1.35], [20.05, 1.35], [20.05, 1.55], [14.3, 1.55], [13.0, 1.6], [12.9, 0.6]].map(p => new THREE.Vector3(p[0], p[1], 0));
+const GAS_LEN = GAS_PTS.slice(1).reduce((a, p, i) => a + p.distanceTo(GAS_PTS[i]), 0);
+function gasAt(p, out) { let d = p * GAS_LEN; for (let i = 1; i < GAS_PTS.length; i++) { const L = GAS_PTS[i].distanceTo(GAS_PTS[i - 1]); if (d <= L) return out.lerpVectors(GAS_PTS[i - 1], GAS_PTS[i], d / L); d -= L; } return out.copy(GAS_PTS[GAS_PTS.length - 1]); }
+const GLOW = new THREE.MeshBasicMaterial({ color: 0xff7a1a, transparent: true, opacity: 0.9, depthTest: false, blending: THREE.AdditiveBlending });
+const gas = Array.from({ length: 26 }, () => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), GLOW); ammo.add(m); return m; });
+const GLOW2 = GLOW.clone(), GLOW3 = GLOW.clone();
+const boreGas = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 1, 16).rotateZ(Math.PI / 2), GLOW2); ammo.add(boreGas);
+const camGlow = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 12), GLOW3); camGlow.scale.set(1.6, 0.8, 0.8); ammo.add(camGlow);
+const flash = new THREE.Mesh(new THREE.ConeGeometry(1.1, 3.2, 16, 1, true).rotateZ(Math.PI / 2), GLOW.clone()); ammo.add(flash);
+let shotT = 0, shotGoal = 0, shotSpeed = 0.6, magCount = MAG_N, chamberFull = true;
+const SHOT_DUR = [1.2, 1.6, 1.8, 1.8];   // тривалість фаз у секундах за швидкості 1
+const sm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u), cl = u => Math.min(1, Math.max(0, u));
+const sv = { pos: new THREE.Vector3(), rot: 0 }, sv2 = { pos: new THREE.Vector3(), rot: 0 };
+function shotTick(dt) {
+  if (shotT < shotGoal) { const ph = Math.min(3, Math.floor(shotT)); shotT = Math.min(shotGoal, shotT + dt * shotSpeed / SHOT_DUR[ph]); }
+  if (shotT >= 4) {
+    // цикл завершено: досланий патрон став патроном у патроннику
+    if (fedThisCycle) magCount--; chamberFull = fedThisCycle; shotT = 0; shotGoal = 0;
+    $('shotn').textContent = magCount ? `У магазині ${magCount} патронів` : (chamberFull ? 'Останній патрон у патроннику' : 'Патронів немає');
+  }
+  shotApply();
+}
+let fedThisCycle = true, coverShot = false;
+function shotApply() {
+  const t = shotT, u1 = cl(t), u2 = cl(t - 1), u3 = cl(t - 2), u4 = cl(t - 3);
+  // затворна рама: хід назад 8 см (фаза 3) і повернення (фаза 4)
+  const d = t < 2 ? 0 : t < 3 ? 8 * sm(u3) : 8 * (1 - sm(u4));
+  const bx = -Math.max(0, d - 0.4);                       // затвор рушає після вільного ходу рами
+  const rot = 0.39 * cl((d - 0.1) / 0.3);                  // поворот затвора (відмикання / замикання)
+  for (const id of ['carrier', 'fpin', 'rpin']) parts[id].group.position.set(-d, 0, 0);
+  parts.fpin.group.position.x = -d + (t > 0.62 && t < 1.2 ? 0.15 : 0);
+  parts.bolt.group.position.set(bx, 0, 0); parts.bolt.group.rotation.x = rot;
+  parts.cam.group.position.set(bx, 0, 0); parts.cam.group.rotation.x = rot;
+  parts.buffer.group.position.set(-d, 0, 0);
+  const sp = parts.spring.group, s = (16.7 - d) / 16.7; sp.scale.x = s; sp.position.set(-17.3 * (1 - s), 0, 0);
+  // курок: у фазі 1 зривається (з 1,75 до 0), у фазі 3 рама його зводить
+  const hz = t < 0.55 ? 1.75 : t < 0.65 ? 1.75 * (1 - (t - 0.55) / 0.1) : t < 2 ? 0 : t < 3 ? 1.75 * cl((d - 0.8) / 2.7) : 1.75;
+  for (const m of parts.hammer.group.children) m.rotation.z = hz;
+  // спусковий гачок натиснутий від початку до кінця циклу
+  parts.trigger.group.children[0].rotation.z = -0.4 * (t < 0.5 ? sm(t / 0.5) : t > 3.85 ? 1 - sm((t - 3.85) / 0.15) : 1);
+  if (t >= 2) coverShot = true; coverOpen = coverShot;
+  // патрон у патроннику: куля летить у фазі 2, гільза йде із затвором і вилітає у вікно
+  const cr = chamberRound, live = chamberFull;
+  cr.visible = live; cr.userData.b.visible = live && (t < 1 || (t < 1.6 && u2 < 0.55));
+  const bulletX = t < 1 ? 0 : 38 * Math.min(1, u2 / 0.55);
+  cr.userData.b.position.set(bulletX, 0, 0);
+  const ej0 = 2.78, bxE = -(8 * sm(0.78) - 0.4), ejT = cl((t - ej0) / 0.55);          // викидання гільзи
+  if (t < ej0) { cr.position.set(FACE + bx, 0, 0); cr.rotation.set(0, 0, 0); cr.userData.c.visible = live; }
+  else { cr.position.set(FACE + bxE - 2 * ejT, 3 * ejT - 5 * ejT * ejT, 11 * ejT); cr.rotation.set(0, -2.5 * ejT, 1.5 * ejT); cr.userData.c.visible = live && ejT < 1; }
+  // гази: в каналі ствола за кулею, через газовідвідний блок і трубку в камору рами
+  const gasOn = t >= 1 && t < 2.35 && live;
+  boreGas.visible = gasOn && t < 2; if (boreGas.visible) { const x1 = 22.8 + Math.min(bulletX, 31.2); boreGas.scale.x = Math.max(0.01, x1 - FACE); boreGas.position.set((FACE + x1) / 2, 0, 0); GLOW2.opacity = 0.75 * (1 - u2 * 0.7); }
+  const gs = (u2 - 0.14) / 0.6;
+  gas.forEach((m, k) => { const p = gs * 1.35 - k * 0.035; m.visible = gasOn && t < 2 && p > 0 && p < 1; if (m.visible) gasAt(p, m.position); });
+  camGlow.visible = gasOn && gs > 0.7; if (camGlow.visible) { camGlow.position.set(12.7 - d, 0.6, 0); GLOW3.opacity = t < 2 ? 0.25 + 0.6 * cl((gs - 0.7) / 0.6) : 0.85 * (1 - u3 / 0.35); }
+  flash.visible = live && t >= 1 && u2 > 0.4 && u2 < 0.62; if (flash.visible) { flash.position.set(55.6, 0, 0); flash.material.opacity = 0.9 * (1 - Math.abs(u2 - 0.5) / 0.12); }
+  // магазин: верхній патрон затвор досилає в патронник (фаза 4), решта підіймається на одне місце
+  const faceX = FACE + bx; let feedF = 0;
+  if (t >= 3 && magCount > 0) { slot(0, sv); feedF = cl((faceX - sv.pos.x) / (FACE - sv.pos.x)); }
+  fedThisCycle = magCount > 0;
+  magRounds.forEach((r, i) => {
+    r.visible = i < magCount; if (!r.visible) return;
+    if (i === 0 && feedF > 0) { slot(0, sv); const f = sm(feedF); r.position.set(faceX, sv.pos.y * (1 - f), sv.pos.z * (1 - f)); r.rotation.set(0, 0, sv.rot * (1 - f) + 0.22 * Math.sin(Math.PI * f)); return; }
+    slot(i, sv); if (feedF > 0 && i > 0) { slot(i - 1, sv2); const f = sm(feedF); sv.pos.lerp(sv2.pos, f); sv.rot += (sv2.rot - sv.rot) * f; }
+    r.position.copy(sv.pos); r.rotation.set(0, 0, sv.rot);
+  });
+  const ph = Math.min(3, Math.floor(t));
+  $('shotp').textContent = SHOT_TEXT[ph][0]; $('shott').textContent = SHOT_TEXT[ph][1];
+}
+// Вхід / вихід із режиму пострілу: прозорі корпус, ствол і магазин, видно патрони
+function shotMode(on) {
+  ammo.visible = on;
+  for (const id of ['barrel', 'mag']) { const m = parts[id].mat; m.transparent = on; m.opacity = on ? 0.3 : 1; m.depthWrite = !on; m.needsUpdate = true; }
+  if (!on) { shotReset(); coverShot = false; shotT = shotGoal = 0; } else shotApply();
+}
+function shotReset() { for (const id of ['bolt', 'cam']) parts[id].group.rotation.x = 0; parts.spring.group.scale.x = 1; parts.trigger.group.children[0].rotation.z = 0; }
+
 new ResizeObserver(resize).observe(stage);
 resize(); paint();
 
@@ -776,7 +897,7 @@ let lastT = 0;
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
-  { const now = performance.now(), want = hammerFired && now >= hammerAt ? 0 : 1.75; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === 0 ? 0.45 : 0.15); }
+  if (mode !== 'shot') { const now = performance.now(), want = hammerFired && now >= hammerAt ? 0 : 1.75; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === 0 ? 0.45 : 0.15); }
   if (portPlate) { const d = parts.carrier.group.position.clone().sub(parts.upper.group.position); const inside = Math.abs(d.y) < 0.6 && Math.abs(d.z) < 0.6 && d.x > -4 && d.x < 1;
     const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   // приклад: за замовчуванням зсунутий до кінця (+2,8 см уперед); торкання — висунути / зсунути
@@ -789,6 +910,7 @@ renderer.setAnimationLoop(() => {
     if (p.id === 'stock' && !stockExt && EMB !== 'dims') tgt.x += 2.8;
     p.group.position.copy(tgt);
   }
+  if (mode === 'shot') shotTick(dt);
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
     const dir = camera.position.clone().sub(controls.target), len = dir.length();
