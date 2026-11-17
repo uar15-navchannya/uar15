@@ -326,6 +326,18 @@ part('stock', 'Приклад', [
 // Спусковий гачок — окрема деталь, щоб показати натискання (вісь обертання — у верхній частині)
 part('trigger', 'Спусковий гачок', [extr([[8.5, -4.9], [9.1, -4.9], [9.1, -6.3], [9.4, -6.85], [9.95, -7.2], [9.8, -7.42], [9.1, -7.1], [8.65, -6.45]], 0.5)], M(BLACK, { roughness: 0.8 }), [0, 0, 0]);
 { const m = parts.trigger.group.children[0]; m.geometry.translate(-8.8, 5.2, 0); m.position.set(8.8, -5.2, 0); }
+// Курок (рис. 6, поз. 10): обертається на осі за спусковим гачком; звівся — лежить назад, спущений — головкою вгору до ударника
+part('hammer', 'Курок', [
+  extr([[-0.55, 0], [-0.4, -0.65], [0.55, -0.65], [0.75, 0], [1.05, 2.0], [2.25, 3.35], [2.05, 3.9], [1.2, 3.9], [0.55, 3.0], [-0.45, 1.0]], 0.75),
+  [cylZ(0.2, 1.2, 0, 0), SCREW],
+  // бойова пружина — дротяна петля навколо осі
+  [(() => { const g = new THREE.TorusGeometry(0.42, 0.06, 6, 18); g.translate(0, 0, 0.45); return g; })(), SCREW], [(() => { const g = new THREE.TorusGeometry(0.42, 0.06, 6, 18); g.translate(0, 0, -0.45); return g; })(), SCREW],
+], M(0x3a3d42, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
+{ const g = parts.hammer.group; g.children.forEach(m => m.position.set(6.9, -4.9, 0)); }
+// Шептало одиночного вогню — гачок на задній частині спускового гачка (рис. 6, поз. 11)
+part('sear', 'Шептало одиночного вогню', [extr([[7.3, -5.0], [8.5, -5.05], [8.5, -5.5], [7.6, -5.55], [7.2, -5.3]], 0.5), [cylZ(0.1, 0.6, 8.0, -5.6), SCREW]],
+  M(0x4a4e54, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
+let hammerFired = false, hammerAt = 0;
 part('grip', 'Пістолетне руків’я', [
   // контур за бічним фото з лінійкою: передній край майже вертикальний, низ відходить назад
   extr([[6.0, -4.9], [6.0, -6.5], [5.6, -8.5], [5.2, -10.0], [4.7, -13.0], [4.3, -15.6], [4.0, -16.2], [3.4, -16.4], [-0.6, -15.8], [-1.3, -15.3], [-1.4, -14.7], [-0.7, -12.3], [-0.1, -10.0], [0.6, -7.6], [1.2, -5.9], [1.0, -4.8], [0.3, -3.4], [-0.1, -2.6], [0.3, -2.2], [1.0, -2.6], [1.6, -4.7]], 2.9),
@@ -416,6 +428,8 @@ function setTargets() {
   for (const p of Object.values(parts)) p.target.set(0, 0, 0);
   // кришка відкривається, коли затворну раму відводять назад (розбирання з кроку 2, збирання з кроку 9)
   coverOpen = mode === 'steps' && (asm ? step >= 9 : step >= 2); coverTouched = null;
+  // курок: у розбиранні звівся на кроці 2, спущений з кроку 3; у збиранні звівся з кроку 9 (рама відведена)
+  { const fired = mode === 'steps' ? (asm ? step < 9 : step >= 3) : false; if (fired && !hammerFired && !asm && step === 3) hammerAt = performance.now() + 1150; hammerFired = fired; }
   if (mode === 'view') { for (const p of Object.values(parts)) p.target.copy(p.explode).multiplyScalar(explode); }
   else if (mode === 'bcg') { for (const [id, v] of Object.entries(BCG_EXPLODE)) parts[id].target.set(...v).multiplyScalar(explodeB); }
   else if (!asm) for (let i = 0; i < step; i++) for (const [ids, x, y, z] of STEPS[i][1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
@@ -461,7 +475,7 @@ function paint() {
     $('stepn').textContent = step === 0 ? 'Зібрана гвинтівка' : `Крок ${step} з ${STEPS.length}`;
     $('stept').textContent = step === 0 ? 'Натисни «Далі», щоб почати неповне розбирання. «Назад» — збирає у зворотному порядку.' : STEPS[step - 1][0];
     $('prev').disabled = step === 0; $('next').disabled = step === STEPS.length;
-    setXray(asm || step >= 7 || $('xray').checked);
+    setXray(asm || step >= 7 || step === 2 || step === 3 || $('xray').checked);
     setTargets(); focusStep();
   }
   lightStep(); stepAnims();
@@ -496,7 +510,7 @@ if (EMB === 'labels') {
   const lead = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); $('labels').appendChild(lead);
   // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
   const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], cover: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
-    buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [0, 0, 0], mag: [8, -9, 0], sling: [0, 0, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
+    buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], hammer: [0, 0, 0], sear: [0, 0, 0], stock: [-9, 0, 0], grip: [0, 0, 0], mag: [8, -9, 0], sling: [0, 0, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
   for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
   for (const [id, n] of Object.entries(NUM)) {
     const c = new THREE.Box3().setFromObject(parts[id].group).getCenter(new THREE.Vector3());
@@ -609,6 +623,7 @@ resize(); paint();
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
+  { const now = performance.now(), want = hammerFired && now >= hammerAt ? 0 : 1.75; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === 0 ? 0.45 : 0.15); }
   if (portPlate) { const d = parts.carrier.group.position.clone().sub(parts.upper.group.position); const inside = Math.abs(d.y) < 0.6 && Math.abs(d.z) < 0.6 && d.x > -4 && d.x < 1;
     const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   for (const p of Object.values(parts)) if (!busy.has(p.id)) p.group.position.lerp(p.target, 0.14);
