@@ -399,7 +399,16 @@ function setTargets() {
   }
 }
 function setXray(on) {
-  for (const p of Object.values(parts)) if (p.shell) { p.mat.transparent = on; p.mat.opacity = on ? 0.28 : 1; p.mat.depthWrite = !on; p.mat.needsUpdate = true; }
+  // Прозорий корпус: дрібні деталі на ньому (прорізи, гвинти, накладки) ховаємо, грані — лише зовнішні, щоб не було «сміття»
+  for (const p of Object.values(parts)) if (p.shell) {
+    p.mat.transparent = on; p.mat.opacity = on ? 0.28 : 1; p.mat.depthWrite = !on; p.mat.side = on ? THREE.FrontSide : THREE.DoubleSide; p.mat.needsUpdate = true;
+    for (const m of p.group.children) if (m.material !== p.mat) {
+      // великі деталі (труба приклада) лишаємо напівпрозорими, дрібні накладки ховаємо
+      if (!m.userData.big) { m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox; m.userData.big = b.max.x - b.min.x > 10 ? 1 : -1; }
+      if (m.userData.big > 0) { if (!m.userData.mat0) { m.userData.mat0 = m.material; m.userData.matX = m.material.clone(); Object.assign(m.userData.matX, { transparent: true, opacity: 0.28, depthWrite: false, side: THREE.FrontSide }); } m.material = on ? m.userData.matX : m.userData.mat0; }
+      else m.visible = !on;
+    }
+  }
 }
 const $ = id => document.getElementById(id);
 function paint() {
