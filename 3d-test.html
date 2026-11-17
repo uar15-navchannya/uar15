@@ -236,6 +236,11 @@ part('cover', 'Кришка вікна викидання гільз', [
   box(6.0, 1.5, 0.14, 15.4, -0.15, 1.68), box(0.7, 0.55, 0.16, 15.4, -0.15, 1.8), [box(0.5, 0.12, 0.05, 15.4, -0.15, 1.89), RUB],
 ], M(BLACK, { roughness: 0.75 }), [0, 14, 0]);
 for (const m of parts.cover.group.children) { m.geometry.translate(0, 0.98, -1.66); m.position.set(0, -0.98, 1.74); }
+// Передня антабка (рис. 2, поз. 8): кріплення M-LOK на лівому боці цівки з поворотною петлею QD
+part('fsling', 'Передня антабка', [
+  box(1.8, 0.95, 0.3, 45.4, -1.15, -2.38), cylZ(0.42, 0.45, 45.4, -1.15, -2.7),
+  (() => { const g = new THREE.TorusGeometry(0.85, 0.13, 8, 24); g.translate(45.4, -2.05, -2.95); return g; })(),
+], M(BLACK, { roughness: 0.6, metalness: 0.4 }), [0, 14, 0]);
 let coverOpen = false, coverTouched = null;
 // Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
 const PORT_IN = M(PHOS, { metalness: 0.5, roughness: 0.55 });
@@ -360,7 +365,7 @@ part('rearpin', 'Задня вісь', [cylZ(0.3, 3.3, 3.1, -2.2), cylZ(0.5, 0.2
 part('frontpin', 'Передня вісь', [cylZ(0.3, 3.3, 19.2, -2.4), cylZ(0.5, 0.2, 19.2, -2.4, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
 
 // ── Кроки неповного розбирання (як на сторінці навчання) ──
-const UPPER = ['upper', 'cover', 'handguard', 'fgrip', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
+const UPPER = ['upper', 'cover', 'handguard', 'fgrip', 'fsling', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const BCG = ['carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const STEPS = [
   ['Натиснути кнопку фіксатора магазина й вийняти магазин.', [[['mag'], 3, -14, 0]]],
@@ -502,7 +507,7 @@ function setPicked(id, notify) {
   picked = id && parts[id] ? id : null;
   const chip = $('chip');
   if (picked) { parts[picked].mat.emissive.setHex(0x5a2a00); chip.textContent = (NUM[picked] ? NUM[picked] + ' · ' : '') + (NUMNAME[picked] || parts[picked].name); chip.hidden = false; } else chip.hidden = true;
-  if (labelSet !== 'ctrl') for (const t of tags) if (t.id) t.el.classList.toggle('sel', t.id === picked);
+  if (!LISTS[labelSet]) for (const t of tags) if (t.id) t.el.classList.toggle('sel', t.id === picked);
   if (notify && window.parent !== window) try { window.parent.postMessage({ type: 'uar-picked', num: picked ? (NUM[picked] || 0) : 0 }, location.origin); } catch (e) { /* без батьківської сторінки */ }
 }
 // Підписи на моделі: «Основні частини» (рис. 16 настанови, розкладено) або «Органи керування» (рис. 3, у зборі)
@@ -514,6 +519,9 @@ const CTRL = [
   [13, 'Пістолетне руків’я', 'grip', [2.5, -11, 1.5]], [14, 'Антабка', 'sling', [-1.25, -2.9, 0.6]],
 ];
 const NUMNAME = { carrier: 'Затворна рама з затвором' };
+// Точки кріплення ременя
+const SLING = [[1, 'Передня антабка (M-LOK, ліворуч на цівці)', 'fsling', [45.4, -2.05, -2.95]], [2, 'Задня антабка', 'sling', [-1.25, -2.9, 0.6]], [3, 'Проріз для ременя в прикладі', 'stock', [-24, -1.9, -1.75]]];
+const LISTS = { ctrl: CTRL, sling: SLING };
 let labelSet = 'parts', lead = null;
 function buildLabels(set) {
   labelSet = set;
@@ -526,9 +534,9 @@ function buildLabels(set) {
     const ln = document.createElementNS(NS, 'line'), dot = document.createElementNS(NS, 'circle'); dot.setAttribute('r', 3.2); lead.append(ln, dot);
     tags.push({ el, id, n, ln, dot, at });
   };
-  if (set === 'ctrl') {
-    explode = 0; $('explode').value = 0; frame = { t: [13, -3.5, 0], w: 42, h: 20 }; controls.target.set(...frame.t); camera.position.set(13, -3.5, 1); resize();
-    for (const [n, name, id, pt] of CTRL) { const c = new THREE.Vector3(...pt); add(n, name, id, v => v.copy(c).add(parts[id].group.position), () => pickCtrl(n, true)); }
+  if (LISTS[set]) {
+    explode = 0; $('explode').value = 0; frame = { t: [13, -3.5, 0], w: 42, h: 20 }; controls.target.set(...frame.t); camera.position.set(13, -3.5, set === 'sling' ? -1 : 1); resize();
+    for (const [n, name, id, pt] of LISTS[set]) { const c = new THREE.Vector3(...pt); add(n, name, id, v => v.copy(c).add(parts[id].group.position), () => pickCtrl(n, true)); }
   } else {
     explode = 1; $('explode').value = 100; if (frame !== BASE) { frame = BASE; controls.target.set(...BASE.t); camera.position.set(BASE.t[0] + 0.35, BASE.t[1] + 0.22, 1); resize(); }
     for (const [id, n] of Object.entries(NUM)) {
@@ -540,7 +548,7 @@ function buildLabels(set) {
   setTargets();
 }
 function pickCtrl(n, notify) {
-  const row = CTRL.find(r => r[0] === n);
+  const row = (LISTS[labelSet] || []).find(r => r[0] === n);
   setPicked(row ? row[2] : null, false);
   if (row) { const chip = $('chip'); chip.textContent = `${n} · ${row[1]}`; chip.hidden = false; }
   for (const t of tags) t.el.classList.toggle('sel', t.n === n);
@@ -549,7 +557,7 @@ function pickCtrl(n, notify) {
 if (EMB === 'labels') {
   lead = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); $('labels').appendChild(lead);
   // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
-  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], cover: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
+  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], cover: [0, 12.5, 0], fsling: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
     buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], hammer: [0, 0, 0], sear: [0, 0, 0], stock: [-9, 0, 0], grip: [0, 0, 0], mag: [8, -9, 0], sling: [0, 0, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
   for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
   buildLabels('parts');
@@ -576,9 +584,9 @@ function placeTags() {
   const w = stage.clientWidth, h = stage.clientHeight, pts = [];
   for (const t of tags) { t.at(tv).project(camera); pts.push({ x: (tv.x + 1) / 2 * w, y: (1 - tv.y) / 2 * h, vis: tv.z <= 1 }); }
   // «Органи керування»: як на рис. 3 — номери в ряд над моделлю (верхні деталі) і під нею (нижні), без накладання
-  if (labelSet === 'ctrl') {
+  if (LISTS[labelSet]) {
     const rows = { top: [], bot: [] };
-    tags.forEach((t, i) => { const row = CTRL.find(r => r[0] === t.n), up = row[3][1] > -2.6; rows[up ? "top" : "bot"].push({ t, p: pts[i], y: up ? 70 : h - 40 }); });
+    tags.forEach((t, i) => { const row = LISTS[labelSet].find(r => r[0] === t.n), up = row[3][1] > -2.6; rows[up ? "top" : "bot"].push({ t, p: pts[i], y: up ? 70 : h - 40 }); });
     for (const r of Object.values(rows)) {
       r.sort((a, b) => a.p.x - b.p.x);
       const gap = 28; let x = 14;
@@ -691,8 +699,8 @@ renderer.setAnimationLoop(() => {
 // Навчальна сторінка керує кроком розбирання
 window.addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data) return;
-  if (e.data.type === 'uar-pick') { if (labelSet === 'ctrl') pickCtrl(e.data.num, false); else setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
-  if (e.data.type === 'uar-labels') { buildLabels(e.data.set === 'ctrl' ? 'ctrl' : 'parts'); return; }
+  if (e.data.type === 'uar-pick') { if (LISTS[labelSet]) pickCtrl(e.data.num, false); else setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
+  if (e.data.type === 'uar-labels') { buildLabels(LISTS[e.data.set] ? e.data.set : 'parts'); return; }
   if (e.data.type !== 'uar-step') return;
   mode = 'steps'; asm = e.data.kind === 'as'; step = Math.max(0, Math.min(asm ? 11 : STEPS.length, e.data.n | 0)); paint();
 });
