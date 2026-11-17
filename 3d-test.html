@@ -434,7 +434,7 @@ function posAt(id, sv, out) {
   out.set(0, 0, 0); const m = MOVES[id]; if (!m) return out;
   for (const k in m) { const i = +k; if (sv <= i) continue; const legs = m[k];
     if (sv >= i + 1) { for (const l of legs) out.add(l); continue; }
-    const tot = legs.reduce((a, l) => a + l.length(), 0); const u = sv - i; let d = (u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2) * tot;
+    const tot = legs.reduce((a, l) => a + l.length(), 0); const u = sv - i; let d = (mode === 'view' ? u : u < 0.5 ? 2 * u * u : 1 - (-2 * u + 2) ** 2 / 2) * tot;
     for (const l of legs) { const L = l.length(); if (d >= L) { out.add(l); d -= L; } else { out.addScaledVector(l, d / L); break; } } }
   return out;
 }
@@ -514,11 +514,14 @@ function setTargets() {
 }
 // Поточне положення кожної деталі на шкалі (sC) рухається до цілі (sT) крок за кроком розбирання:
 // у кожному кроці рухаються лише його деталі, тож нічого не проходить крізь інше
-const sC = {}, sT = {};
+const sC = {}, sT = {}; let viewSync = false;
 function stepScale(dt) {
   const ids = Object.keys(sT); for (const id of ids) if (sC[id] === undefined) sC[id] = 0;
+  if (mode !== 'view') viewSync = false;
+  // повзунок: деталі йдуть точно за ним, без запізнення
+  if (mode === 'view' && viewSync) { for (const id of ids) sC[id] = sT[id]; return; }
   const dec = ids.filter(id => sC[id] > sT[id] + 1e-4), inc = ids.filter(id => sC[id] < sT[id] - 1e-4);
-  const grp = dec.length ? dec : inc; if (!grp.length) return;
+  const grp = dec.length ? dec : inc; if (!grp.length) { if (mode === 'view') viewSync = true; return; }
   const down = dec.length > 0, speed = dt / (mode === 'view' ? 0.45 : 0.75);
   let g = down ? Math.max(...grp.map(id => sC[id])) : Math.min(...grp.map(id => sC[id]));
   for (let guard = 0; guard < 40; guard++) {
@@ -533,7 +536,8 @@ function stepScale(dt) {
 const BCG_PATH = { rpin: [[0, 0.3, [0, 0, 5]], [0.3, 0.4, [0, -1.5, 0]]], fpin: [[0.3, 0.6, [-18, 0, 0]], [0.6, 0.68, [0, -3.2, 0]], [0.68, 0.75, [9, 0, 0]]],
   cam: [[0.7, 0.85, [0, 4.5, 0]]], bolt: [[0.85, 1, [6, 0, 0]]] };
 let eB = 0;
-function bcgPos(id, e, out) { out.set(0, 0, 0); for (const [t0, t1, v] of BCG_PATH[id] || []) out.addScaledVector(new THREE.Vector3(...v), Math.min(1, Math.max(0, (e - t0) / (t1 - t0)))); return out; }
+const bv = new THREE.Vector3();
+function bcgPos(id, e, out) { out.set(0, 0, 0); for (const [t0, t1, v] of BCG_PATH[id] || []) out.addScaledVector(bv.set(...v), Math.min(1, Math.max(0, (e - t0) / (t1 - t0)))); return out; }
 function setXray(on) {
   // Прозорий корпус: дрібні деталі на ньому (прорізи, гвинти, накладки) ховаємо, грані — лише зовнішні, щоб не було «сміття»
   for (const p of Object.values(parts)) if (p.shell) {
@@ -567,7 +571,7 @@ function paint() {
   } else setXray($('xray').checked || EMB === 'dims');
   setTargets();
 }
-$('tab-view').onclick = () => { mode = 'view'; paint(); };
+$('tab-view').onclick = () => { mode = 'view'; viewSync = false; paint(); };
 $('tab-steps').onclick = () => { mode = 'steps'; paint(); };
 $('tab-bcg').onclick = () => { mode = 'bcg'; paint(); };
 $('explode-b').oninput = e => { explodeB = e.target.value / 100; setTargets(); };
@@ -764,7 +768,7 @@ renderer.setAnimationLoop(() => {
     const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   // приклад: за замовчуванням зсунутий до кінця (+2,8 см уперед); торкання — висунути / зсунути
   const now2 = performance.now(), dt = Math.min(0.05, (now2 - (lastT || now2)) / 1000); lastT = now2;
-  if (mode === 'bcg') { eB += Math.max(-dt / 1.6, Math.min(dt / 1.6, explodeB - eB)); }
+  if (mode === 'bcg') eB = explodeB;
   else if (!(mode === 'view' && EMB === 'labels')) stepScale(dt);
   for (const p of Object.values(parts)) {
     if (busy.has(p.id)) continue;
