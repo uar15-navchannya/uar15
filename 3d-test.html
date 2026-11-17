@@ -228,9 +228,15 @@ part('upper', 'Рама верхня', [
   // кнопка досилача: чорний стрижень із широким закругленим ободком на торці (як на фото)
   ...[[0.58, 0.58, 1.25, -2.7], [0.72, 0.72, 0.22, -3.42], [0.62, 0.72, 0.12, -3.59]].map(([r1, r2, h, x]) => [(() => { const g = new THREE.CylinderGeometry(r1, r2, h, 28); g.rotateZ(Math.PI / 2); g.translate(x, 0, 0); g.rotateY(0.28); g.translate(4.2, -0.15, 1.85); return g; })(), BLK]),
   box(1.6, 1.3, 1.5, 3.1, -2.2), box(1.6, 1.3, 1.5, 19.2, -2.4),
-  [box(7.4, 1.5, 0.12, 15.9, -0.15, 1.58), HOLE], [box(7.4, 1.5, 0.14, 15.9, -0.15, 1.68), BLK], [box(0.7, 0.55, 0.16, 15.9, -0.15, 1.8), BLK], [box(0.5, 0.12, 0.05, 15.9, -0.15, 1.89), RUB], [cylX(0.14, 7.8, 15.9, -0.98, 1.66), BLK],
+  [box(7.4, 1.5, 0.12, 15.9, -0.15, 1.58), HOLE], [cylX(0.14, 7.8, 15.9, -0.98, 1.66), BLK],
   [box(3.4, 0.5, 2.0, 3.6, 3.05), BLK], [box(2.6, 0.45, 1.2, 3.4, 3.45), BLK], [cylZ(0.3, 2.2, 4.9, 3.2), BLK],
 ], M(TAN), [0, 14, 0], true);
+// Кришка вікна викидання гільз — окрема деталь на шарнірі (вісь уздовж рами внизу вікна); відкривається торканням
+part('cover', 'Кришка вікна викидання гільз', [
+  box(7.4, 1.5, 0.14, 15.9, -0.15, 1.68), box(0.7, 0.55, 0.16, 15.9, -0.15, 1.8), [box(0.5, 0.12, 0.05, 15.9, -0.15, 1.89), RUB],
+], M(BLACK, { roughness: 0.75 }), [0, 14, 0]);
+for (const m of parts.cover.group.children) { m.geometry.translate(0, 0.98, -1.66); m.position.set(0, -0.98, 1.66); }
+let coverOpen = false, coverTouched = null;   // coverTouched — ручне відкриття/закриття, діє до зміни кроку
 
 // Рукоятка перезаряджання: П-подібний стрижень, гачок спереду, двобічна ручка із засувками
 part('ch', 'Рукоятка перезаряджання', [
@@ -335,7 +341,7 @@ part('rearpin', 'Задня вісь', [cylZ(0.3, 3.3, 3.1, -2.2), cylZ(0.5, 0.2
 part('frontpin', 'Передня вісь', [cylZ(0.3, 3.3, 19.2, -2.4), cylZ(0.5, 0.2, 19.2, -2.4, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
 
 // ── Кроки неповного розбирання (як на сторінці навчання) ──
-const UPPER = ['upper', 'handguard', 'fgrip', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
+const UPPER = ['upper', 'cover', 'handguard', 'fgrip', 'barrel', 'ch', 'carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const BCG = ['carrier', 'bolt', 'fpin', 'cam', 'rpin'];
 const STEPS = [
   ['Натиснути кнопку фіксатора магазина й вийняти магазин.', [[['mag'], 3, -14, 0]]],
@@ -401,6 +407,8 @@ let frame = { t: [22, -3, 0], w: 47, h: 27 };
 if (EMB === 'labels') explode = 1;
 function setTargets() {
   for (const p of Object.values(parts)) p.target.set(0, 0, 0);
+  // кришка відкривається, коли затворну раму відводять назад (розбирання з кроку 2, збирання з кроку 9)
+  coverOpen = mode === 'steps' && (asm ? step >= 9 : step >= 2); coverTouched = null;
   if (mode === 'view') { for (const p of Object.values(parts)) p.target.copy(p.explode).multiplyScalar(explode); }
   else if (mode === 'bcg') { for (const [id, v] of Object.entries(BCG_EXPLODE)) parts[id].target.set(...v).multiplyScalar(explodeB); }
   else if (!asm) for (let i = 0; i < step; i++) for (const [ids, x, y, z] of STEPS[i][1]) for (const id of ids) parts[id].target.add(new THREE.Vector3(x, y, z));
@@ -480,7 +488,7 @@ if (EMB === 'labels') {
   $('explode').value = 100;
   const lead = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); $('labels').appendChild(lead);
   // Розкладка «в стовпчик» — щоб на вузькому екрані номери не накладались
-  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
+  const LAY = { ch: [0, 28, 0], barrel: [0, 12.5, 0], upper: [0, 12.5, 0], handguard: [0, 12.5, 0], fgrip: [0, 12.5, 0], cover: [0, 12.5, 0], carrier: [2, 6, 0], bolt: [2, 6, 0], fpin: [2, 6, 0], cam: [2, 6, 0], rpin: [2, 6, 0],
     buffer: [36, -2, 0], spring: [58, -2, 0], lower: [0, 0, 0], stock: [-9, 0, 0], grip: [0, 0, 0], mag: [8, -9, 0], sling: [0, 0, 0], rearpin: [0, 0, 0], frontpin: [0, 0, 0] };
   for (const [id, v] of Object.entries(LAY)) parts[id].explode.set(...v);
   for (const [id, n] of Object.entries(NUM)) {
@@ -544,7 +552,12 @@ renderer.domElement.addEventListener('pointerup', e => {
   const hits = ray.intersectObjects(scene.children, true).filter(h => h.object.userData.part && parts[h.object.userData.part].group.visible);
   // крізь прозорий корпус — спершу внутрішні деталі
   const hit = hits.find(h => !(parts[h.object.userData.part].shell && parts[h.object.userData.part].mat.transparent)) || hits[0];
-  setPicked(hit ? hit.object.userData.part : null, true);
+  const id = hit ? hit.object.userData.part : null;
+  // торкання кришки або самого вікна (коли кришка відкрита) — відкрити / закрити
+  const pt = hit && hit.point.clone().sub(parts.upper.group.position);
+  const atPort = hit && id === 'upper' && pt.x > 12 && pt.x < 19.8 && pt.y > -1 && pt.y < 0.8 && pt.z > 1.3;
+  if (id === 'cover' || atPort) coverTouched = !(coverTouched == null ? coverOpen : coverTouched);
+  setPicked(atPort ? 'cover' : id, true);
 });
 
 function resize() {
@@ -588,6 +601,7 @@ resize(); paint();
 
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
+  { const want = (coverTouched == null ? coverOpen : coverTouched) ? 2.6 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
   for (const p of Object.values(parts)) if (!busy.has(p.id)) p.group.position.lerp(p.target, 0.14);
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
