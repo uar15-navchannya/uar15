@@ -373,16 +373,16 @@ part('buffer', 'Буфер', [lathe([[0, 0], [0, 1.05], [-0.1, 1.15], [-0.6, 1.1
 part('spring', 'Зворотна пружина', [helixX(-17.2, -0.7, 1.08, 34, 0)], M(0xc3c8cd, { metalness: 0.8, roughness: 0.3 }), [58, -9, 0]);
 // Антабка — вушко з отвором упоперек у нижній частині затильної плити, одразу за руків'ям
 // Задня антабка — опорна плита з гніздом QD (типу ASAP): кільце на трубі приклада між гайкою й нижньою рамою,
-// знизу — потовщений виступ з наскрізним гніздом для швидкознімної антабки (вставляється збоку, з будь-якого боку)
+// знизу — потовщений виступ впритул до корпусу нижньої рами з наскрізним гніздом для швидкознімної антабки (вставляється збоку, з будь-якого боку)
 part('sling', 'Антабка', (() => {
   const toX = (g, x) => { g.rotateY(-Math.PI / 2); g.translate(x, 0, 0); return g; };
   const ring = new THREE.Shape(); ring.absarc(0, 0, 1.78, 0, Math.PI * 2, false);
   const rh = new THREE.Path(); rh.absarc(0, 0, 1.43, 0, Math.PI * 2, true); ring.holes.push(rh);
   const lobe = new THREE.Shape(); lobe.moveTo(-0.9, -1.45); lobe.lineTo(0.9, -1.45); lobe.lineTo(0.66, -2.75); lobe.absarc(0, -2.75, 0.66, 0, -Math.PI, true); lobe.lineTo(-0.9, -1.45);
   const ex = (sh, d) => new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: false, curveSegments: 28 });
-  const hole = new THREE.CylinderGeometry(0.36, 0.36, 1.36, 20); hole.rotateX(Math.PI / 2); hole.translate(-1.8, -2.75, 0);
-  const rim = z => { const g = new THREE.TorusGeometry(0.36, 0.05, 6, 20); g.translate(-1.8, -2.75, z); return g; };
-  return [toX(ex(ring, 0.35), -1.38), toX(ex(lobe, 0.9), -1.35), [hole, HOLE], [rim(0.67), SCREW], [rim(-0.67), SCREW]];
+  const hole = new THREE.CylinderGeometry(0.36, 0.36, 1.36, 20); hole.rotateX(Math.PI / 2); hole.translate(-1.07, -2.75, 0);
+  const rim = z => { const g = new THREE.TorusGeometry(0.36, 0.05, 6, 20); g.translate(-1.07, -2.75, z); return g; };
+  return [toX(ex(ring, 0.35), -1.38), toX(ex(lobe, 1.33), -0.4), [hole, HOLE], [rim(0.67), SCREW], [rim(-0.67), SCREW]];
 })(), M(BLACK, { roughness: 0.65, metalness: 0.2 }), [0, 0, 0]);
 part('rearpin', 'Задня вісь', [cylZ(0.3, 3.3, 3.1, -2.2), cylZ(0.5, 0.2, 3.1, -2.2, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
 part('frontpin', 'Передня вісь', [cylZ(0.3, 3.3, 19.2, -2.4), cylZ(0.5, 0.2, 19.2, -2.4, 1.62)], M(0x1b1d20, { metalness: 0.6, roughness: 0.4 }), [0, 0, 6]);
@@ -539,11 +539,11 @@ const CTRL = [
   [4, 'Рама верхня', 'upper', [6, 1.4, 1.5]], [5, 'Кнопка досилача', 'upper', [0.3, -0.15, 2.5]], [6, 'Приклад', 'stock', [-20, -2, 1.7]],
   [7, 'Кнопка застібки магазина', 'lower', [12.4, -3.8, 1.75]], [8, 'Руків’я перезаряджання', 'ch', [-0.7, 2.1, 2.2]], [9, 'Затворна затримка', 'lower', [13.1, -2.0, -1.85]],
   [10, 'Магазин', 'mag', [17, -14, 1.2]], [11, 'Перевідник вогню', 'lower', [5.6, -3.4, 1.75]], [12, 'Спусковий гачок', 'trigger', [9.3, -6.6, 0.3]],
-  [13, 'Пістолетне руків’я', 'grip', [2.5, -11, 1.5]], [14, 'Антабка', 'sling', [-1.8, -2.75, 0.7]],
+  [13, 'Пістолетне руків’я', 'grip', [2.5, -11, 1.5]], [14, 'Антабка', 'sling', [-1.07, -2.75, 0.7]],
 ];
 const NUMNAME = { carrier: 'Затворна рама з затвором', sling: 'Антабка задня', fsling: 'Антабка передня' };
 // Точки кріплення ременя
-const SLING = [[1, 'Передня антабка (рис. 2, поз. 8) — на цівці з обох боків', 'fsling', [46.1, -1.62, -2.5]], [2, 'Задня антабка — опорна плита з гніздом QD', 'sling', [-1.8, -2.75, -0.7]], [3, 'Гніздо QD у прикладі', 'stock', [-21.3, -6.6, -1.76]], [4, 'Проріз для ременя в прикладі', 'stock', [-24, -1.9, -1.75]]];
+const SLING = [[1, 'Передня антабка (рис. 2, поз. 8) — на цівці з обох боків', 'fsling', [46.1, -1.62, -2.5]], [2, 'Задня антабка — опорна плита з гніздом QD', 'sling', [-1.07, -2.75, -0.7]], [3, 'Гніздо QD у прикладі', 'stock', [-21.3, -6.6, -1.76]], [4, 'Проріз для ременя в прикладі', 'stock', [-24, -1.9, -1.75]]];
 const LISTS = { ctrl: CTRL, sling: SLING };
 let labelSet = 'parts', lead = null;
 function buildLabels(set) {
