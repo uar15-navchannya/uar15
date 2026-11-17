@@ -228,18 +228,18 @@ part('upper', 'Рама верхня', [
   // кнопка досилача: чорний стрижень із широким закругленим ободком на торці (як на фото)
   ...[[0.58, 0.58, 1.25, -2.7], [0.72, 0.72, 0.22, -3.42], [0.62, 0.72, 0.12, -3.59]].map(([r1, r2, h, x]) => [(() => { const g = new THREE.CylinderGeometry(r1, r2, h, 28); g.rotateZ(Math.PI / 2); g.translate(x, 0, 0); g.rotateY(0.28); g.translate(4.2, -0.15, 1.85); return g; })(), BLK]),
   box(1.6, 1.3, 1.5, 3.1, -2.2), box(1.6, 1.3, 1.5, 19.2, -2.4),
-  [box(7.4, 1.5, 0.12, 15.9, -0.15, 1.58), HOLE], [cylX(0.14, 7.8, 15.9, -0.98, 1.66), BLK],
+  [box(6.0, 1.5, 0.12, 15.4, -0.15, 1.58), HOLE], [cylX(0.14, 6.4, 15.4, -0.98, 1.66), BLK],
   [box(3.4, 0.5, 2.0, 3.6, 3.05), BLK], [box(2.6, 0.45, 1.2, 3.4, 3.45), BLK], [cylZ(0.3, 2.2, 4.9, 3.2), BLK],
 ], M(TAN), [0, 14, 0], true);
 // Кришка вікна викидання гільз — окрема деталь на шарнірі (вісь уздовж рами внизу вікна); відкривається торканням
 part('cover', 'Кришка вікна викидання гільз', [
-  box(7.4, 1.5, 0.14, 15.9, -0.15, 1.68), box(0.7, 0.55, 0.16, 15.9, -0.15, 1.8), [box(0.5, 0.12, 0.05, 15.9, -0.15, 1.89), RUB],
+  box(6.0, 1.5, 0.14, 15.4, -0.15, 1.68), box(0.7, 0.55, 0.16, 15.4, -0.15, 1.8), [box(0.5, 0.12, 0.05, 15.4, -0.15, 1.89), RUB],
 ], M(BLACK, { roughness: 0.75 }), [0, 14, 0]);
-for (const m of parts.cover.group.children) { m.geometry.translate(0, 0.98, -1.66); m.position.set(0, -0.98, 1.66); }
+for (const m of parts.cover.group.children) { m.geometry.translate(0, 0.98, -1.66); m.position.set(0, -0.98, 1.74); }
 let coverOpen = false, coverTouched = null;
 // Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
 const PORT_IN = M(PHOS, { metalness: 0.5, roughness: 0.55 });
-const portPlate = parts.upper.group.children.find(m => m.material === HOLE && (m.geometry.computeBoundingBox(), Math.abs(m.geometry.boundingBox.getCenter(new THREE.Vector3()).x - 15.9) < 0.2));   // coverTouched — ручне відкриття/закриття, діє до зміни кроку
+const portPlate = parts.upper.group.children.find(m => m.material === HOLE && (m.geometry.computeBoundingBox(), Math.abs(m.geometry.boundingBox.getCenter(new THREE.Vector3()).x - 15.4) < 0.2));   // coverTouched — ручне відкриття/закриття, діє до зміни кроку
 
 // Рукоятка перезаряджання: П-подібний стрижень, гачок спереду, двобічна ручка із засувками
 part('ch', 'Рукоятка перезаряджання', [
@@ -562,7 +562,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   const id = hit ? hit.object.userData.part : null;
   // торкання кришки або самого вікна (коли кришка відкрита) — відкрити / закрити
   const pt = hit && hit.point.clone().sub(parts.upper.group.position);
-  const atPort = hit && id === 'upper' && pt.x > 12 && pt.x < 19.8 && pt.y > -1 && pt.y < 0.8 && pt.z > 1.3;
+  const atPort = hit && id === 'upper' && pt.x > 12.2 && pt.x < 18.6 && pt.y > -1 && pt.y < 0.8 && pt.z > 1.3;
   if (id === 'cover' || atPort) coverTouched = !(coverTouched == null ? coverOpen : coverTouched);
   setPicked(atPort ? 'cover' : id, true);
 });
@@ -608,7 +608,7 @@ resize(); paint();
 
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
-  { const want = (coverTouched == null ? coverOpen : coverTouched) ? 2.6 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
+  { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
   if (portPlate) { const d = parts.carrier.group.position.clone().sub(parts.upper.group.position); const inside = Math.abs(d.y) < 0.6 && Math.abs(d.z) < 0.6 && d.x > -4 && d.x < 1;
     const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   for (const p of Object.values(parts)) if (!busy.has(p.id)) p.group.position.lerp(p.target, 0.14);
