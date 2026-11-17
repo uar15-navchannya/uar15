@@ -513,8 +513,8 @@ $('next').onclick = () => { if (step < STEPS.length) { step++; paint(); } };
 
 // ── Номери частин (як у списку «Будова») і розміри з таблиці ТТХ ──
 const NUM = { barrel: 1, handguard: 2, carrier: 3, upper: 4, ch: 5, stock: 6, lower: 7, grip: 8, buffer: 9, spring: 10, sling: 11, mag: 12 };
-// Пробно (лише тестова сторінка передає p13=1): номер 13 — руків'я перенесення вогню
-try { if (new URLSearchParams(location.search).get('p13') === '1') { NUM.fgrip = 13; NUM.fsling = 14; } } catch (e) { /* без параметрів */ }
+// 13 — руків'я перенесення вогню, 14 — передня антабка
+NUM.fgrip = 13; NUM.fsling = 14;
 const tags = [];   // { el, at() } — підписи, що йдуть за деталями
 function setPicked(id, notify) {
   if (picked) parts[picked].mat.emissive.setHex(0x000000);
