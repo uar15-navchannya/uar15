@@ -382,21 +382,32 @@ part('stock', 'Приклад', [
   [cylZ(0.4, 3.5, -9.3, -1.0), HOLE],
 ], M(0x202225, { roughness: 0.85, metalness: 0.05 }), [-12, 0, 0], true);
 // Спусковий гачок — окрема деталь, щоб показати натискання (вісь обертання — у верхній частині)
-part('trigger', 'Спусковий гачок', [extr([[8.5, -4.9], [9.1, -4.9], [9.1, -6.3], [9.4, -6.85], [9.95, -7.2], [9.8, -7.42], [9.1, -7.1], [8.65, -6.45]], 0.5)], M(BLACK, { roughness: 0.8 }), [0, 0, 0]);
-{ const m = parts.trigger.group.children[0]; m.geometry.translate(-8.8, 5.2, 0); m.position.set(8.8, -5.2, 0); }
+// УСМ за рис. 23 настанови: вісь спускового гачка позаду, вісь курка попереду й вище (так само на фото — головки осей на рамі)
+const TRIG_P = [8.75, -3.95], HAM_P = [10.9, -3.2];
+part('trigger', 'Спусковий гачок', [extr([[5.0, -3.85], [6.8, -3.95], [8.2, -3.55], [9.6, -3.6], [10.6, -3.95], [11.2, -4.05], [11.15, -4.35], [10.4, -4.4], [9.6, -4.45], [9.35, -4.95], [9.5, -5.9], [9.75, -6.8], [10.0, -7.5], [9.85, -7.9], [9.4, -7.65], [8.9, -6.85], [8.5, -5.8], [8.3, -4.7], [7.0, -4.5], [5.0, -4.4]], 0.5),
+  [cylZ(0.17, 1.6, ...TRIG_P), SCREW],
+  // пружина спускового гачка — петлі навколо осі
+  ...[0.4, -0.4].map(z => [(() => { const g = new THREE.TorusGeometry(0.32, 0.05, 6, 16); g.translate(TRIG_P[0], TRIG_P[1], z); return g; })(), SCREW])], M(0x55595f, { metalness: 0.6, roughness: 0.45 }), [0, 0, 0]);
+for (const m of parts.trigger.group.children) { m.geometry.translate(-TRIG_P[0], -TRIG_P[1], 0); m.position.set(...TRIG_P, 0); }
 // Курок (рис. 6, поз. 10): обертається на осі за спусковим гачком; звівся — лежить назад, спущений — головкою вгору до ударника
 part('hammer', 'Курок', [
-  extr([[-0.55, 0], [-0.4, -0.65], [0.55, -0.65], [0.75, 0], [1.05, 2.0], [2.25, 3.35], [2.05, 3.9], [1.2, 3.9], [0.55, 3.0], [-0.45, 1.0]], 0.75),
+  // курок: вісь унизу, головка вгорі (кут 0 — головка вертикально; спущений 0,45, на бойовому звoді 1,1)
+  (() => { const sh = new THREE.Shape([[-0.55, -0.85], [0.45, -0.9], [0.8, -0.45], [0.75, 0.3], [0.5, 1.4], [0.55, 2.6], [0.3, 3.5], [-0.45, 3.5], [-0.7, 2.85], [-0.55, 1.4], [-0.8, 0.35], [-1.1, 0.0], [-0.95, -0.5]].map(p => new THREE.Vector2(...p)));
+    const h = new THREE.Path(); h.absarc(0, 0, 0.2, 0, Math.PI * 2, true); sh.holes.push(h); const g = new THREE.ExtrudeGeometry(sh, { depth: 0.75, bevelEnabled: false }); g.translate(0, 0, -0.375); return g; })(),
   [cylZ(0.2, 1.2, 0, 0), SCREW],
   // бойова пружина — дротяна петля навколо осі
   [(() => { const g = new THREE.TorusGeometry(0.42, 0.06, 6, 18); g.translate(0, 0, 0.45); return g; })(), SCREW], [(() => { const g = new THREE.TorusGeometry(0.42, 0.06, 6, 18); g.translate(0, 0, -0.45); return g; })(), SCREW],
-], M(0x3a3d42, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
-{ const g = parts.hammer.group; g.children.forEach(m => m.position.set(6.9, -4.9, 0)); }
+], M(0x6b7077, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
+{ const g = parts.hammer.group; g.children.forEach(m => { m.position.set(...HAM_P, 0); m.rotation.z = 1.1; }); }
+const HAM_F = 0.45, HAM_C = 1.1, HAM_D = 1.18, HAM_X = 1.45;   // курок: спущений, на шепталі, на шепталі одиночного вогню, відведений рамою
 // Шептало одиночного вогню — гачок на задній частині спускового гачка (рис. 6, поз. 11)
-part('sear', 'Шептало одиночного вогню', [extr([[7.3, -5.0], [8.5, -5.05], [8.5, -5.5], [7.6, -5.55], [7.2, -5.3]], 0.5), [cylZ(0.1, 0.6, 8.0, -5.6), SCREW]],
+part('sear', 'Шептало одиночного вогню', [extr([[6.3, -3.55], [9.4, -3.35], [9.95, -3.0], [10.25, -3.1], [10.1, -3.5], [6.4, -3.85]], 0.36), [cylY(0.12, 0.45, 7.0, -3.9), SCREW]],
   M(0x4a4e54, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
 // шептало сидить на осі спускового гачка й повертається разом із ним
-for (const m of parts.sear.group.children) { m.geometry.translate(-8.8, 5.2, 0); m.position.set(8.8, -5.2, 0); }
+for (const m of parts.sear.group.children) { m.geometry.translate(-TRIG_P[0], -TRIG_P[1], 0); m.position.set(...TRIG_P, 0); }
+// шептало автоматичного вогню (рис. 23, поз. 7) — позаду курка над перевідником
+part('asear', 'Шептало автоматичного вогню', [extr([[4.1, -1.9], [5.0, -1.9], [5.1, -2.3], [4.6, -2.4], [4.6, -3.0], [4.1, -3.0]], 0.5), [cylZ(0.12, 1.4, 4.35, -2.7), SCREW]],
+  M(0x4a4e54, { metalness: 0.7, roughness: 0.4 }), [0, 0, 0]);
 let hammerFired = false, hammerAt = 0;
 part('grip', 'Пістолетне руків’я', [
   // контур за фото: майже рівна передня грань, «п'ятка» спереду внизу, задня грань з упором під долоню, хвостовик під трубою
@@ -789,7 +800,7 @@ function runAnims(now) {
   const busy = new Set();
   for (let i = anims.length - 1; i >= 0; i--) {
     const a = anims[i], u = Math.min(1, Math.max(0, (now - a.t0) / a.dur));
-    if (a.id === 'trig') { parts.trigger.group.children[0].rotation.z = -0.4 * Math.sin(Math.PI * Math.min(1, u * 1.15)); if (u >= 1) anims.splice(i, 1); continue; }
+    if (a.id === 'trig') { parts.trigger.group.children.forEach(m => m.rotation.z = -0.14 * Math.sin(Math.PI * Math.min(1, u * 1.15))); for (const m of parts.sear.group.children) m.rotation.z = parts.trigger.group.children[0].rotation.z; if (u >= 1) anims.splice(i, 1); continue; }
     busy.add(a.id);
     const n = a.pts.length - 1, f = ease(u) * n, k = Math.min(n - 1, Math.floor(f));
     parts[a.id].group.position.lerpVectors(a.pts[k], a.pts[k + 1], f - k);
@@ -885,10 +896,13 @@ function shotApply() {
   const sp = parts.spring.group, s = (16.7 - d) / 16.7; sp.scale.x = s; sp.position.set(-17.3 * (1 - s), 0, 0);
   if (kind === 'charge' && shotGoal) parts.ch.group.position.set(-d, 0, 0);
   // курок: у фазі 1 зривається, у фазі 3 рама його зводить; спусковий гачок і шептало натиснуті до кінця циклу
-  const hz = kind !== 'fire' || held ? 1.75 : t < 0.55 ? 1.75 : t < 0.63 ? 1.75 * (1 - (t - 0.55) / 0.08) : t < 2 ? 0 : t < 3 ? 1.8 * cl((d - 0.8) / 2.7) : t < 3.85 ? 1.8 : 1.75;
+  const push = sm(cl((d - 0.4) / 3.5));   // рама, відходячи, відводить курок униз
+  const hz = held ? HAM_X : kind !== 'fire' ? HAM_C + (HAM_X - HAM_C) * push
+    : t < 0.55 ? HAM_C : t < 0.63 ? HAM_C + (HAM_F - HAM_C) * (t - 0.55) / 0.08 : t < 2 ? HAM_F : t < 3 ? HAM_F + (HAM_X - HAM_F) * push
+    : t < 3.85 ? HAM_D + (HAM_X - HAM_D) * push : HAM_D + (HAM_C - HAM_D) * sm((t - 3.85) / 0.15);
   for (const m of parts.hammer.group.children) m.rotation.z = hz;
-  const trg = kind === 'fire' && shotGoal ? -0.4 * (t < 0.5 ? sm(t / 0.5) : t > 3.85 ? 1 - sm((t - 3.85) / 0.15) : 1) : 0;
-  parts.trigger.group.children[0].rotation.z = trg; for (const m of parts.sear.group.children) m.rotation.z = trg;
+  const trg = kind === 'fire' && shotGoal ? -0.14 * (t < 0.5 ? sm(t / 0.5) : t > 3.85 ? 1 - sm((t - 3.85) / 0.15) : 1) : 0;
+  for (const m of [...parts.trigger.group.children, ...parts.sear.group.children]) m.rotation.z = trg;
   if (t >= 2 || held) coverShot = true; coverOpen = coverShot;
   // віддача: уся гвинтівка коротко відходить назад
   const rk = firing && t > 1.2 ? Math.sin(Math.PI * cl((t - 1.2) / 1.1)) * Math.exp(-2 * cl((t - 1.2) / 1.1)) * 0.9 : 0;
@@ -948,8 +962,8 @@ function shotSkin() {
 }
 function shotMode(on) {
   ammo.visible = fx.visible = on; shotSkin();
-  if (!on) { for (const id of ['bolt', 'cam']) parts[id].group.rotation.x = 0; parts.spring.group.scale.x = 1; parts.trigger.group.children[0].rotation.z = 0;
-    for (const m of parts.sear.group.children) m.rotation.z = 0; parts.mag.group.position.y = 0; ammo.position.x = 0; coverShot = false; }
+  if (!on) { for (const id of ['bolt', 'cam']) parts[id].group.rotation.x = 0; parts.spring.group.scale.x = 1;
+    for (const m of [...parts.trigger.group.children, ...parts.sear.group.children]) m.rotation.z = 0; parts.mag.group.position.y = 0; ammo.position.x = 0; coverShot = false; }
   else { shotUI(); shotApply(); }
 }
 new ResizeObserver(resize).observe(stage);
@@ -959,7 +973,7 @@ let lastT = 0;
 renderer.setAnimationLoop(() => {
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
-  if (mode !== 'shot') { const now = performance.now(), want = hammerFired && now >= hammerAt ? 0 : 1.75; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === 0 ? 0.45 : 0.15); }
+  if (mode !== 'shot') { const now = performance.now(), want = hammerFired && now >= hammerAt ? HAM_F : HAM_C; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === HAM_F ? 0.45 : 0.15); }
   if (portPlate) { const d = parts.carrier.group.position.clone().sub(parts.upper.group.position); const inside = Math.abs(d.y) < 0.6 && Math.abs(d.z) < 0.6 && d.x > -4 && d.x < 1;
     const m = inside ? PORT_IN : HOLE; if (portPlate.material !== m) portPlate.material = m; }
   // приклад: за замовчуванням зсунутий до кінця (+2,8 см уперед); торкання — висунути / зсунути
