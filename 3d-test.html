@@ -106,13 +106,13 @@ uarTheme(); addEventListener('storage', e => { if (e.key === 'uar15_theme' || e.
     <p class="note">Затворна рама, затвор, ударник, палець затвора, шплінт. Торкнись деталі — побачиш назву.</p>
   </div>
   <div class="panel" id="panel-shot" hidden>
-    <div class="stepn" id="shotp"></div>
-    <div class="stept" id="shott"></div>
-    <div class="row2"><button class="btn" id="shot-prev">‹ Фаза</button><button class="btn" id="shot-next">Фаза ›</button></div>
+    <div class="stepn" id="shotp" hidden></div>
+    <div class="stept" id="shott" hidden></div>
+    <div class="row2" hidden><button class="btn" id="shot-prev">‹ Фаза</button><button class="btn" id="shot-next">Фаза ›</button></div>
     <button class="btn primary" id="shot-go">Постріл</button>
     <div class="row"><label for="shot-speed">Швидкість</label><input type="range" id="shot-speed" min="10" max="150" value="60"></div>
     <label class="check"><input type="checkbox" id="shot-xray" checked> Прозорий корпус — видно механізм і патрони</label>
-    <p class="note" id="shotn"></p>
+    <p class="note" id="shotn" hidden></p>
   </div>
   <div class="panel" id="panel-steps" hidden>
     <div class="stepn" id="stepn"></div>
