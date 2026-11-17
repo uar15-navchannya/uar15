@@ -269,6 +269,8 @@ p { margin: 0; }
 .ttx dd small { display: block; font: 400 12px/1.35 var(--body); color: var(--muted); margin-top: 2px; }
 
 /* ── Будова ── */
+.seg { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.seg .btn[aria-pressed="true"] { background:var(--violet); border-color:var(--violet); color:#fff; }
 .parts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px 16px; }
 /* дві колонки: рахунок іде згори вниз — ліва 1…7, права 8…13 */
 @media (min-width: 520px) { .parts { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(var(--rows, 7), auto); grid-auto-flow: column; } }
@@ -464,7 +466,7 @@ const FACTS = [
 ];
 
 const PARTS = {
-  1: 'Ствол', 2: 'Цівка', 3: 'Затворна рама', 4: 'Рама верхня', 5: 'Рукоятка перезаряджання', 6: 'Приклад',
+  1: 'Ствол', 2: 'Цівка', 3: 'Затворна рама з затвором', 4: 'Рама верхня', 5: 'Руків’я перезаряджання', 6: 'Приклад',
   7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка', 12: 'Магазин', 13: 'Руків’я перенесення вогню',
 };
 const ON_DIAGRAM = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -848,14 +850,33 @@ function table() {
 }
 
 // — Будова —
+// Органи керування — рис. 3 настанови
+const CTRL_NAMES = { 1: 'Ствол', 2: 'Цівка', 3: 'Кришка вікна викидання гільз', 4: 'Рама верхня', 5: 'Кнопка досилача', 6: 'Приклад', 7: 'Кнопка застібки магазина',
+  8: 'Руків’я перезаряджання', 9: 'Затворна затримка', 10: 'Магазин', 11: 'Перевідник вогню', 12: 'Спусковий гачок', 13: 'Пістолетне руків’я', 14: 'Антабка' };
+let partsSet = 'parts';
+function partsList() {
+  const L = partsSet === 'ctrl' ? CTRL_NAMES : PARTS;
+  return `<ul class="parts" style="--rows:${Math.ceil(Object.keys(L).length / 2)}">${Object.entries(L).map(([n, t]) => `<li data-act="pick-part" data-n="${n}"><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>`;
+}
 function parts() {
   setBar('Будова UAR-15S');
+  partsSet = 'parts';
   app.innerHTML = `
+    <div class="seg" role="tablist"><button class="btn" data-act="parts-set" data-set="parts" aria-pressed="true">Основні частини</button><button class="btn" data-act="parts-set" data-set="ctrl" aria-pressed="false">Органи керування</button></div>
     ${m3d('labels', 'view')}
-    <p class="muted small">Номери на моделі — як у списку. Торкнись номера, деталі або рядка списку. Повзунок збирає автомат назад.</p>
-    <h3 class="h">Назви частин</h3>
-    <ul class="parts" style="--rows:${Math.ceil(Object.keys(PARTS).length / 2)}">${Object.entries(PARTS).map(([n, t]) => `<li data-act="pick-part" data-n="${n}"><b>${n}</b><span>${esc(t)}</span></li>`).join('')}</ul>
-    <p class="src">Джерело: ${esc(SRC_TTX)}.</p>`;
+    <p class="muted small" id="parts-hint">Номери на моделі — як у списку. Торкнись номера, деталі або рядка списку. Повзунок збирає автомат назад.</p>
+    <h3 class="h" id="parts-h">Назви частин</h3>
+    <div id="parts-list">${partsList()}</div>
+    <p class="src" id="parts-src">Джерело: Настанова щодо експлуатування UAR-15, рис. 16.</p>`;
+}
+function partsSetTo(set) {
+  partsSet = set;
+  for (const b of app.querySelectorAll('[data-act="parts-set"]')) b.setAttribute('aria-pressed', String(b.dataset.set === set));
+  $('parts-list').innerHTML = partsList();
+  $('parts-h').textContent = set === 'ctrl' ? 'Органи керування' : 'Назви частин';
+  $('parts-hint').textContent = set === 'ctrl' ? 'Автомат у зборі. Торкнись номера або рядка списку; модель можна крутити — затворна затримка зліва.' : 'Номери на моделі — як у списку. Торкнись номера, деталі або рядка списку. Повзунок збирає автомат назад.';
+  $('parts-src').textContent = `Джерело: Настанова щодо експлуатування UAR-15, рис. ${set === 'ctrl' ? 3 : 16}.`;
+  try { $('m3d').contentWindow.postMessage({ type: 'uar-labels', set }, location.origin); } catch (e) { /* модель ще вантажиться */ }
 }
 function markPart(n) { for (const li of app.querySelectorAll('.parts li')) li.classList.toggle('sel', +li.dataset.n === n); }
 window.addEventListener('message', e => { if (e.origin === location.origin && e.data && e.data.type === 'uar-picked') markPart(e.data.num); });
@@ -921,7 +942,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261117-065804';
+const APP_V = '20261117-070847';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}&p13=1" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1639,6 +1660,7 @@ document.addEventListener('click', e => {
       if (gStep > 1) playStep(t.dataset.kind, gStep - 1, false);
       else { stopSteps(); gStep = 0; modelPos(); modelStep(parseInt(t.dataset.n, 10)); }
       break;
+    case 'parts-set': partsSetTo(t.dataset.set); break;
     case 'pick-part': { const n = parseInt(t.dataset.n, 10); markPart(n); try { $('m3d').contentWindow.postMessage({ type: 'uar-pick', num: n }, location.origin); } catch (e) { /* модель ще вантажиться */ } break; }
     case 'backup-copy': backupCopy(); break;
     case 'backup-check': backupCheck(); break;
