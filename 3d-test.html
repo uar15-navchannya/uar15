@@ -622,8 +622,6 @@ $('tab-shot').onclick = () => { mode = 'shot'; paint(); };
 $('shot-go').onclick = () => {
   if (state === 'empty') { shotStart('charge'); state = 'busy'; }
   else if (state === 'ready') { shotStart('fire'); state = 'busy'; }
-  else if (state === 'hold') { magCount = MAG_N; reloadU = 0; state = 'reload'; }
-  else if (state === 'hold2') { shotStart('release'); state = 'busy'; }
   else if (state === 'busy' && kind === 'fire') shotGoal = 4;
   shotUI(); };
 $('shot-next').onclick = () => { if (state === 'ready') { shotStart('fire'); shotGoal = 1; state = 'busy'; } else if (state === 'busy' && kind === 'fire') shotGoal = Math.min(4, Math.floor(shotT + 1e-6) + 1); shotUI(); };
@@ -860,7 +858,7 @@ const smoke = Array.from({ length: 18 }, (_, k) => { const sp = new THREE.Sprite
   sp.userData = { port, t0: port ? 0.3 + rnd() * 0.1 : 0.08 + rnd() * 0.15, v: new THREE.Vector3(port ? rnd() * 1.2 - 0.6 : 2 + rnd() * 5, 0.6 + rnd() * 1.6, port ? 2.5 + rnd() * 2 : rnd() * 2 - 1), s: port ? 0.9 + rnd() : 2.4 + rnd() * 2.6 }; fx.add(sp); return sp; });
 
 let shotT = 0, shotGoal = 0, shotSpeed = 1, smokeAt = -1e9, magCount = MAG_N, chamberFull = false, kind = 'fire', state = 'empty', shotXray = true, reloadU = 1, coverShot = false;
-let dFrom = 8, dTo = 0;          // хід рами у фазі 4: звідки й куди (затримка зупиняє раму в задньому положенні)
+let dFrom = 8, dTo = 0, holdT = 0;          // хід рами у фазі 4: звідки й куди (затримка зупиняє раму в задньому положенні)
 const SHOT_DUR = [0.32, 0.22, 0.2, 0.24];   // секунди на фазу за повної швидкості
 const sm = u => u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u), cl = u => Math.min(1, Math.max(0, u));
 const sv = { pos: new THREE.Vector3(), rot: 0 }, sv2 = { pos: new THREE.Vector3(), rot: 0 };
@@ -870,7 +868,9 @@ function shotStart(k) {
   dFrom = k === 'release' ? HOLD_D : 8; dTo = 0;
 }
 function shotTick(dt) {
-  if (state === 'reload') { reloadU = Math.min(1, reloadU + dt * shotSpeed / 1.6); if (reloadU >= 1) { state = 'hold2'; shotUI(); } shotApply(); return; }
+  // патрони закінчились: рама на затримці → порожній магазин виймаємо, вставляємо повний → затримку відпускаємо
+  if (state === 'hold') { holdT += dt * shotSpeed; if (holdT > 0.5) { holdT = 0; magCount = MAG_N; reloadU = 0; state = 'reload'; shotUI(); } shotApply(); return; }
+  if (state === 'reload') { reloadU = Math.min(1, reloadU + dt * shotSpeed / 1.8); if (reloadU >= 1) { state = 'busy'; shotStart('release'); shotUI(); } shotApply(); return; }
   if (shotT < shotGoal) { const ph = Math.min(3, Math.floor(shotT)); shotT = Math.min(shotGoal, shotT + dt * shotSpeed / SHOT_DUR[ph]); }
   if (shotT >= 4) {
     // цикл завершено: якщо патрон досланий — він тепер у патроннику
@@ -881,7 +881,7 @@ function shotTick(dt) {
 }
 function shotUI() {
   const b = $('shot-go');
-  b.textContent = state === 'empty' ? 'Зарядити' : state === 'ready' ? 'Постріл' : state === 'hold' ? 'Новий магазин' : state === 'hold2' ? 'Відпустити затримку' : '…';
+  b.textContent = state === 'empty' ? 'Зарядити' : state === 'ready' ? 'Постріл' : '…';
   $('shotn').textContent = state === 'hold' || state === 'reload' ? 'Магазин порожній' : `У магазині ${magCount} ${magCount % 10 === 1 && magCount !== 11 ? 'патрон' : magCount % 10 >= 2 && magCount % 10 <= 4 && (magCount < 12 || magCount > 14) ? 'патрони' : 'патронів'}${chamberFull ? ', один — у патроннику' : ''}`;
   $('shot-prev').disabled = $('shot-next').disabled = !(state === 'ready' || state === 'busy' && kind === 'fire');
 }
@@ -933,7 +933,7 @@ function shotApply() {
   if (feeding) { slot(0, top % 2, sv); feedF = cl((faceX - sv.pos.x) / (FACE - sv.pos.x)); }
   const rise = sm(cl((feedF - 0.3) / 0.3));
   // заміна магазина: порожній опускається, споряджений піднімається
-  const magDrop = state === 'reload' ? (reloadU < 0.5 ? -14 * sm(reloadU * 2) : -14 * (1 - sm(reloadU * 2 - 1))) : 0;
+  const magDrop = state === 'reload' ? (reloadU < 0.45 ? -26 * sm(reloadU / 0.45) : reloadU < 0.55 ? -26 : -26 * (1 - sm((reloadU - 0.55) / 0.45))) : 0;
   const shownCount = state === 'reload' && reloadU < 0.5 ? 0 : magCount;
   parts.mag.group.position.y = magDrop;
   rounds.forEach((r, j) => {
