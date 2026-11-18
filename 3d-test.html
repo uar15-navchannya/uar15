@@ -1333,10 +1333,12 @@ function aimTick() {
 }
 // Корпус коліматора у прицілюванні — пласке кільце окуляра й об’єктива поверх кадру: стабільно, без мерехтіння на телефонах
 const tubeV = new THREE.Vector3();
-function aimTube(w, h) {
+function aimTube(w, h, sz) {
   const el = aimTubeEl || (aimTubeEl = Object.assign(document.createElement('div'), { className: 'aim-tube' }));
   if (!el.parentNode) stage.insertBefore(el, aimInset);
   el.style.display = sightMode === 'red' ? 'block' : 'none'; if (sightMode !== 'red') return;
+  // не затемнюємо збільшене вікно
+  const L = w - sz - 10, T = 10, R = w - 10, B = 10 + sz; el.style.clipPath = `polygon(evenodd, 0 0, ${w}px 0, ${w}px ${h}px, 0 ${h}px, 0 0, ${L}px ${T}px, ${R}px ${T}px, ${R}px ${B}px, ${L}px ${B}px, ${L}px ${T}px)`;
   const proj = (x, r) => { tubeV.set(x, SIGHT_Y, 0); aimRig.localToWorld(tubeV); const d = tubeV.distanceTo(camera.position); tubeV.project(camera);
     const pxRad = h / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))); return [(tubeV.x + 1) / 2 * w, (1 - tubeV.y) / 2 * h, r / d * pxRad]; };
   const [ex, ey, er] = proj(OPT_X - 5.6, 2.1), [ox, oy, or] = proj(OPT_X + 5.1, 1.75);
@@ -1352,7 +1354,7 @@ function aimRender() {
     const px = Math.max(5, 0.00058 / 0.8 * pxRad) * (0.8 + b * 0.02 + Math.max(0, b - 12) * 0.12);
     aimDot.scale.setScalar(px / pxRad * d); aimDot.material.opacity = Math.min(1, 0.35 + b * 0.065);
     aimDotFar.material.opacity = Math.max(0.6, aimDot.material.opacity); aimDotFar.scale.setScalar(aimTarget.position.x * 0.058 / 100 / 0.8 * (1 + Math.max(0, b - 12) * 0.12)); }
-  renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera); aimTube(w, h);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera); aimTube(w, h, sz);
   // збільшене вікно з мішенню — у правому верхньому куті
   aimCam.aspect = 1; aimCam.updateProjectionMatrix();
   renderer.setScissorTest(true); renderer.setScissor(w - sz - 10, h - sz - 10, sz, sz); renderer.setViewport(w - sz - 10, h - sz - 10, sz, sz);
