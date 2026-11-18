@@ -357,7 +357,8 @@ p { margin: 0; }
 .cl-steps li { display:grid; grid-template-columns:26px 1fr auto; gap:8px; align-items:start; padding:8px; border-radius:10px; border:1px solid transparent; line-height:1.45; }
 .cl-steps li > b { font:600 15px/1.45 var(--display); color:var(--violet); }
 .cl-steps li[data-act] { cursor:pointer; background:color-mix(in srgb, var(--violet) 8%, transparent); }
-.cl-steps li i { color:var(--violet); width:22px; height:22px; } .cl-steps li i .i { width:22px; height:22px; }
+.cl-steps li .play { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--violet); background:transparent; color:var(--violet); display:grid; place-items:center; cursor:pointer; } .cl-steps li .play .i { width:15px; height:15px; }
+.cl-steps li.playing { border-color:var(--violet); }
 .cl-steps li.on { border-color:var(--violet); }
 .cl-steps .cl-pic { grid-column:1 / -1; margin:4px 0 0; }
 .cl-push { animation:cl-push 2.6s ease-in-out infinite; } @keyframes cl-push { 0% { transform:translateX(0); } 70%, 100% { transform:translateX(170px); } }
@@ -1044,8 +1045,8 @@ function guideAs() {
 }
 
 // — Озвучка кроків: один аудіоелемент на всі кроки (так iPhone дозволяє грати кроки підряд) —
-const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9, safe: 5, codex: 6, aim: 7 };
-const VOICE_NAME = { aim: 'Прицілювання · частина', dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина', safe: 'Безпечне поводження · правило', codex: 'Кодекс · пункт' };
+const VOICE_STEPS = { dis: DIS.length, as: ASM.length, law: 9, safe: 5, codex: 6, aim: 7, clean: 20 };
+const VOICE_NAME = { clean: 'Чищення · частина', aim: 'Прицілювання · частина', dis: 'Розбирання · крок', as: 'Збирання · крок', law: 'Застосування зброї · частина', safe: 'Безпечне поводження · правило', codex: 'Кодекс · пункт' };
 const stepAudio = new Audio();
 stepAudio.preload = 'auto';
 const P = { kind: null, n: 0, all: false, wait: null, token: 0 };
@@ -1084,6 +1085,7 @@ function playStep(kind, n, all) {
     else el.scrollIntoView({ block: all ? 'center' : 'nearest', behavior: 'smooth' });
   }
   if (kind === 'dis' || kind === 'as') { modelStep(n, kind); gStep = n; modelPos(); }
+  if (kind === 'clean' && el && el.dataset.n) cleanShow(+el.dataset.n, el);
   $('player-text').textContent = `${VOICE_NAME[kind]} ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
@@ -1854,24 +1856,25 @@ function cleanShow(n, row) {
 function cleanView() {
   setBar('Чищення зброї');
   app.innerHTML = `<div class="law clv">
-    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі. Одним пальцем — пересувати стіл, двома — наблизити й повернути.</span></p></div>
-    <section class="art"><h3>Коли чистити</h3><ul>
+    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку — покажу на моделі; ▶ — послухати. Одним пальцем — пересувати стіл, двома — наблизити й повернути.</span></p></div>
+    ${listenBtn('clean')}
+    <section class="art" data-step="1"><h3 class="aim-h">Коли чистити<button class="play" data-act="play-step" data-kind="clean" data-n="1" aria-label="Слухати">${svg('play')}</button></h3><ul>
       <li>Після стрільби — одразу на стрільбищі: ствольну коробку, канал ствола й затвор. Остаточно — після повернення і ще 2–3 доби щодня.</li>
       <li>Після наряду чи занять у полі без стрільби — після повернення.</li>
       <li>У бою й на довгих навчаннях — щодня в перервах; якщо зброю не застосовували — щонайменше раз на тиждень.</li>
       <li>У кімнаті зберігання зброї — щонайменше раз на 3 місяці, навіть якщо не користувались.</li></ul></section>
-    <section class="art"><h3>Приладдя</h3><ul>
+    <section class="art" data-step="2"><h3 class="aim-h">Приладдя<button class="play" data-act="play-step" data-kind="clean" data-n="2" aria-label="Слухати">${svg('play')}</button></h3><ul>
       <li>Нейтральне мастило — чищення й змащування (від −50 до +50 °C). Лужне мастило або засіб від нагару — для каналу ствола та деталей, на які діють гази.</li>
       <li>Шомпол і шомпол для патронника; вішер для патчів; протирка для ганчір’я.</li>
       <li>Йоржі латунний і пластиковий для ствола, йорж для патронника; патчі — лише для каналу ствола.</li>
       <li>Ганчір’я, щітка, дерев’яні палички для пазів і отворів.</li></ul></section>
     <section class="art"><h3>Порядок чищення</h3>
-      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span>${n ? `<i>${svg('play')}</i>` : '<i></i>'}${CLEAN_PICS[i] || ''}</li>`).join('')}</ol></section>
-    <section class="art"><h3>Змащування</h3><ul>
+      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li data-step="${i + 3}"${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span><button class="play" data-act="play-step" data-kind="clean" data-n="${i + 3}" aria-label="Слухати крок ${i + 1}">${svg('play')}</button>${CLEAN_PICS[i] || ''}</li>`).join('')}</ol></section>
+    <section class="art" data-step="19"><h3 class="aim-h">Змащування<button class="play" data-act="play-step" data-kind="clean" data-n="19" aria-label="Слухати">${svg('play')}</button></h3><ul>
       <li>Одразу після чищення, лише на чисту суху поверхню — щоб волога не діяла на метал.</li>
       <li>При +5 °C і нижче — лише універсальний засіб або нейтральне мастило. Змінюєш тип мастила — ретельно прибери старе.</li>
       <li>Зброю, внесену з морозу в тепло, чистити не раніше ніж через 10–20 хв, коли висохне конденсат.</li></ul></section>
-    <section class="art warn"><h3>Заборонено</h3><ul>
+    <section class="art warn" data-step="20"><h3 class="aim-h">Заборонено<button class="play" data-act="play-step" data-kind="clean" data-n="20" aria-label="Слухати">${svg('play')}</button></h3><ul>
       <li>Абразиви: наждачний папір, пісок тощо.</li>
       <li>Гострі й тверді предмети, сталеві щітки та йоржі.</li>
       <li>Знімати цівку, демонтувати затворну затримку, повністю викручувати гвинт газоблока.</li></ul></section>
