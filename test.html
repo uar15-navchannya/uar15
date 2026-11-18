@@ -368,7 +368,9 @@ p { margin: 0; }
 .cl-out { animation:cl-out 2.4s ease-in-out infinite; } @keyframes cl-out { 0%, 20% { transform:translateY(0); } 70%, 100% { transform:translateY(16px); opacity:.4; } }
 @media (prefers-reduced-motion: reduce) { .cl-push, .cl-pass, .cl-wipe, .cl-spin, .cl-drop, .cl-out { animation:none; opacity:1; } }
 .art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
-.aim-res { font-weight:600; } .aim-res.ok { color:var(--good, #6fbf73); } .aim-res.bad { color:var(--bad); }
+.aim-res { font-weight:600; }
+#aim-breath.held { background:var(--good); border-color:var(--good); color:#000; }
+#aim-breath { user-select:none; -webkit-user-select:none; touch-action:none; } .aim-res.ok { color:var(--good, #6fbf73); } .aim-res.bad { color:var(--bad); }
 .m3d-nav { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-top:6px; }
 .m3d-nav .btn { min-height:44px; font-size:15px; }
 .m3d-nav span { font:500 13px/1.2 var(--display); letter-spacing:1px; text-transform:uppercase; color:var(--muted); text-align:center; }
@@ -974,7 +976,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-050622';
+const APP_V = '20261118-052825';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1640,7 +1642,7 @@ function lawAnswer(k) {
 // ═════════ Прицілювання ═════════
 // Відхилення кулі від лінії прицілювання, см — розрахунок для 5,56 мм SS109 (G7 0,151), 830 м/с, висота прицілу 6,7 см, пристрілка на 100 м
 const AIM_DROP = { 25: -3.5, 50: -1.3, 100: 0, 150: -3.3, 200: -11.8, 250: -26.4, 300: -47.9, 350: -77.4, 400: -116.3 };
-const AIM_ST = { dist: 100, sight: 'red', hold: 'corr', shots: 0, hits: 0, last: null };
+const AIM_ST = { mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null };
 function aimHint(d) {
   const h = -AIM_DROP[d];
   if (h <= 5) return 'Наводь у центр фігури — різниця до 5 см, вона в межах розсіювання.';
@@ -1649,53 +1651,99 @@ function aimHint(d) {
   if (h < 60) return `Наводь на ${Math.round(h)} см вище центру — це на ${Math.round(h - 25)} см вище голови фігури.`;
   return `Наводь на ${Math.round(h)} см вище центру — ≈ ${(h / 50).toFixed(1).replace('.', ',')} висоти грудної фігури (50 см) над її центром, вище самої мішені.`;
 }
-const aimSend = (extra = {}) => { const f = $('m3d'); try { f.contentWindow.postMessage({ type: 'uar-aim', dist: AIM_ST.dist, sight: AIM_ST.sight, hold: AIM_ST.hold, ...extra }, location.origin); } catch (e) { /* модель ще вантажиться */ } };
+const aimSend = (extra = {}) => { const f = $('m3d'); try { f.contentWindow.postMessage({ type: 'uar-aim', ...extra }, location.origin); } catch (e) { /* модель ще вантажиться */ } };
+const aimSync = () => aimSend({ dist: AIM_ST.dist, sight: AIM_ST.sight, mode: AIM_ST.mode, hint: AIM_ST.hint });
+const aimMiss = m => { const v = [], y = m.aimOffY, z = m.aimOffZ; if (Math.abs(y) > 3) v.push(`${Math.abs(y)} см ${y > 0 ? 'вище' : 'нижче'}`); if (Math.abs(z) > 3) v.push(`${Math.abs(z)} см ${z > 0 ? 'правіше' : 'лівіше'}`); return v.length ? `Ти цілився ${v.join(' й ')} центру фігури.` : 'Ти цілився в центр фігури.'; };
 function aimInfo() {
-  const d = AIM_ST.dist, dr = AIM_DROP[d], el = $('aim-info'); if (!el) return;
-  el.innerHTML = `<p><b>${d} м.</b> ${dr === 0 ? 'Дистанція пристрілки: куля йде точно в точку прицілювання.' : `Куля пройде на <b>${Math.abs(dr).toString().replace('.', ',')} см нижче</b> точки прицілювання.`}</p>
-    <p>${esc(aimHint(d))}</p>
-    ${AIM_ST.last ? `<p class="aim-res ${AIM_ST.last.hit ? 'ok' : 'bad'}">${AIM_ST.last.hit ? 'Влучання' : AIM_ST.last.board ? 'Промах — у щит поза фігурою' : 'Промах — куля пішла в землю перед мішенню'} · ${AIM_ST.hits} з ${AIM_ST.shots}</p>` : ''}`;
+  const el = $('aim-info'); if (!el) return;
+  if (AIM_ST.mode === 'drill') {
+    const d = AIM_ST.drill;
+    el.innerHTML = !d ? '<p>Мішені з’являються по одній на різних дистанціях. Знайди ціль, наведи з поправкою на дистанцію й стріляй — до 3 пострілів на мішень.</p>'
+      : d.done ? `<p class="aim-res ok">Вправу завершено: влучив ${d.hits} з ${d.n} мішеней, пострілів — ${d.shots}, час — ${d.sec} с.</p><p>Натисни «Вправа» ще раз, щоб почати знову.</p>`
+      : `<p><b>Мішень ${d.i} з ${d.n} · ${d.dist} м.</b> ${esc(aimHint(d.dist))}</p>${d.last != null ? `<p class="aim-res ${d.last ? 'ok' : 'bad'}">${d.last ? 'Влучання' : 'Промах'} · ${esc(aimMiss(d))}</p>` : ''}<p class="muted small">Влучань: ${d.hits} · пострілів: ${d.shots}</p>`;
+    return;
+  }
+  const dd = AIM_ST.dist, dr = AIM_DROP[dd];
+  el.innerHTML = `<p><b>${dd} м.</b> ${dr === 0 ? 'Дистанція пристрілки: куля йде точно в точку прицілювання.' : `Куля пройде на <b>${Math.abs(dr).toString().replace('.', ',')} см нижче</b> точки прицілювання.`}</p>
+    <p>${esc(aimHint(dd))}${AIM_ST.hint ? ' Жовтий хрестик на мішені — туди й наводь.' : ''}</p>
+    ${AIM_ST.last ? `<p class="aim-res ${AIM_ST.last.hit ? 'ok' : 'bad'}">${AIM_ST.last.hit ? 'Влучання' : AIM_ST.last.board ? 'Промах — у щит поза фігурою' : 'Промах — куля пішла в землю перед мішенню'} · ${AIM_ST.hits} з ${AIM_ST.shots}</p><p class="muted small">${esc(aimMiss(AIM_ST.last))}</p>` : ''}`;
 }
 function aimSeg(name, cur, items) { return `<div class="aseg" role="group">${items.map(([v, t]) => `<button class="btn" data-act="aim-set" data-k="${name}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`; }
 function aimControls() {
-  $('aim-ctl').innerHTML = `${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
-    <div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
-    ${aimSeg('hold', AIM_ST.hold, [['corr', 'З поправкою'], ['center', 'У центр']])}
-    <button class="btn primary" data-act="aim-fire">Постріл</button>`;
+  $('aim-ctl').innerHTML = `${aimSeg('mode', AIM_ST.mode, [['train', 'Тренування'], ['drill', 'Вправа']])}
+    ${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
+    ${AIM_ST.mode === 'train' ? `<div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
+    ${aimSeg('hint', String(AIM_ST.hint), [['true', 'Підказка: так'], ['false', 'Без підказки']])}` : ''}
+    <div class="aseg"><button class="btn" id="aim-breath">Затримати дихання</button><button class="btn primary" data-act="aim-fire">Постріл</button></div>`;
+  const b = $('aim-breath'), on = v => e => { e.preventDefault(); b.classList.toggle('held', v); aimSend({ breath: v }); };
+  b.addEventListener('pointerdown', on(true)); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, on(false));
+  b.addEventListener('contextmenu', e => e.preventDefault());
 }
 function aimView() {
   setBar('Прицілювання');
   app.innerHTML = `<div class="law aimv">
-    <div class="m3d-stick">${m3d('aim', 'aim')}</div>
+    <div class="m3d-stick">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — так наводиш зброю. Тримай «Затримати дихання» і стріляй.</span></p></div>
     <div class="aim-ctl" id="aim-ctl"></div>
     <div class="art" id="aim-info"></div>
-    <section class="art"><h3>Як цілитися з коліматора</h3><ul>
-      <li>Дивись <b>обома відкритими очима</b>: так ширший огляд і швидше знаходиш ціль.</li>
-      <li>Наведи червону точку на точку прицілювання. Центрувати точку у вікні прицілу не треба: вона «тримається» на цілі, навіть якщо око трохи зміщене.</li>
-      <li>Поверни перемикач яскравості так, щоб точку було добре видно на фоні цілі, але вона не розпливалась.</li></ul></section>
-    <section class="art"><h3>Як цілитися з механічного прицілу</h3><ul>
-      <li>Дивись крізь кільце цілика. <b>Верх мушки</b> — у центрі кільця, око саме знаходить центр.</li>
-      <li>Фокус — на мушці: вона чітка, ціль трохи розмита. Верх мушки — це точка прицілювання.</li>
-      <li>Голова щоразу в тому самому місці: щока на прикладі в одній точці.</li></ul></section>
-    <section class="art"><h3>Постріл</h3><ul>
-      <li>Приклад щільно в плече, щока на прикладі, руки тримають зброю без напруги.</li>
-      <li>Дихання: вдих — видих — постріл на природній паузі, поки груди не рухаються.</li>
-      <li>Натискай на спусковий гачок плавно, прямо назад, не смикай. Постріл має статися «несподівано».</li>
-      <li>Після пострілу тримай приціл на цілі й відпускай гачок лише до клацання — і готовий до наступного.</li></ul></section>
-    <section class="art"><h3>Пристрілка коліматора (настанова)</h3><ul>
-      <li>Гвинт зверху — по висоті, гвинт справа — по горизонталі. Інструмент: монета, викрутка, гільза.</li>
-      <li>1 клік = <b>16 мм на 100 м</b> (4 мм на 25 м, 32 мм на 200 м).</li>
-      <li>Точку влучання вгору — гвинт по висоті проти годинникової стрілки; вниз — за годинниковою. Вправо — гвинт горизонталі проти годинникової; вліво — за годинниковою.</li>
-      <li>Перевір пристрілку щонайменше трьома пострілами, потім переконайся, що приціл і кріплення надійно затягнуті.</li></ul></section>
-    <p class="src">Поправки — розрахунок для патрона 5,56×45 мм типу SS109, початкова швидкість 830 м/с (ТТХ), висота прицілу 6,7 см (39 мм над планкою — табл. 3 настанови), пристрілка на 100 м. Значення приблизні: звіряй з пристрілкою своєї зброї. Розсіювання — r50 = 40 мм на 100 м (ТТХ). Пристрілка коліматора — розділ CompM4s настанови.</p>
+    ${AIM_PICS()}
+    <p class="src">Поправки — розрахунок для патрона 5,56×45 мм типу SS109, початкова швидкість 830 м/с (ТТХ), висота прицілу 6,7 см (39 мм над планкою — табл. 3 настанови), пристрілка на 100 м. Значення приблизні: звіряй з пристрілкою своєї зброї. Розсіювання — r50 = 40 мм на 100 м (ТТХ). Приціли — за рис. 2, 43, 44 настанови; пристрілка коліматора — розділ CompM4s настанови.</p>
   </div>`;
   aimControls(); aimInfo();
-  $('m3d').addEventListener('load', () => setTimeout(() => aimSend(), 300));
+  $('m3d').addEventListener('load', () => setTimeout(aimSync, 300));
 }
 window.addEventListener('message', e => {
-  if (e.origin !== location.origin || !e.data || e.data.type !== 'uar-aim-hit' || view !== 'aim') return;
-  AIM_ST.shots++; if (e.data.hit) AIM_ST.hits++; AIM_ST.last = e.data; aimInfo();
+  if (e.origin !== location.origin || !e.data || view !== 'aim') return;
+  if (e.data.type === 'uar-aim-hit') { AIM_ST.shots++; if (e.data.hit) AIM_ST.hits++; AIM_ST.last = e.data; aimInfo(); }
+  if (e.data.type === 'uar-aim-drill') { const m = e.data; AIM_ST.drill = { ...m, last: 'hit' in m ? m.hit : null }; aimInfo(); }
 });
+// ── Малюнки до пояснень ──
+const apSvg = (body, lbl, h = 150) => `<svg class="sp" viewBox="0 0 320 ${h}" role="img" aria-label="${esc(lbl)}">${body}</svg>`;
+const apFig = (cx, cy, s = 1, fill = '#4a5634') => `<path transform="translate(${cx} ${cy}) scale(${s})" d="M-25 25 V-2 Q-24 -9 -14 -10 L-9 -11 Q-12 -25 0 -25 Q12 -25 9 -11 L14 -10 Q24 -9 25 -2 V25 Z" fill="${fill}"/>`;
+function AIM_PICS() {
+  // 1. Картинка в коліматорі: обидва ока відкриті, точка на цілі
+  const p1 = apSvg(`<circle cx="110" cy="72" r="52" fill="#9fb6c4"/><defs><clipPath id="apc1"><circle cx="110" cy="72" r="52"/></clipPath></defs><rect x="58" y="86" width="104" height="40" fill="#9fae6f" clip-path="url(#apc1)"/>
+    ${apFig(110, 74, 0.9)}<circle cx="110" cy="66" r="4.5" fill="#ff2a2a"/><circle cx="110" cy="66" r="9" fill="#ff2a2a" opacity=".25"/>
+    <circle cx="110" cy="72" r="52" fill="none" stroke="var(--sp-gun)" stroke-width="10"/>
+    <g transform="translate(212 40)"><ellipse cx="0" cy="12" rx="16" ry="10" fill="#fff"/><circle cx="0" cy="12" r="6" fill="#3a3f30"/><ellipse cx="44" cy="12" rx="16" ry="10" fill="#fff"/><circle cx="44" cy="12" r="6" fill="#3a3f30"/>
+    <text class="sm" x="-12" y="44">обидва ока</text><text class="sm" x="-4" y="58">відкриті</text></g>
+    <text class="sm" x="70" y="140">точка — на точці прицілювання</text>`, 'Картинка в коліматорі');
+  // 2. Механічний: кільце цілика, мушка в центрі, фокус на мушці
+  const p2 = apSvg(`<circle cx="110" cy="72" r="56" fill="var(--sp-gun)"/><circle cx="110" cy="72" r="30" fill="#b9c8d1"/>
+    <g opacity=".55" filter="url(#bl)">${apFig(110, 74, 0.55)}</g>
+    <path d="M86 102 V76 h8 v-6 h4 v6 h-4" fill="none"/><rect x="107" y="72" width="6" height="40" fill="#1c1f19"/><path d="M84 112 V84 H92 V112 M128 112 V84 H136 V112" fill="#1c1f19"/>
+    <path d="M110 72 m-30 0 h-8 M110 72 m30 0 h8" stroke="var(--violet)" stroke-width="1.5"/>
+    <defs><filter id="bl"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+    <text class="sm" x="190" y="50">верх мушки —</text><text class="sm" x="190" y="64">у центрі кільця</text><text class="sm" x="190" y="92">фокус на мушці,</text><text class="sm" x="190" y="106">ціль трохи розмита</text>`, 'Механічний приціл');
+  // 3. Траєкторія: лінія прицілювання і куля, пристрілка 100 м
+  const X = d => 30 + d * 0.68, Y = c => 46 - c * 0.62;
+  const pts = [[0, -6.7], [25, -3.5], [50, -1.3], [100, 0], [150, -3.3], [200, -11.8], [250, -26.4], [300, -47.9], [350, -77.4], [400, -116.3]];
+  const p3 = apSvg(`<path d="M${X(0)} ${Y(0)} H${X(400)}" stroke="#ff4a3a" stroke-width="1.8" stroke-dasharray="6 4"/>
+    <path d="M${pts.map(([d, c]) => `${X(d).toFixed(1)} ${Y(c).toFixed(1)}`).join(' L')}" stroke="var(--sp-tan)" stroke-width="2.5" fill="none"/>
+    ${[100, 200, 300, 400].map(d => `<path d="M${X(d)} 34 V${Y(AIM_DROP[d]) + 4}" stroke="var(--sp-dim)" stroke-width="1"/><text class="sm" x="${X(d) - 12}" y="30">${d} м</text><text class="sm" x="${X(d) - (d === 100 ? 4 : 14)}" y="${Math.min(Y(AIM_DROP[d]) + 14, 146)}">${d === 100 ? '0' : Math.round(AIM_DROP[d]) + ' см'}</text>`).join('')}
+    <text class="sm" x="30" y="16" style="fill:#ff6a5a">лінія прицілювання</text><text class="sm" x="${X(30)}" y="${Y(-30)}" style="fill:var(--sp-tan)">траєкторія кулі</text>`, 'Траєкторія кулі');
+  // 4. Куди наводити на 100, 200, 300 м
+  const p4 = apSvg([100, 200, 300].map((d, i) => { const cx = 55 + i * 105, cy = 92, k = 0.9, h = -AIM_DROP[d] * k;
+    return `<rect x="${cx - 40}" y="40" width="80" height="80" rx="4" fill="#c9b88f"/>${apFig(cx, cy, k)}<g stroke="#ffd23f" stroke-width="2.5"><path d="M${cx - 7} ${cy - h} h14 M${cx} ${cy - h - 7} v14"/></g>
+      <text class="sm" x="${cx - 14}" y="30">${d} м</text><text class="sm" x="${cx - 28}" y="138">${d === 100 ? 'у центр' : `на ${Math.round(-AIM_DROP[d])} см вище`}</text>`; }).join(''), 'Куди наводити');
+  // 5. Дихання: природна пауза після видиху
+  const wave = Array.from({ length: 61 }, (_, i) => { const x = 20 + i * 4.6, t = i / 60 * Math.PI * 4; return `${x.toFixed(1)} ${(70 - 26 * Math.sin(t)).toFixed(1)}`; }).join(' L');
+  const p5 = apSvg(`<path d="M${wave}" stroke="var(--sp-ink)" stroke-width="2" fill="none"/><rect x="${20 + 43 * 4.6}" y="88" width="34" height="14" rx="4" fill="var(--good)" opacity=".35"/>
+    <path d="M${20 + 46 * 4.6} 86 V100" stroke="var(--good)" stroke-width="2"/><text class="sm" x="${20 + 36 * 4.6}" y="122" style="fill:var(--good)">постріл — у паузі</text>
+    <text class="sm" x="20" y="26">вдих</text><text class="sm" x="80" y="122">видих</text>`, 'Дихання');
+  // 6. Спуск: подушечка пальця, тиснути прямо назад
+  const p6 = apSvg(`<path d="M150 30 Q148 70 160 98 Q166 112 178 114 L186 104 Q170 96 168 70 L168 30 Z" fill="var(--sp-gun)" stroke="var(--sp-dim)"/>
+    <path d="M60 80 Q120 70 150 78 Q160 82 162 90 Q158 98 148 96 L100 98 Q70 100 60 96 Z" fill="#c99b7a"/><circle cx="156" cy="88" r="6" fill="#a5795c" opacity=".7"/>
+    <g stroke="var(--violet)" stroke-width="3" fill="none" stroke-linecap="round"><path d="M200 88 H250"/><path d="M243 81 L251 88 L243 95"/></g>
+    <text class="sm" x="200" y="74">прямо назад,</text><text class="sm" x="200" y="114">плавно</text><text class="sm" x="40" y="130">подушечка першої фаланги</text>`, 'Спуск');
+  const card = (t, pic, items) => `<section class="art"><h3>${t}</h3>${pic}<ul>${items.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  return card('Як цілитися з коліматора', p1, ['Дивись <b>обома відкритими очима</b>: так ширший огляд і швидше знаходиш ціль.', 'Наведи червону точку на точку прицілювання. Центрувати точку у вікні прицілу не треба: вона «тримається» на цілі, навіть якщо око трохи зміщене.', 'Поверни перемикач яскравості так, щоб точку було добре видно на фоні цілі, але вона не розпливалась.'])
+    + card('Як цілитися з механічного прицілу', p2, ['Дивись крізь кільце цілика. <b>Верх мушки</b> — у центрі кільця, око саме знаходить центр.', 'Фокус — на мушці: вона чітка, ціль трохи розмита. Верх мушки — це точка прицілювання.', 'Щока на прикладі щоразу в тому самому місці.'])
+    + card('Чому на різних дистанціях цілимося по-різному', p3, ['Приціл стоїть вище ствола, тож куля летить по дузі: при пристрілці на 100 м вона перетинає лінію прицілювання саме там.', 'Ближче — куля трохи нижче (на 25 м — на 3–4 см), далі — дедалі нижче: на 200 м на 12 см, на 300 м на 48 см, на 400 м більше ніж на метр.'])
+    + card('Куди наводити', p4, ['100 м — у центр фігури. 200 м — трохи вище центру. 300 м — над головою фігури.', 'На 350–400 м точка прицілювання вже вище мішені — тому ефективна дальність 400–500 м (ТТХ).'])
+    + card('Дихання', p5, ['Вдих — видих — і постріл на природній паузі, поки груди не рухаються.', 'Довго не затримуй дихання: через кілька секунд руки починають тремтіти — краще видихнути й почати знову. У тренажері це теж так.'])
+    + card('Спуск', p6, ['Палець — подушечкою першої фаланги на спусковому гачку.', 'Натискай плавно й прямо назад, не смикай. Постріл має статися «несподівано».', 'Після пострілу тримай приціл на цілі й відпускай гачок лише до клацання.'])
+    + card('Пристрілка коліматора (настанова)', '', ['Гвинт зверху — по висоті, гвинт справа — по горизонталі. Інструмент: монета, викрутка, гільза.', '1 клік = <b>16 мм на 100 м</b> (4 мм на 25 м, 32 мм на 200 м).', 'Точку влучання вгору — гвинт по висоті проти годинникової стрілки; вниз — за годинниковою. Вправо — гвинт горизонталі проти годинникової; вліво — за годинниковою.', 'Перевір пристрілку щонайменше трьома пострілами, потім переконайся, що приціл і кріплення надійно затягнуті.']);
+}
 
 // ═════════ Чищення зброї (п. 2.8 настанови) ═════════
 // [текст кроку, номер анімації на 3D-моделі або 0]
@@ -1840,7 +1888,7 @@ document.addEventListener('click', e => {
     case 'card-prev': cardGo(-1); break;
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
-    case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; aimControls(); aimInfo(); aimSend(); break; }
+    case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : k === 'hint' ? v === 'true' : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; if (k === 'mode') AIM_ST.drill = null; aimControls(); aimInfo(); aimSync(); break; }
     case 'clean-show': cleanShow(+t.dataset.n, t); break;
     case 'aim-fire': aimSend({ fire: true }); break;
     case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;

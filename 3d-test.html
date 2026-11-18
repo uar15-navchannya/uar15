@@ -297,30 +297,40 @@ part('fsling', 'Передня антабка', qdMount(46.1, -1.15, 2.25, 1), M
 const SIGHT_Y = 2.78 + 3.9;
 const OPT_X = 9.0;                     // середина коліматора над верхньою рамою
 part('optic', 'Коліматорний приціл', [
-  // корпус (Ø ≈ 4 см), розширений об’єктив спереду, окуляр ззаду
-  // порожниста труба — крізь неї видно ціль
-  lathe([[OPT_X - 5.6, 1.6], [OPT_X - 5.6, 1.95], [OPT_X - 4.9, 2.05], [OPT_X - 4.6, 1.85], [OPT_X + 2.6, 1.85], [OPT_X + 3.4, 2.15], [OPT_X + 6.3, 2.15], [OPT_X + 6.5, 2.0], [OPT_X + 6.5, 1.75], [OPT_X + 3.0, 1.6], [OPT_X - 5.6, 1.6]], 0, SIGHT_Y, 40),
-  // рифлення окуляра й об’єктива
-  ...[-5.35, -5.05, 5.6, 5.9, 6.2].map(dx => { const r = dx > 0 ? 2.18 : 2.08, x = OPT_X + dx; return [lathe([[x - 0.06, r - 0.2], [x - 0.06, r], [x + 0.06, r], [x + 0.06, r - 0.2]], 0, SIGHT_Y, 40), RUB]; }),
-  // барабани поправок: зверху (вертикаль) і справа (горизонталь), з кришками
-  cylY(0.75, 1.0, OPT_X + 0.4, SIGHT_Y + 2.35), [cylY(0.62, 0.12, OPT_X + 0.4, SIGHT_Y + 2.9), RUB],
-  cylZ(0.75, 1.0, OPT_X + 0.4, SIGHT_Y, 2.35), [cylZ(0.62, 0.12, OPT_X + 0.4, SIGHT_Y, 2.9), RUB],
-  // батарейний відсік і поворотний перемикач яскравості — ліворуч унизу
-  cylX(0.72, 4.6, OPT_X - 0.7, SIGHT_Y - 1.45, -2.35), [cylX(0.8, 0.5, OPT_X + 1.85, SIGHT_Y - 1.45, -2.35), RUB],
-  [cylX(0.95, 0.75, OPT_X - 3.4, SIGHT_Y - 1.45, -2.35), RUB],
-  // кріплення QRP2: стійка під корпусом, проставка, основа на планці, ручка з обмежувачем моменту ліворуч
-  box(4.4, 1.6, 2.2, OPT_X - 0.4, SIGHT_Y - 2.5), box(5.6, 1.2, 2.6, OPT_X - 0.4, 2.78 + 0.6 + 0.35),
-  box(5.6, 0.5, 2.4, OPT_X - 0.4, 2.78 + 0.25),
-  [cylZ(0.85, 0.9, OPT_X - 0.4, 2.78 + 0.6, -1.9), RUB], [cylZ(0.25, 1.6, OPT_X - 0.4, 2.78 + 0.6, -1.0), SCREW],
-  // лінзи: окуляр з антибліковим покриттям, об’єктив із червонуватим відблиском
-  [cylX(1.75, 0.04, OPT_X - 5.55, SIGHT_Y, 0, 40), M(0x1c2a2e, { metalness: 0.9, roughness: 0.08 })],
-  [cylX(1.95, 0.04, OPT_X + 6.45, SIGHT_Y, 0, 40), M(0x5a2a22, { metalness: 0.9, roughness: 0.06 })],
+  // CompM4s за рис. 2, 43, 44 настанови: труба з окуляром і об’єктивом, під нею корпус із батарейним відсіком,
+  // поворотний перемикач спереду праворуч, барабани поправок зверху й праворуч, кріплення QRP2 з проставкою, ручка кріплення ліворуч
+  lathe([[OPT_X - 5.6, 1.62], [OPT_X - 5.6, 2.1], [OPT_X - 4.9, 2.1], [OPT_X - 4.75, 1.95], [OPT_X + 4.3, 1.95], [OPT_X + 4.45, 2.18], [OPT_X + 5.1, 2.18], [OPT_X + 5.1, 1.75], [OPT_X - 5.6, 1.62]], 0, SIGHT_Y, 44),
+  // антиблікова бленда спереду
+  lathe([[OPT_X + 5.1, 1.9], [OPT_X + 5.1, 2.12], [OPT_X + 7.0, 2.12], [OPT_X + 7.0, 1.95], [OPT_X + 5.1, 1.9]], 0, SIGHT_Y, 44),
+  ...[OPT_X - 5.35, OPT_X - 5.05].map(x => [lathe([[x - 0.06, 1.9], [x - 0.06, 2.16], [x + 0.06, 2.16], [x + 0.06, 1.9]], 0, SIGHT_Y, 40), RUB]),
+  // нижній корпус (батарейний відсік) із заокругленими ребрами
+  box(8.8, 1.2, 3.4, OPT_X + 0.1, SIGHT_Y - 2.3), cylX(0.6, 8.8, OPT_X + 0.1, SIGHT_Y - 2.3, 1.1), cylX(0.6, 8.8, OPT_X + 0.1, SIGHT_Y - 2.3, -1.1),
+  // перехід від труби до корпусу з боків
+  ...[1, -1].map(sd => extr([[OPT_X - 4.3, SIGHT_Y - 1.8], [OPT_X + 4.5, SIGHT_Y - 1.8], [OPT_X + 4.5, SIGHT_Y - 1.0], [OPT_X - 4.3, SIGHT_Y - 1.0]], 0.4).translate(0, 0, sd * 1.75)),
+  // батарейна трубка праворуч і поворотний перемикач яскравості з рифленням на передньому торці
+  cylX(1.0, 6.4, OPT_X + 2.2, SIGHT_Y - 1.95, 1.75),
+  [cylX(1.12, 0.9, OPT_X + 5.85, SIGHT_Y - 1.95, 1.75, 24), RUB], ...Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2; return [box(0.85, 0.15, 0.15, OPT_X + 5.85, SIGHT_Y - 1.95 + 1.15 * Math.sin(a), 1.75 + 1.15 * Math.cos(a)), RUB]; }),
+  // барабан по висоті (зверху) і по горизонталі (праворуч), кришки з хрестом
+  box(2.2, 0.55, 2.2, OPT_X + 0.2, SIGHT_Y + 2.05), cylY(0.85, 0.5, OPT_X + 0.2, SIGHT_Y + 2.55),
+  [box(1.3, 0.06, 0.16, OPT_X + 0.2, SIGHT_Y + 2.82), HOLE], [box(0.16, 0.06, 1.3, OPT_X + 0.2, SIGHT_Y + 2.82), HOLE],
+  box(2.2, 2.2, 0.55, OPT_X + 0.2, SIGHT_Y, 2.05), cylZ(0.85, 0.5, OPT_X + 0.2, SIGHT_Y, 2.55),
+  [box(1.3, 0.16, 0.06, OPT_X + 0.2, SIGHT_Y, 2.82), HOLE], [box(0.16, 1.3, 0.06, OPT_X + 0.2, SIGHT_Y, 2.82), HOLE],
+  decal('Aimpoint', OPT_X + 0.2, SIGHT_Y - 2.25, -1.73, 0.6, -1, '#7d8288', 500),
+  // QRP2: основа на планці з упором, проставка, затиск під корпусом, ручка з обмежувачем моменту ліворуч
+  box(5.4, 0.4, 2.6, OPT_X + 0.1, 2.78 + 0.2), [box(0.5, 0.35, 2.0, OPT_X + 0.1, 2.78 - 0.1), SCREW],
+  box(5.0, 0.32, 2.3, OPT_X + 0.1, 3.34), box(4.6, 0.25, 2.7, OPT_X + 0.1, 3.6),
+  [cylZ(0.95, 1.1, OPT_X + 0.1, 3.3, -1.95), RUB], [cylZ(0.75, 0.5, OPT_X + 0.1, 3.3, -2.75), M(0x3a3d42, { roughness: 0.6 })], [cylZ(0.2, 1.4, OPT_X + 0.1, 3.3, -1.0), SCREW],
+  // лінзи
+  [cylX(1.62, 0.04, OPT_X - 5.5, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0x8fb0b8, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false })],
+  [cylX(1.8, 0.04, OPT_X + 4.9, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0xb05040, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.22, depthWrite: false })],
 ], M(0x24272b, { roughness: 0.55, metalness: 0.35 }), [0, 14, 0]);
 // Механічні прицільні пристрої: складаються, коли стоїть коліматор
 const RS_X = 1.4, FS_X = 46.9;
 part('rsight', 'Цілик', [
   box(2.6, 0.55, 2.3, RS_X, 2.78 + 0.28), box(2.0, 0.35, 2.0, RS_X, 2.78 + 0.7),
   [cylZ(0.18, 2.4, RS_X + 0.7, 2.78 + 0.85), SCREW],
+  // барабан поправок цілика з рифленням (рис. 2, поз. 3)
+  cylZ(0.55, 0.5, RS_X - 0.6, 2.78 + 0.85, 1.3), ...Array.from({ length: 10 }, (_, i) => { const a = i / 10 * Math.PI * 2; return box(0.12, 0.12, 0.5, RS_X - 0.6 + 0.58 * Math.cos(a), 2.78 + 0.85 + 0.58 * Math.sin(a), 1.3); }),
 ], M(0x23262a, { roughness: 0.6, metalness: 0.3 }), [0, 14, 0]);
 part('fsight', 'Мушка', [
   box(2.4, 0.6, 2.3, FS_X, 2.83 + 0.3), box(1.8, 0.35, 2.0, FS_X, 2.83 + 0.75),
@@ -1155,49 +1165,101 @@ function aimSetup() {
   aimApply();
 }
 // положення камери (ока) й мішені для поточних дистанції, прицілу та точки прицілювання
+// Наведення: стрілець сам веде зброю пальцем (yaw — вліво/вправо, pitch — вгору/вниз), зброя хитається від дихання й тремору.
+// «Затримати дихання» на кілька секунд майже прибирає хитання, потім руки починають тремтіти сильніше.
+Object.assign(AIM, { yaw: 0, pitch: 0, sy: 0, sp: 0, breath: false, bT: 0, mode: 'train', hint: true, drill: null, tz: 0, ty: 0, up: 1, t: 0 });
+const DRILL_D = [50, 100, 150, 200, 250, 300, 350];
+function aimTargetPlace(D, z, y) { aimTarget.position.set(D, y, z); AIM.tz = z; AIM.ty = y; aimCam.fov = 2 * Math.atan(85 / D) * 180 / Math.PI; aimCam.updateProjectionMatrix(); }
+function aimClearHits() { for (const h of AIM.hits) h.removeFromParent(); AIM.hits = []; }
 function aimApply() {
-  const D = AIM.dist * 100, hold = AIM.hold === 'corr' ? -AIM_DROP[AIM.dist] : 0;
   const eyeX = sightMode === 'red' ? OPT_X - 5.6 - 11 : RS_X + 0.7 - 7;
-  camera.position.set(eyeX, SIGHT_Y, 0); camera.lookAt(eyeX + 100, SIGHT_Y, 0);
-  aimCam.position.copy(camera.position); aimCam.quaternion.copy(camera.quaternion);
-  // лінія прицілювання — на висоті прицілу; щоб тримати винос, мішень опускаємо на величину виносу
-  aimTarget.position.set(D, SIGHT_Y - hold, 0);
-  aimDot.visible = sightMode === 'red'; aimDot.position.set(D - 3, SIGHT_Y, 0); aimDot.scale.setScalar(0.058 * AIM.dist * 1.0);
-  aimCam.fov = 2 * Math.atan(85 / D) * 180 / Math.PI; aimCam.updateProjectionMatrix();
-  for (const h of AIM.hits) h.removeFromParent(); AIM.hits = [];
-  aimInset.querySelector('span').textContent = `${AIM.dist} м · збільшено`;
+  camera.position.set(eyeX, SIGHT_Y, 0); camera.lookAt(eyeX + 100, SIGHT_Y, 0); camera.updateMatrixWorld();
+  aimDot.visible = sightMode === 'red';
+  aimClearHits();
+  if (AIM.mode === 'train') { aimTargetPlace(AIM.dist * 100, 0, SIGHT_Y); AIM.up = 1; AIM.drill = null; }
+  else aimDrillNext(true);
+  AIM.yaw = 0.004 * (Math.random() - 0.5); AIM.pitch = -0.003;   // починаємо трохи поза точкою — наведи сам
+  if (aimHintMark) { aimHintMark.visible = AIM.hint && AIM.mode === 'train'; aimHintMark.position.set(-1.8, -AIM_DROP[AIM.dist], 0); aimHintMark.scale.setScalar(Math.max(1, AIM.dist / 60)); }
+  aimInset.querySelector('span').textContent = AIM.mode === 'train' ? `${AIM.dist} м · збільшено` : 'збільшено';
 }
+// Вправа: 8 мішеней на різних дистанціях з’являються по одній, стріляєш поки не влучиш (до 3 пострілів)
+function aimDrillNext(start) {
+  if (start) AIM.drill = { i: 0, n: 8, hits: 0, shots: 0, tries: 0, t0: performance.now() };
+  const d = AIM.drill; if (d.i >= d.n) { aimPost({ type: 'uar-aim-drill', done: true, hits: d.hits, shots: d.shots, n: d.n, sec: Math.round((performance.now() - d.t0) / 1000) }); return; }
+  const D = DRILL_D[Math.floor(Math.random() * DRILL_D.length)], z = (Math.random() * 2 - 1) * D * 100 * 0.06;
+  AIM.dist = D; d.tries = 0; aimClearHits(); aimTargetPlace(D * 100, z, SIGHT_Y); AIM.up = 0; AIM.rise = performance.now() + 500;
+  if (aimHintMark) aimHintMark.visible = false; aimInset.querySelector('span').textContent = `ціль ${d.i + 1} з ${d.n}`;
+  aimPost({ type: 'uar-aim-drill', i: d.i + 1, n: d.n, dist: D, hits: d.hits, shots: d.shots });
+}
+const aimPost = m => { try { parent.postMessage(m, location.origin); } catch (e) {} };
+// напрямок лінії прицілювання з урахуванням хитання
+const aimDir = () => [AIM.yaw + AIM.sy, AIM.pitch + AIM.sp];
 function aimFire() {
-  if (!aimRig) return;
-  const D = AIM.dist * 100;
-  // розсіювання: r50 = 40 мм на 100 м (настанова), пропорційно дистанції
+  if (!aimRig || AIM.up < 0.95) return;
+  const D = aimTarget.position.x, [yw, pt] = aimDir();
+  // точка, куди дивиться лінія прицілювання на площині мішені
+  const ly = SIGHT_Y + D * Math.tan(pt), lz = -D * Math.tan(yw);
   const s = 4 * AIM.dist / 100 / 1.1774, u = Math.random() || 1e-6, rr = s * Math.sqrt(-2 * Math.log(u)), a = Math.random() * Math.PI * 2;
-  const dy = AIM_DROP[AIM.dist] + rr * Math.sin(a), dz = rr * Math.cos(a);
   AIM.kick = 1; AIM.flash = 1;
   if (sfxOn) { sfxInit(); if (AC) SFX.shot(); }
-  AIM.pend.push({ at: performance.now() + AIM_TOF[AIM.dist] * 1000 + 60, dy, dz });
+  AIM.pend.push({ at: performance.now() + AIM_TOF[AIM.dist] * 1000 + 60, y: ly + AIM_DROP[AIM.dist] + rr * Math.sin(a), z: lz + rr * Math.cos(a), aimY: ly, aimZ: lz });
 }
+function aimInFig(z, y) { const pts = chestShape().getPoints(24); let c = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const xi = pts[i].x, yi = pts[i].y, xj = pts[j].x, yj = pts[j].y; if ((yi > y) !== (yj > y) && z < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
 function aimLand(p) {
-  // точка влучання відносно мішені: лінія прицілювання + зниження + розсіювання
-  const ty = SIGHT_Y + p.dy - aimTarget.position.y, tz = p.dz;
-  const onBoard = Math.abs(ty) < 60 && Math.abs(tz) < 50;
-  const inFig = (() => { const pts = chestShape().getPoints(24); let c = false; const X = tz, Y = ty;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const xi = pts[i].x, yi = pts[i].y, xj = pts[j].x, yj = pts[j].y; if ((yi > Y) !== (yj > Y) && X < (xj - xi) * (Y - yi) / (yj - yi) + xi) c = !c; } return c; })();
+  const ty = p.y - aimTarget.position.y, tz = p.z - aimTarget.position.z;
+  const onBoard = Math.abs(ty) < 60 && Math.abs(tz) < 50, inFig = aimInFig(tz, ty);
   let m;
   if (onBoard) { m = new THREE.Mesh(new THREE.CircleGeometry(Math.max(0.6, AIM.dist * 0.012), 16), new THREE.MeshBasicMaterial({ color: inFig ? 0xffe14d : 0x111111 }));
     m.rotation.y = -Math.PI / 2; m.position.set(-1.6, ty, tz); aimTarget.add(m); }
   else { m = new THREE.Mesh(new THREE.SphereGeometry(Math.max(4, AIM.dist * 0.06), 10, 8), new THREE.MeshBasicMaterial({ color: 0xb5a27a, transparent: true, opacity: 0.8 }));
     m.position.set(-200, Math.max(ty, -150 + SIGHT_Y - aimTarget.position.y + 5), tz); aimTarget.add(m); m.userData.dust = performance.now(); }
   AIM.hits.push(m);
-  try { parent.postMessage({ type: 'uar-aim-hit', hit: inFig, board: onBoard, dy: Math.round(p.dy - (AIM.hold === 'corr' ? -AIM_DROP[AIM.dist] : 0)), dz: Math.round(p.dz) }, location.origin); } catch (e) {}
+  // звук влучання долітає зі швидкістю звуку
+  if (inFig && sfxOn && AC) setTimeout(() => SFX.clack(0.25), AIM.dist / 340 * 1000);
+  const aimOffY = Math.round(p.aimY - aimTarget.position.y), aimOffZ = Math.round(p.aimZ - aimTarget.position.z);
+  if (AIM.mode === 'drill' && AIM.drill) {
+    const d = AIM.drill; d.shots++; d.tries++;
+    if (inFig) { d.hits++; AIM.fall = performance.now(); }
+    if (inFig || d.tries >= 3) { d.i++; setTimeout(() => aimDrillNext(false), inFig ? 1100 : 600); }
+    aimPost({ type: 'uar-aim-drill', i: Math.min(d.i + 1, d.n), n: d.n, dist: AIM.dist, hits: d.hits, shots: d.shots, hit: inFig, aimOffY, aimOffZ });
+  } else aimPost({ type: 'uar-aim-hit', hit: inFig, board: onBoard, aimOffY, aimOffZ });
 }
+// керування пальцем: тягни по екрану — зброя повертається за пальцем (чутливість — як у збільшеному вікні)
+{ let drag = null;
+  stage.addEventListener('pointerdown', e => { if (!AIM.on) return; drag = { x: e.clientX, y: e.clientY }; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener('pointermove', e => { if (!drag) return; const k = THREE.MathUtils.degToRad(camera.fov) / stage.clientHeight * 0.12;
+    AIM.yaw += (e.clientX - drag.x) * k * -1; AIM.pitch += (drag.y - e.clientY) * k; drag = { x: e.clientX, y: e.clientY };
+    AIM.yaw = THREE.MathUtils.clamp(AIM.yaw, -0.25, 0.25); AIM.pitch = THREE.MathUtils.clamp(AIM.pitch, -0.15, 0.15); });
+  const end = () => { drag = null; }; stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  if (AIM.on) stage.style.touchAction = 'none'; }
+let aimHintMark = null;
 function aimTick() {
   const now = performance.now();
+  if (!aimHintMark) { aimHintMark = new THREE.Group(); const mm = new THREE.MeshBasicMaterial({ color: 0xffd23f });
+    aimHintMark.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.8, 7), mm), new THREE.Mesh(new THREE.BoxGeometry(0.4, 7, 0.8), mm)); aimTarget.add(aimHintMark); aimApply(); }
+  const dtA = Math.min(0.05, (now - (AIM.last || now)) / 1000); AIM.last = now; AIM.t += dtA;
   for (let i = AIM.pend.length - 1; i >= 0; i--) if (now >= AIM.pend[i].at) { aimLand(AIM.pend[i]); AIM.pend.splice(i, 1); }
   for (const h of AIM.hits) if (h.userData.dust) { const k = (now - h.userData.dust) / 900; h.material.opacity = Math.max(0, 0.8 * (1 - k)); h.scale.setScalar(1 + k); }
-  // віддача: упор з гвинтівкою й оком коротко підкидає вгору й назад
-  const dtA = Math.min(0.05, (now - (AIM.last || now)) / 1000); AIM.last = now; AIM.kick *= Math.exp(-dtA * 9); AIM.flash *= Math.exp(-dtA * 30);
-  aimRig.rotation.z = 0.06 * AIM.kick; aimRig.position.x = -2.2 * AIM.kick;
+  // хитання: дихання (повільно вгору-вниз) + тремор; затримка дихання 0–4 с — спокійно, далі руки тремтять
+  if (AIM.breath) AIM.bT += dtA; else AIM.bT = Math.max(0, AIM.bT - dtA * 2);
+  const calm = AIM.breath ? (AIM.bT < 4 ? 0.22 : Math.min(2, 0.22 + (AIM.bT - 4) * 0.5)) : 1;
+  const t = AIM.t, br = AIM.breath ? 0 : 0.0011 * Math.sin(t * 1.6);
+  AIM.sp = br + calm * 0.00045 * (Math.sin(t * 2.3) + 0.6 * Math.sin(t * 5.1 + 1) + 0.3 * Math.sin(t * 9.7));
+  AIM.sy = calm * 0.00045 * (Math.cos(t * 1.9) + 0.5 * Math.sin(t * 4.3 + 2) + 0.3 * Math.cos(t * 8.9));
+  // віддача — короткий підкид, потім зброя повертається
+  AIM.kick *= Math.exp(-dtA * 9); AIM.flash *= Math.exp(-dtA * 30);
+  const [yw, pt] = aimDir();
+  aimRig.rotation.set(0, yw, pt + 0.06 * AIM.kick, 'YZX'); aimRig.position.x = -2.2 * AIM.kick;
+  // збільшене вікно дивиться туди ж, куди лінія прицілювання (без віддачі)
+  { const e = new THREE.Euler(0, yw, pt, 'YZX'); aimCam.position.copy(camera.position).applyEuler(e); aimCam.quaternion.setFromEuler(e).multiply(camera.quaternion); }
+  // мішень вправи підіймається / падає після влучання
+  if (AIM.mode === 'drill') {
+    const want = AIM.fall && now - AIM.fall < 1000 ? 0 : now > (AIM.rise || 0) ? 1 : 0; if (AIM.fall && now - AIM.fall >= 1000) AIM.fall = 0;
+    AIM.up += (want - AIM.up) * Math.min(1, dtA * 8);
+  } else AIM.up = 1;
+  aimTarget.children.forEach(c => { if (c !== aimHintMark) c.visible = true; });
+  aimTarget.rotation.z = -(1 - AIM.up) * Math.PI / 2 * 0.98;
   flames.forEach(f => { f.visible = AIM.flash > 0.05; if (f.visible) { f.position.set(54 + f.userData.dx, 0, 0); f.scale.setScalar(f.userData.s * AIM.flash); f.material.opacity = AIM.flash; } });
   fx.visible = true; ammo.visible = false;
 }
@@ -1346,8 +1408,12 @@ renderer.setAnimationLoop(() => {
 window.addEventListener('message', e => {
   if (e.origin === location.origin && e.data && e.data.type === 'uar-clean' && CLEAN.on) { cleanSet(e.data.n | 0); return; }
   if (e.origin === location.origin && e.data && e.data.type === 'uar-aim' && AIM.on) {
-    const d = e.data; if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUp = d.sight === 'iron' ? 1 : 0; } if (d.dist) AIM.dist = d.dist; if (d.hold) AIM.hold = d.hold;
-    if (d.fire) aimFire(); else aimApply(); return; }
+    const d = e.data;
+    if (d.fire) { aimFire(); return; }
+    if (d.breath !== undefined) { AIM.breath = !!d.breath; return; }
+    if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUp = d.sight === 'iron' ? 1 : 0; }
+    if (d.dist) AIM.dist = d.dist; if (d.mode) AIM.mode = d.mode; if (d.hint !== undefined) AIM.hint = !!d.hint;
+    aimApply(); return; }
   if (e.origin !== location.origin || !e.data) return;
   if (e.data.type === 'uar-pick') { if (LISTS[labelSet]) pickCtrl(e.data.num, false); else setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
   if (e.data.type === 'uar-labels') { buildLabels(LISTS[e.data.set] ? e.data.set : 'parts'); return; }
