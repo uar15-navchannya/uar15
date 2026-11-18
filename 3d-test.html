@@ -1352,7 +1352,7 @@ const mk = (g, m) => new THREE.Mesh(g, m);
 let tableMesh = null;
 // шомпол: стрижень уздовж +x, кінчик у x = 0, ручка позаду (центр ручки — x = −66)
 function rodWith(tip) { const g = new THREE.Group(); g.add(mk(cylX(0.17, 62, -31, 0), TM.steel), mk(cylX(0.6, 9, -66, 0), TM.handle)); g.add(tip); tools.add(g); return g; }
-const patchTip = (() => { const g = new THREE.Group(); g.add(mk(cylX(0.27, 1.6, 0.8, 0), TM.patch)); return g; })();
+const patchTip = (() => { const g = new THREE.Group(); g.add(mk(cylX(0.36, 2.2, 1.1, 0), TM.patch)); return g; })();
 const bristles = (r, len, mat) => { const g = new THREE.Group(); g.add(mk(cylX(r * 0.35, len + 0.6, len / 2, 0), TM.steel));
   for (let i = 0; i < 9; i++) g.add(mk(new THREE.TorusGeometry(r * 0.75, r * 0.28, 6, 14).rotateY(Math.PI / 2).translate(0.3 + i * len / 9, 0, 0), mat)); return g; };
 const rodPatch = rodWith(patchTip), rodBrass = rodWith(bristles(0.3, 3, TM.brass)), rodPlastic = rodWith(bristles(0.3, 3, TM.plastic));
@@ -1378,29 +1378,42 @@ const P = id => parts[id].group.position;
 const tri = u => 1 - Math.abs(((u % 2) + 2) % 2 - 1);   // 0→1→0
 // анімації кроків: які деталі піднімаються, дії приладдя й рук; повертають центр і ширину кадру
 const CLEAN_ANIM = {
-  patch: { lift: UP_GRP, f: (t, dirty) => { const B = P('barrel'), x = -6 + ((t / 3.4) % 1) * 64; rodPatch.visible = true; rodPatch.position.set(B.x + x, B.y, B.z);
-    patchTip.children[0].material = dirty ? TM.dirty : TM.patch; patchTip.visible = x < 55.5;  handR.position.set(B.x + x - 66, B.y, B.z);
-     handL.position.set(B.x + 32, B.y - 2.9, B.z); return [B.x + 4, B.y, B.z, 92]; } },
-  chamber: { lift: UP_GRP, f: t => { const B = P('barrel'); chBrush.visible = true; chBrush.position.set(B.x + 17.2 + 1.2 * tri(t / 0.8), B.y, B.z); chBrush.rotation.x = t * 9;
-     handR.position.set(chBrush.position.x - 22, B.y, B.z); handR.rotation.x = t * 9; return [B.x + 8, B.y, B.z, 34]; } },
-  brass: { lift: UP_GRP, f: t => { const B = P('barrel'), x = 20 + 33 * tri(t / 1.6); rodBrass.visible = true; rodBrass.position.set(B.x + x, B.y, B.z);
-     handR.position.set(B.x + x - 66, B.y, B.z);  handL.position.set(B.x + 32, B.y - 2.9, B.z); return [B.x + 10, B.y, B.z, 92]; } },
-  copper: { lift: UP_GRP, f: t => { const B = P('barrel'), x = 20 + 33 * tri(t / 1.6); rodPlastic.visible = true; rodPlastic.position.set(B.x + x, B.y, B.z);
-     handR.position.set(B.x + x - 66, B.y, B.z);  handL.position.set(B.x + 32, B.y - 2.9, B.z); return [B.x + 10, B.y, B.z, 92]; } },
+  // Шомпол заходить ззаду крізь верхню раму (затворна рама вийнята) → патронник → ствол → дуло; патч випадає; шомпол виходить назад
+  patch: { lift: UP_GRP, f: (t, dirty) => { const B = P('barrel'), T = t % 7, S = -12, M = 57.5;
+    let x, on = true;
+    if (T < 1.2) x = S - 8 + 8 * sm(T / 1.2);                           // підводимо шомпол до задньої частини рами
+    else if (T < 4.2) x = S + (M - S) * sm((T - 1.2) / 3);               // проштовхуємо від патронника до дула
+    else if (T < 4.8) { x = M; on = false; }                             // патч випадає з дула
+    else if (T < 6.4) { x = M + (S - 8 - M) * sm((T - 4.8) / 1.6); on = false; }   // шомпол виходить назад
+    else { x = S - 8; on = false; }
+    rodPatch.visible = true; rodPatch.position.set(B.x + x, B.y, B.z);
+    patchTip.children[0].material = dirty || T > 2.6 ? TM.dirty : TM.patch; patchTip.visible = on;
+    // патч, що випав, лежить біля дула
+    drops[0].visible = T >= 4.2; if (T >= 4.2) { const k = sm(Math.min(1, (T - 4.2) / 0.5)); drops[0].material = dirty ? TM.dirty : TM.dirty; drops[0].scale.set(1.6, 1.2, 0.7); drops[0].position.set(B.x + M + 1.2 + 1.5 * k, B.y - 2.5 * k, B.z - (B.z - TABLE_Z - 0.3) * k); }
+    return [B.x + 22, B.y, 92]; } },
+  chamber: { lift: UP_GRP, f: t => { const B = P('barrel'), T = t % 6;
+    let x = T < 1.2 ? -10 + 27.2 * sm(T / 1.2) : T < 4.6 ? 17.2 + 1.0 * tri((T - 1.2) / 0.6) : 17.2 - 27.2 * sm((T - 4.6) / 1.2);
+    chBrush.visible = true; chBrush.position.set(B.x + x, B.y, B.z); chBrush.rotation.x = T > 1.2 && T < 4.6 ? (T - 1.2) * 9 : 0; return [B.x + 12, B.y, 56]; } },
+  brass: { lift: UP_GRP, f: t => { const B = P('barrel'), T = t % 8, S = -10;
+    let x = T < 1.2 ? S + (20 - S) * sm(T / 1.2) : T < 6.6 ? 20 + 34 * tri((T - 1.2) / 1.35) : 20 + (S - 20) * sm((T - 6.6) / 1.2);
+    rodBrass.visible = true; rodBrass.position.set(B.x + x, B.y, B.z); return [B.x + 22, B.y, 92]; } },
+  copper: { lift: UP_GRP, f: t => { const B = P('barrel'), T = t % 8, S = -10;
+    let x = T < 1.2 ? S + (20 - S) * sm(T / 1.2) : T < 6.6 ? 20 + 34 * tri((T - 1.2) / 1.35) : 20 + (S - 20) * sm((T - 6.6) / 1.2);
+    rodPlastic.visible = true; rodPlastic.position.set(B.x + x, B.y, B.z); return [B.x + 22, B.y, 92]; } },
   bolt: { lift: ['carrier'], f: t => { const C = P('carrier'); rag.visible = true; rag.position.set(C.x + 4 + 12 * tri(t / 1.2), C.y, C.z + 1.6);
-     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6);  handL.position.set(C.x + 1, C.y - 1.6, C.z); return [C.x + 9, C.y, C.z, 26]; } },
+     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6);  handL.position.set(C.x + 1, C.y - 1.6, C.z); return [C.x + 9, C.y, 34]; } },
   oil: { lift: ['bolt'], f: t => { const Bo = P('bolt'); bottle.visible = true; bottle.position.set(Bo.x + 16.5, Bo.y + 1.0, Bo.z + 4); bottle.rotation.set(-0.9, 0, 0.5);
      handR.position.set(Bo.x + 17.5, Bo.y + 2.4, Bo.z + 5.6);
     drops.forEach((d, i) => { const k = ((t + i * 0.45) % 1.35) / 1.35; d.visible = true; d.position.set(Bo.x + 16 - 0.6 * k, Bo.y + 0.4, Bo.z + 3 - 2.4 * k * k); });
-     handL.position.set(Bo.x + 12.5, Bo.y - 1.4, Bo.z); return [Bo.x + 15, Bo.y, Bo.z, 18]; } },
+     handL.position.set(Bo.x + 12.5, Bo.y - 1.4, Bo.z); return [Bo.x + 15, Bo.y, 26]; } },
   frame: { lift: LOW_GRP, f: t => { const L = P('lower'); rag.visible = true; rag.position.set(L.x + 3 + 14 * tri(t / 1.4), L.y - 4.5, L.z + 2.2);
-     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6); return [L.x + 6, L.y - 4, L.z, 40]; } },
+     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6); return [L.x + 6, L.y - 4, 50]; } },
   fcg: { lift: LOW_GRP, f: t => { const L = P('lower'); bottle.visible = true; bottle.position.set(L.x + 12, L.y - 1.5, L.z + 6); bottle.rotation.set(-0.9, 0, 0.5);
      handR.position.set(L.x + 13, L.y - 0.1, L.z + 7.6);
     const Q = [[10.43, -3.85], [8.35, -4.6], [10.43, -3.85]]; drops.forEach((d, i) => { const k = ((t + i * 0.45) % 1.35) / 1.35, [x, y] = Q[i]; d.visible = true; d.position.set(L.x + 11.5 + (x - 11.5) * k, L.y - 2 + (y + 2) * k, L.z + 5 - 4 * k); });
-    return [L.x + 9, L.y - 3, L.z, 24]; } },
+    return [L.x + 9, L.y - 3, 32]; } },
   buffer: { lift: ['buffer', 'spring'], f: t => { const S = P('spring'); rag.visible = true; rag.position.set(S.x - 16 + 13 * tri(t / 1.3), S.y, S.z + 1.7);
-     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6);  handL.position.set(S.x - 0.4, S.y, S.z); return [S.x - 9, S.y + 3, S.z, 34]; } },
+     handFlat.position.set(rag.position.x - 0.5, rag.position.y, rag.position.z + 0.6);  handL.position.set(S.x - 0.4, S.y, S.z); return [S.x - 9, S.y + 1, 44]; } },
 };
 const CLEAN_STEP = { 1: 'patch', 2: 'chamber', 3: 'brass', 4: 'patch', 5: 'copper', 6: 'bolt', 7: 'oil', 8: 'frame', 9: 'fcg', 10: 'buffer' };
 const CL_DIR = new THREE.Vector3(0.05, -0.62, 1).normalize();
@@ -1421,18 +1434,18 @@ function cleanDemo(ids) {
   return [16 - c.x, -28 - c.y];
 }
 function cleanTick(now) {
-  for (const o of ALLT) { o.visible = false; o.rotation.set(0, 0, 0); } patchTip.visible = true;
+  for (const o of ALLT) { o.visible = false; o.rotation.set(0, 0, 0); o.scale.setScalar(1); } for (const d of drops) d.material = TM.oil; patchTip.visible = true; CLEAN.want = null;
   const a = CLEAN_ANIM[CLEAN_STEP[CLEAN.n]]; if (!a) return;
-  const f = a.f((now - CLEAN.t0) / 1000, CLEAN.n === 1);
+  const f = a.f((now - CLEAN.t0) / 1000, CLEAN.n === 1); CLEAN.want = f;
   if (false) { CLEAN.cam = CLEAN.n; dT.set(f[0], f[1], f[2]); const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); dDist = Math.max(f[3] / 2 / (half * camera.aspect), f[3] * 0.32 / half); dDir.copy(CL_DIR); auto = true; }
 }
 // погляд сидячи за столом: стіл перед нами, дальній край — угорі кадру. Стіл можна крутити по горизонталі (свайп) і наближати (щипок / коліщатко)
 function cleanCam() {
-  const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), T = new THREE.Vector3(18.5, -4, TABLE_Z);
-  const base = Math.max(53 / (half * camera.aspect), 40 / half), dist = base * CLEAN.zoom;
-  const dir = new THREE.Vector3(0, -0.5, 1).normalize().applyAxisAngle(new THREE.Vector3(0, 0, 1), CLEAN.az);
-  // при наближенні центр зсувається до деталі, з якою працюємо
-  const focus = T.clone().lerp(new THREE.Vector3(16, -28, TABLE_Z), (1 - CLEAN.zoom) / 0.65 * (CLEAN.n ? 1 : 0));
+  // кадр: увесь стіл, а коли показуємо дію — плавно наводимося так, щоб було видно весь рух приладдя
+  const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), W = CLEAN.want || [18.5, -4, 100];
+  const fr = CLEAN.fr || (CLEAN.fr = W.slice()); for (let i = 0; i < 3; i++) fr[i] += (W[i] - fr[i]) * 0.06;
+  const dist = Math.max(fr[2] / 2 / (half * camera.aspect), fr[2] * 0.36 / half) * CLEAN.zoom;
+  const dir = new THREE.Vector3(0, -0.5, 1).normalize().applyAxisAngle(new THREE.Vector3(0, 0, 1), CLEAN.az), focus = new THREE.Vector3(fr[0], fr[1], TABLE_Z);
   camera.up.set(0, 0, 1); camera.position.copy(focus).addScaledVector(dir, dist); camera.lookAt(focus);
   controls.enabled = false;
 }
@@ -1452,7 +1465,9 @@ function cleanSet(n) {
   CLEAN.n = n; CLEAN.t0 = performance.now(); CLEAN.cam = -1;
   const a = CLEAN_ANIM[CLEAN_STEP[n]]; CLEAN.demo = a ? cleanDemo(a.lift) : [0, 0];
   for (const id in CLEAN.lift) CLEAN.lift[id] = 0;
+  // ствол і раму показуємо прозорими, щоб було видно шомпол і патч усередині
   setXray(n === 9); for (const p of Object.values(parts)) p.mat.emissive.setHex(0x000000);
+  for (const id of ['barrel', 'upper', 'handguard']) { const on = n >= 1 && n <= 5, m = parts[id].mat; m.transparent = on; m.opacity = on ? (id === 'barrel' ? 0.4 : 0.25) : 1; m.depthWrite = !on; m.needsUpdate = true; }
 }
 if (CLEAN.on) {
   mode = 'steps'; step = STEPS.length; tools.visible = true;
