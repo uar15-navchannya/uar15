@@ -774,6 +774,13 @@ function say(kind) {
     if (p && p.catch) p.catch(() => {});
   } catch (err) { /* звук недоступний — лишається текст */ }
 }
+// Усі відповіді тесту неправильні — окрема фраза сержанта (запис Ростислава)
+const SGT_ZERO = 'Ви шо, дуба… шо?!';
+function sayZero() {
+  showSgt(SGT_ZERO, 'facepalm', 6000);
+  if (!voiceOn) return;
+  try { if (audio) audio.pause(); audio = new Audio('voice/sgtZero_01.mp3'); const p = audio.play(); if (p && p.catch) p.catch(() => {}); } catch (err) { /* без звуку */ }
+}
 let rightRun = 0, wrongRun = 0;
 function streak(ok) {
   if (ok) {
@@ -980,7 +987,7 @@ function quizNext() {
   if (Q.i < Q.qs.length - 1) { Q.i++; Q.chosen = null; renderQuiz(); return; }
   Q.done = true;
   const share = Q.ok.filter(Boolean).length / Q.qs.length;
-  if (share >= 0.8) say('good'); else if (share < 0.5) say('bad');
+  if (share === 0) sayZero(); else if (share >= 0.8) say('good'); else if (share < 0.5) say('bad');
   renderQuiz();
 }
 function renderResults() {
@@ -997,7 +1004,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-100742';
+const APP_V = '20261118-101545';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
