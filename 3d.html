@@ -382,6 +382,18 @@ const optDot = (() => { const c = document.createElement('canvas'); c.width = c.
   g.addColorStop(0, 'rgba(255,250,245,1)'); g.addColorStop(0.15, 'rgba(255,40,30,1)'); g.addColorStop(0.45, 'rgba(255,0,0,.35)'); g.addColorStop(1, 'rgba(255,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
   sp.position.set(OPT_X - 5.45, SIGHT_Y, 0); sp.scale.setScalar(1.0); sp.renderOrder = 15; sp.userData.part = 'optic'; parts.optic.group.add(sp); return sp; })();
+/* Відкидні кришки лінз (рис. 44, поз. 13): гумові, на шарнірі зверху; задня прозора. Торкнись коліматора — відкриваються / закриваються */
+let capsOpen = false, capsT = 0;
+const optCaps = [[-1, OPT_X - 5.6, 2.1], [1, OPT_X + 7.0, 2.12]].map(([sd, xe, re]) => {
+  const pv = new THREE.Group(); pv.position.set(xe + sd * 0.05, SIGHT_Y + re + 0.12, 0);
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.userData.part = 'optic'; pv.add(m); return m; };
+  const cy = -(re + 0.12);
+  add(cylX(re + 0.22, 0.12, sd * 0.32, cy, 0, 40), sd < 0 ? new THREE.MeshStandardMaterial({ color: 0xc9d6dc, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.38, depthWrite: false }) : RUB);
+  add(new THREE.TorusGeometry(re + 0.16, 0.13, 8, 40).rotateY(Math.PI / 2).translate(sd * 0.25, cy, 0), RUB);   /* гумовий обідок */
+  add(box(0.5, 0.35, 0.9, 0, 0.05, 0), RUB);   /* петля-шарнір */
+  if (sd > 0) add(cylX(0.8, 0.02, sd * 0.39, cy, 0, 24), HOLE);   /* тиснення на передній кришці */
+  parts.optic.group.add(pv); return { pv, sd };
+});
 let coverOpen = false, coverTouched = null;
 let stockExt = false; const stockTv = new THREE.Vector3();
 // Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
@@ -878,6 +890,7 @@ renderer.domElement.addEventListener('pointerup', e => {
   const pt = hit && hit.point.clone().sub(parts.upper.group.position);
   const atPort = hit && id === 'upper' && pt.x > 12.2 && pt.x < 18.6 && pt.y > -1 && pt.y < 0.8 && pt.z > 1.3;
   if (id === 'stock') stockExt = !stockExt;
+  if (id === 'optic') capsOpen = !capsOpen;
   if (id === 'cover' || atPort) coverTouched = !(coverTouched == null ? coverOpen : coverTouched);
   setPicked(atPort ? 'cover' : id, true);
 });
@@ -1550,6 +1563,7 @@ renderer.setAnimationLoop(() => {
   { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
     optDot.visible = !AIM.on && v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
   { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg' && !AIM.on; /* у прицілюванні корпус — пласке кільце */ og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
+  { capsT += Math.max(-dt * 4, Math.min(dt * 4, (capsOpen ? 1 : 0) - capsT)); const e = capsT * capsT * (3 - 2 * capsT); for (const c of optCaps) c.pv.rotation.z = c.sd * e * 2.95; }
   if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
