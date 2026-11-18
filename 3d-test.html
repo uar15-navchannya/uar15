@@ -636,7 +636,7 @@ controls.addEventListener('start', () => { auto = false; });
 
 // ── Стан ──
 const EMB = document.documentElement.dataset.embed || '';
-let asm = false;
+let asm = (() => { try { return new URLSearchParams(location.search).get('k') === 'as'; } catch (e) { return false; } })();   /* збирання: модель одразу розібрана */
 let mode = EMB === 'steps' ? 'steps' : 'view', explode = 0, explodeB = 0, step = 0, picked = null;
 const BCG_EXPLODE = { bolt: 1, fpin: 1, cam: 1, rpin: 1, carrier: 1 };
 const BASE = EMB === 'labels' ? { t: [17, 0, 0], w: 46, h: 34 } : EMB === 'dims' ? { t: [14, -5, 0], w: 45, h: 27 } : { t: [14, -3, 0], w: 43, h: 27 };
@@ -676,7 +676,7 @@ function setTargets() {
 // у кожному кроці рухаються лише його деталі, тож нічого не проходить крізь інше
 const sC = {}, sT = {}; let viewSync = false;
 function stepScale(dt) {
-  const ids = Object.keys(sT); for (const id of ids) if (sC[id] === undefined) sC[id] = 0;
+  const ids = Object.keys(sT); for (const id of ids) if (sC[id] === undefined) sC[id] = sT[id];   /* перший кадр — одразу в потрібному положенні */
   if (mode !== 'view') viewSync = false;
   // повзунок: деталі йдуть точно за ним, без запізнення
   if (mode === 'view' && viewSync) { for (const id of ids) sC[id] = sT[id]; return; }
@@ -1598,7 +1598,8 @@ window.addEventListener('message', e => {
   if (e.data.type === 'uar-pick') { if (LISTS[labelSet]) pickCtrl(e.data.num, false); else setPicked(Object.keys(NUM).find(k => NUM[k] === e.data.num) || null, false); return; }
   if (e.data.type === 'uar-labels') { buildLabels(LISTS[e.data.set] ? e.data.set : 'parts'); return; }
   if (e.data.type !== 'uar-step') return;
-  mode = 'steps'; asm = e.data.kind === 'as'; step = Math.max(0, Math.min(asm ? 11 : STEPS.length, e.data.n | 0)); paint();
+  const wasAsm = asm; mode = 'steps'; asm = e.data.kind === 'as'; step = Math.max(0, Math.min(asm ? 11 : STEPS.length, e.data.n | 0)); paint();
+  if (asm !== wasAsm) for (const id in sT) sC[id] = sT[id];   /* перемкнули розбирання ↔ збирання — без довгої анімації */
 });
 window.__3d = { parts, STEPS, get step() { return step; }, get asm() { return asm; } };
 </script>

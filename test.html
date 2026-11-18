@@ -1005,8 +1005,8 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-141941';
-const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
+const APP_V = '20261118-171309';
+const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
   try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) { /* немає API */ }
@@ -1020,7 +1020,7 @@ function modelStep(n, kind) {
   try { if (f && f.contentWindow) f.contentWindow.postMessage({ type: 'uar-step', n, kind: modelKind }, location.origin); } catch (e) { /* модель ще вантажиться */ }
 }
 let gStep = 0;
-const stickModel = (mk, kind = '') => { modelWant = 0; modelKind = mk; gStep = 0; const start = 0; return `<div class="m3d-stick">${m3d('steps', '')}
+const stickModel = (mk, kind = '') => { modelWant = 0; modelKind = mk; gStep = 0; const start = 0; return `<div class="m3d-stick">${m3d('steps', '', mk === 'as' ? '&k=as' : '')}
   ${kind ? `<div class="m3d-nav"><button class="btn" data-act="model-prev" data-kind="${kind}" data-n="${start}">‹ Назад</button><span id="m3d-pos">початок</span><button class="btn primary" data-act="model-next" data-kind="${kind}">Далі ›</button></div>` : ''}</div>`; };
 function modelPos() { const el = $('m3d-pos'); if (el) el.textContent = gStep ? `крок ${gStep}` : 'початок'; }
 function modelView() {
