@@ -1563,7 +1563,7 @@ renderer.setAnimationLoop(() => {
   { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
     optDot.visible = !AIM.on && v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
   { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg' && !AIM.on; /* у прицілюванні корпус — пласке кільце */ og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
-  { capsT += Math.max(-dt * 4, Math.min(dt * 4, (capsOpen ? 1 : 0) - capsT)); const e = capsT * capsT * (3 - 2 * capsT); for (const c of optCaps) c.pv.rotation.z = c.sd * e * 1.85; }
+  { capsT += Math.max(-dt * 4, Math.min(dt * 4, (capsOpen ? 1 : 0) - capsT)); const e = capsT * capsT * (3 - 2 * capsT); for (const c of optCaps) c.pv.rotation.z = c.sd * e * 2.95; }
   if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
