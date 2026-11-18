@@ -370,6 +370,7 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .cl-push, .cl-pass, .cl-wipe, .cl-spin, .cl-drop, .cl-out { animation:none; opacity:1; } }
 .art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
 .aim-res { font-weight:600; }
+.aim-br { display:flex; align-items:center; gap:10px; } .aim-br label { font-size:14px; color:var(--muted); flex:none; } .aim-br input { flex:1; accent-color:#e23; } .aim-br b { min-width:2ch; text-align:right; }
 .aim-h { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .aim-h .play { flex:none; width:36px; height:36px; border-radius:50%; border:1.5px solid var(--violet); background:transparent; color:var(--violet); display:grid; place-items:center; cursor:pointer; }
 .aim-h .play .i { width:16px; height:16px; }
@@ -1004,7 +1005,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-111650';
+const APP_V = '20261118-111814';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1671,7 +1672,7 @@ function lawAnswer(k) {
 // ═════════ Прицілювання ═════════
 // Відхилення кулі від лінії прицілювання, см — розрахунок для 5,56 мм SS109 (G7 0,151), 830 м/с, висота прицілу 6,7 см, пристрілка на 100 м
 const AIM_DROP = { 25: -3.5, 50: -1.3, 100: 0, 150: -3.3, 200: -11.8, 250: -26.4, 300: -47.9, 350: -77.4, 400: -116.3 };
-const AIM_ST = { mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null };
+const AIM_ST = { bright: 9, mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null };
 function aimHint(d) {
   const h = -AIM_DROP[d];
   if (h <= 5) return 'Наводь у центр фігури — різниця до 5 см, вона в межах розсіювання.';
@@ -1681,7 +1682,7 @@ function aimHint(d) {
   return `Наводь на ${Math.round(h)} см вище центру — ≈ ${(h / 50).toFixed(1).replace('.', ',')} висоти грудної фігури (50 см) над її центром, вище самої мішені.`;
 }
 const aimSend = (extra = {}) => { const f = $('m3d'); try { f.contentWindow.postMessage({ type: 'uar-aim', ...extra }, location.origin); } catch (e) { /* модель ще вантажиться */ } };
-const aimSync = () => aimSend({ dist: AIM_ST.dist, sight: AIM_ST.sight, mode: AIM_ST.mode, hint: AIM_ST.hint });
+const aimSync = () => { aimSend({ dist: AIM_ST.dist, sight: AIM_ST.sight, mode: AIM_ST.mode, hint: AIM_ST.hint }); aimSend({ bright: AIM_ST.bright }); };
 const aimMiss = m => { const v = [], y = m.aimOffY, z = m.aimOffZ; if (Math.abs(y) > 3) v.push(`${Math.abs(y)} см ${y > 0 ? 'вище' : 'нижче'}`); if (Math.abs(z) > 3) v.push(`${Math.abs(z)} см ${z > 0 ? 'правіше' : 'лівіше'}`); return v.length ? `Ти цілився ${v.join(' й ')} центру фігури.` : 'Ти цілився в центр фігури.'; };
 function aimInfo() {
   const el = $('aim-info'); if (!el) return;
@@ -1701,11 +1702,13 @@ function aimSeg(name, cur, items) { return `<div class="aseg" role="group">${ite
 function aimControls() {
   $('aim-ctl').innerHTML = `${aimSeg('mode', AIM_ST.mode, [['train', 'Тренування'], ['drill', 'Вправа']])}
     ${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
+    ${AIM_ST.sight === 'red' ? `<div class="row aim-br"><label for="aim-br">Яскравість точки</label><input type="range" id="aim-br" min="1" max="16" value="${AIM_ST.bright}"><b id="aim-brv">${AIM_ST.bright}</b></div>` : ''}
     ${AIM_ST.mode === 'train' ? `<div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
 ` : ''}
 `;
 }
 let aimTab = 'sim';
+document.addEventListener('input', e => { if (e.target.id !== 'aim-br') return; AIM_ST.bright = +e.target.value; $('aim-brv').textContent = AIM_ST.bright; aimSend({ bright: AIM_ST.bright }); });
 function aimView() {
   setBar('Прицілювання');
   app.innerHTML = `<div class="law aimv" data-tab="${aimTab}">
