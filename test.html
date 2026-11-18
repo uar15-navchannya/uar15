@@ -359,6 +359,14 @@ p { margin: 0; }
 .cl-steps li[data-act] { cursor:pointer; background:color-mix(in srgb, var(--violet) 8%, transparent); }
 .cl-steps li i { color:var(--violet); width:22px; height:22px; } .cl-steps li i .i { width:22px; height:22px; }
 .cl-steps li.on { border-color:var(--violet); }
+.cl-steps .cl-pic { grid-column:1 / -1; margin:4px 0 0; }
+.cl-push { animation:cl-push 2.6s ease-in-out infinite; } @keyframes cl-push { 0% { transform:translateX(0); } 70%, 100% { transform:translateX(170px); } }
+.cl-pass { animation:cl-pass 1.6s ease-in-out infinite; } @keyframes cl-pass { 0%, 100% { transform:translateX(0); } 50% { transform:translateX(120px); } }
+.cl-wipe { animation:cl-wipe 1.4s ease-in-out infinite; } @keyframes cl-wipe { 0%, 100% { transform:translateX(0); } 50% { transform:translateX(70px); } }
+.cl-spin { animation:cl-spin .9s linear infinite; } @keyframes cl-spin { 50% { transform:scaleY(.55); } }
+.cl-drop { animation:cl-drop 1.35s ease-in infinite; opacity:0; } @keyframes cl-drop { 0% { transform:translate(0, 0); opacity:1; } 90% { transform:translate(-8px, 26px); opacity:1; } 100% { transform:translate(-8px, 28px); opacity:0; } }
+.cl-out { animation:cl-out 2.4s ease-in-out infinite; } @keyframes cl-out { 0%, 20% { transform:translateY(0); } 70%, 100% { transform:translateY(16px); opacity:.4; } }
+@media (prefers-reduced-motion: reduce) { .cl-push, .cl-pass, .cl-wipe, .cl-spin, .cl-drop, .cl-out { animation:none; opacity:1; } }
 .art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
 .aim-res { font-weight:600; } .aim-res.ok { color:var(--good, #6fbf73); } .aim-res.bad { color:var(--bad); }
 .m3d-nav { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-top:6px; }
@@ -1709,6 +1717,59 @@ const CLEAN_STEPS = [
   ['Трубу буфера обслуговують при кожному чищенні: буфер і пружину протерти насухо від пилу й бруду, змастити тонким шаром.', 10],
   ['Пристрій зниження звуку пострілу не обслуговують. Якщо всередину потрапив сніг чи пісок — промити гасом і обов’язково продути.', 0],
 ];
+// Малюнки до кроків чищення (власні схеми в стилі розділу «Кодекс»)
+const clSvg = (body, lbl = '') => `<svg class="sp cl-pic" viewBox="0 0 320 112" role="img" aria-label="${esc(lbl)}">${body}</svg>`;
+const STEEL = '#b8bdc2', BRASS = '#c9a24a', PLAS = '#3d7be0', WHITE = '#efece4', OIL = '#e0a92e', DIRT = '#6f6a5c';
+// ствол у розрізі: патронник ліворуч (x0), дуло праворуч (x1)
+const clBarrel = (x0, x1, y, mufta = true) => `<path d="M${x0} ${y - 13} H${x0 + 34} L${x0 + 42} ${y - 8} H${x1} V${y + 8} H${x0 + 42} L${x0 + 34} ${y + 13} H${x0} Z" fill="var(--sp-gun)" stroke="var(--sp-dim)" stroke-width="1"/>
+  <path d="M${x0} ${y - 6} H${x0 + 30} L${x0 + 36} ${y - 3} H${x1} V${y + 3} H${x0 + 36} L${x0 + 30} ${y + 6} H${x0} Z" fill="var(--sp-bg)"/>
+  ${mufta ? `<rect x="${x0 - 14}" y="${y - 16}" width="14" height="32" rx="2" fill="var(--sp-gun)" stroke="var(--sp-dim)"/>` : ''}
+  <text class="sm" x="${x0 + 6}" y="${y + 30}">патронник</text><text class="sm" x="${x1 - 30}" y="${y + 30}">дуло</text>`;
+const clRod = (x, y, len, tip) => `<g><rect x="${x - len - 26}" y="${y - 5}" width="26" height="10" rx="4" fill="#2a2d30" stroke="var(--sp-dim)"/><path d="M${x - len} ${y} H${x}" stroke="${STEEL}" stroke-width="3"/>${tip}</g>`;
+const clPatch = (x, y, c = WHITE) => `<rect x="${x - 2}" y="${y - 5}" width="9" height="10" rx="2" fill="${c}"/>`;
+const clBrush = (x, y, c, r = 5, n = 6) => `<g>${Array.from({ length: n }, (_, i) => `<path d="M${x + i * 3} ${y - r} V${y + r}" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>`).join('')}</g>`;
+const clArrow = (x1, y, x2, both = false, c = 'var(--violet)') => `<g stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${x1} ${y} H${x2}"/><path d="M${x2 - 7} ${y - 5} L${x2} ${y} L${x2 - 7} ${y + 5}"/>${both ? `<path d="M${x1 + 7} ${y - 5} L${x1} ${y} L${x1 + 7} ${y + 5}"/>` : ''}</g>`;
+const clX = (x, y, s = 14) => `<g stroke="var(--bad)" stroke-width="4" stroke-linecap="round"><path d="M${x - s} ${y - s} L${x + s} ${y + s}M${x + s} ${y - s} L${x - s} ${y + s}"/></g>`;
+const clChip = (x, y, t, c = 'var(--violet)') => `<g><rect x="${x}" y="${y}" width="${t.length * 7 + 14}" height="20" rx="10" fill="none" stroke="${c}" stroke-width="1.5"/><text class="sm" x="${x + 7}" y="${y + 13.5}" style="fill:${c}">${t}</text></g>`;
+const clCarrier = (x, y) => `<g><rect x="${x}" y="${y - 12}" width="120" height="24" rx="6" fill="#4b4f55" stroke="var(--sp-dim)"/><rect x="${x + 72}" y="${y - 20}" width="30" height="9" rx="2" fill="#3d4045"/>${Array.from({ length: 6 }, (_, i) => `<rect x="${x + 24 + i * 6}" y="${y - 3}" width="3" height="6" fill="#2a2c30"/>`).join('')}</g>`;
+const clBolt = (x, y) => `<g><rect x="${x}" y="${y - 7}" width="60" height="14" rx="3" fill="#6b7077" stroke="var(--sp-dim)"/>${[0, 1, 2, 3].map(i => `<rect x="${x + 60}" y="${y - 9 + i * 5}" width="7" height="3" fill="#6b7077"/>`).join('')}<rect x="${x + 44}" y="${y - 12}" width="12" height="5" fill="#8a8f95"/></g>`;
+const clRag = (x, y, w = 40) => `<g><rect x="${x}" y="${y - 2}" width="${w}" height="16" rx="6" fill="${WHITE}" stroke="var(--sp-dim)"/><path d="M${x + 8} ${y + 1} q4 6 0 11 M${x + w / 2} ${y} q-4 7 1 12 M${x + w - 9} ${y + 1} q3 5 -1 11" stroke="#bdb8aa" stroke-width="1.4" fill="none"/></g>`;
+const clBottle = (x, y) => `<g transform="rotate(35 ${x} ${y})"><rect x="${x - 9}" y="${y - 30}" width="18" height="30" rx="4" fill="#2d6a3e"/><path d="M${x - 5} ${y} L${x} ${y + 12} L${x + 5} ${y} Z" fill="#2d6a3e"/></g>`;
+const clDrops = (x, y) => [0, 1, 2].map(i => `<circle class="cl-drop" style="animation-delay:${i * 0.45}s" cx="${x}" cy="${y}" r="3.2" fill="${OIL}"/>`).join('');
+const CLEAN_PICS = [
+  // 1 розрядити
+  clSvg(`<g transform="translate(40 30)">${clCarrier(0, 26)}</g><rect x="96" y="70" width="34" height="34" rx="4" fill="var(--sp-gun)" stroke="var(--sp-dim)" class="cl-out"/>${clChip(180, 20, 'МАГАЗИН — ВІД’ЄДНАТИ')}${clChip(180, 50, 'ПАТРОННИК — ПЕРЕВІРИТИ')}${clChip(180, 80, 'КУРОК — СПУСТИТИ')}`, 'Розрядити зброю'),
+  // 2 патрони геть
+  clSvg(`${Array.from({ length: 5 }, (_, i) => `<g transform="translate(${40 + i * 18} 40)"><rect width="10" height="34" rx="2" fill="${BRASS}"/><path d="M0 0 Q5 -12 10 0Z" fill="#a8653a"/></g>`).join('')}${clArrow(140, 57, 210)}<rect x="220" y="34" width="62" height="46" rx="6" fill="none" stroke="var(--sp-dim)" stroke-dasharray="5 4"/><text class="sm" x="226" y="96">окремо</text>`, 'Прибрати патрони'),
+  // 3 приладдя
+  clSvg(`${clRod(250, 30, 190, clPatch(250, 30))}<g transform="translate(40 58)">${clBrush(0, 0, BRASS)}${clBrush(40, 0, PLAS)}${clBrush(80, 0, BRASS, 9, 5)}</g><rect x="150" y="50" width="16" height="30" rx="4" fill="#2d6a3e"/><rect x="180" y="52" width="16" height="28" rx="4" fill="#7a5c2c"/>${clRag(215, 64, 44)}<path d="M40 92 H120" stroke="#a07a4a" stroke-width="3"/><text class="sm" x="40" y="106">йоржі · мастило · ганчір’я · палички</text>`, 'Приладдя'),
+  // 4 цівку не знімати
+  clSvg(`<rect x="40" y="40" width="240" height="30" rx="6" fill="var(--sp-tan)"/>${Array.from({ length: 7 }, (_, i) => `<rect x="${58 + i * 30}" y="50" width="18" height="10" rx="5" fill="var(--sp-bg)"/>`).join('')}${clX(160, 55, 20)}<text class="sm" x="40" y="96">цівку не знімати · газову трубку не чистити</text>`, 'Цівку не знімати'),
+  // 5 патч від патронника до дула
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-push">${clRod(100, 50, 90, clPatch(100, 50, DIRT))}</g>${clArrow(140, 18, 260)}`, 'Патч від патронника до дула'),
+  // 6 йорж для патронника
+  clSvg(`${clBarrel(70, 300, 50)}<g>${clRod(98, 50, 90, '')}<g class="cl-spin" style="transform-origin:110px 50px">${clBrush(92, 50, BRASS, 9, 8)}</g></g><path d="M126 22 a14 14 0 1 1 -4 -2" stroke="var(--violet)" stroke-width="2.5" fill="none"/><path d="M118 16 l6 4 -6 4" stroke="var(--violet)" stroke-width="2.5" fill="none"/>${clChip(150, 2, 'ЗА ГОДИННИКОВОЮ')}`, 'Йорж для патронника'),
+  // 7 латунний йорж 20 проходів
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-pass">${clRod(150, 50, 140, clBrush(150, 50, BRASS))}</g>${clArrow(120, 18, 270, true)}${clChip(196, 80, '20 ПРОХОДІВ')}`, 'Латунний йорж'),
+  // 8 чисті патчі насухо
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-push">${clRod(100, 50, 90, clPatch(100, 50))}</g>${[0, 1, 2, 3].map(i => clPatch(230 + i * 14, 92)).join('')}<text class="sm" x="160" y="104">3–4 патчі</text>`, 'Чисті патчі насухо'),
+  // 9 обміднення
+  clSvg(`${clBarrel(70, 300, 50)}<path d="M110 47 H296 M110 53 H296" stroke="#b56a3a" stroke-width="2" stroke-dasharray="6 9"/><g class="cl-pass">${clRod(150, 50, 140, clBrush(150, 50, PLAS))}</g>${clArrow(120, 18, 270, true)}${clChip(186, 80, '10–20 ПРОХОДІВ')}`, 'Обміднення'),
+  // 10 затвор і рама
+  clSvg(`${clCarrier(30, 46)}${clBolt(200, 46)}<g class="cl-wipe">${clRag(46, 22, 44)}</g><path d="M70 92 L140 70" stroke="#a07a4a" stroke-width="4" stroke-linecap="round"/><text class="sm" x="150" y="96">паличка з ганчір’ям</text>`, 'Затвор і рама'),
+  // 11 відбивач, викидач, ударник
+  clSvg(`${clBolt(110, 66)}${clBottle(200, 26)}${clDrops(186, 46)}<rect x="40" y="88" width="80" height="4" rx="2" fill="${STEEL}"/><text class="sm" x="40" y="106">ударник: очистити, змастити, насухо</text>`, 'Змащування затвора'),
+  // 12 рами
+  clSvg(`<path d="M30 40 H170 V60 H120 L110 72 H60 L50 60 H30 Z" fill="var(--sp-tan)"/><path d="M180 30 H300 V58 H180 Z" fill="var(--sp-tan)"/><g class="cl-wipe">${clRag(40, 18, 44)}</g><rect x="58" y="48" width="12" height="8" fill="var(--sp-gun)"/>${clChip(180, 76, 'ЗАТРИМКУ НЕ ЗНІМАТИ', 'var(--bad)')}`, 'Рами'),
+  // 13 газоблок
+  clSvg(`<rect x="40" y="46" width="250" height="12" fill="var(--sp-gun)"/><rect x="120" y="30" width="60" height="40" rx="4" fill="#3d4045" stroke="var(--sp-dim)"/><circle cx="150" cy="30" r="8" fill="${STEEL}"/><path d="M146 30 h8" stroke="#2a2d30" stroke-width="2"/><path d="M168 14 a18 18 0 1 1 -30 0" stroke="var(--violet)" stroke-width="2.5" fill="none"/><text class="sm" x="196" y="22">1 оберт і назад</text>${clChip(190, 76, 'НЕ ВИКРУЧУВАТИ', 'var(--bad)')}`, 'Газоблок'),
+  // 14 УСМ
+  clSvg(`<path d="M40 30 H260 V80 H40 Z" fill="var(--sp-tan)" opacity=".35"/><path d="M150 70 l-30 -30 l20 -6 l26 30 z" fill="#9aa0a6"/><circle cx="160" cy="62" r="5" fill="var(--sp-gun)"/><path d="M90 66 h60 l-6 30 h-10 z" fill="#4f5359"/><circle cx="110" cy="66" r="5" fill="var(--sp-gun)"/>${clBottle(210, 10)}${clDrops(196, 30)}<text class="sm" x="40" y="104">осі курка й спускового гачка</text>`, 'УСМ'),
+  // 15 буфер і пружина
+  clSvg(`<path d="M30 56 ${Array.from({ length: 22 }, (_, i) => `L${36 + i * 8} ${i % 2 ? 44 : 68}`).join(' ')}" stroke="${STEEL}" stroke-width="2.5" fill="none"/><rect x="220" y="42" width="70" height="28" rx="6" fill="#a0a6ac"/><circle cx="292" cy="56" r="8" fill="#3d7be0"/><g class="cl-wipe">${clRag(40, 22, 44)}</g>`, 'Буфер і пружина'),
+  // 16 ПЗРЗП
+  clSvg(`<rect x="60" y="34" width="180" height="44" rx="10" fill="#3a3d42" stroke="var(--sp-dim)"/><rect x="30" y="46" width="30" height="20" fill="var(--sp-gun)"/><text class="sm" x="72" y="100">лише якщо всередині сніг чи пісок — гас, продути</text>`, 'ПЗРЗП'),
+];
 let cleanCur = 0;
 function cleanShow(n, row) {
   cleanCur = n; const f = $('m3d');
@@ -1730,7 +1791,7 @@ function cleanView() {
       <li>Йоржі латунний і пластиковий для ствола, йорж для патронника; патчі — лише для каналу ствола.</li>
       <li>Ганчір’я, щітка, дерев’яні палички для пазів і отворів.</li></ul></section>
     <section class="art"><h3>Порядок чищення</h3>
-      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span>${n ? `<i>${svg('play')}</i>` : ''}</li>`).join('')}</ol></section>
+      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span>${n ? `<i>${svg('play')}</i>` : '<i></i>'}${CLEAN_PICS[i] || ''}</li>`).join('')}</ol></section>
     <section class="art"><h3>Змащування</h3><ul>
       <li>Одразу після чищення, лише на чисту суху поверхню — щоб волога не діяла на метал.</li>
       <li>При +5 °C і нижче — лише універсальний засіб або нейтральне мастило. Змінюєш тип мастила — ретельно прибери старе.</li>
