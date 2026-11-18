@@ -369,6 +369,10 @@ p { margin: 0; }
 @media (prefers-reduced-motion: reduce) { .cl-push, .cl-pass, .cl-wipe, .cl-spin, .cl-drop, .cl-out { animation:none; opacity:1; } }
 .art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
 .aim-res { font-weight:600; }
+.aimv[data-tab="sim"] .aim-how, .aimv[data-tab="how"] .aim-sim { display:none; }
+.aimv .aim-how { display:flex; flex-direction:column; gap:12px; }
+.aimv[data-tab="sim"] .aim-how { display:none; }
+.aim-tabs .btn { min-height:44px; font-size:15px; }
 .sp.trig .A1, .sp.trig .A2 { display:none; }
 .sp.trig .fing { animation:sp-trig 2.6s ease-in-out infinite; }
 @keyframes sp-trig { 0%, 25% { transform:rotate(14deg); } 65%, 78% { transform:rotate(17deg) translateX(-4px); } 100% { transform:rotate(14deg); } }
@@ -988,7 +992,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-065136';
+const APP_V = '20261118-074812';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1688,15 +1692,17 @@ function aimControls() {
 ` : ''}
 `;
 }
+let aimTab = 'sim';
 function aimView() {
   setBar('Прицілювання');
-  app.innerHTML = `<div class="law aimv">
-    <div class="m3d-stick">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — наводиш зброю. Тримай «Дихання» ліворуч і тисни кнопку пострілу праворуч — можна двома пальцями одночасно.</span></p></div>
-    <div class="aim-st" id="aim-st">Наведи точку прицілювання з поправкою на дистанцію</div>
-    <div class="aim-ctl" id="aim-ctl"></div>
-    <div class="art" id="aim-info"></div>
-    ${AIM_PICS()}
-    <p class="src">Поправки — розрахунок для патрона 5,56×45 мм типу SS109 (балістичний коефіцієнт G7 0,151), початкова швидкість 830 м/с (ТТХ) і 796 м/с (GunLib, «Таблиці перевищень 5,56×45, різні стволи», для ствола 29 см); способи пристрілки — ar15.org.ua; висота прицілу 6,7 см (39 мм над планкою — табл. 3 настанови), пристрілка на 100 м. Значення приблизні: звіряй з пристрілкою своєї зброї. Розсіювання — r50 = 40 мм на 100 м (ТТХ). Приціли — за рис. 2, 43, 44 настанови; пристрілка коліматора — розділ CompM4s настанови.</p>
+  app.innerHTML = `<div class="law aimv" data-tab="${aimTab}">
+    <div class="aseg aim-tabs" role="tablist"><button class="btn" data-act="aim-tab" data-v="sim" aria-pressed="${aimTab === 'sim'}">Тренажер</button><button class="btn" data-act="aim-tab" data-v="how" aria-pressed="${aimTab === 'how'}">Як цілитися</button></div>
+    <div class="m3d-stick aim-sim">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — наводиш зброю. Тримай «Дихання» ліворуч і тисни кнопку пострілу праворуч — можна двома пальцями одночасно.</span></p></div>
+    <div class="aim-st aim-sim" id="aim-st">Наведи точку прицілювання з поправкою на дистанцію</div>
+    <div class="aim-ctl aim-sim" id="aim-ctl"></div>
+    <div class="art aim-sim" id="aim-info"></div>
+    <div class="aim-how">${AIM_PICS()}</div>
+    <p class="src aim-how">Поправки — розрахунок для патрона 5,56×45 мм типу SS109 (балістичний коефіцієнт G7 0,151), початкова швидкість 830 м/с (ТТХ) і 796 м/с (GunLib, «Таблиці перевищень 5,56×45, різні стволи», для ствола 29 см); способи пристрілки — ar15.org.ua; висота прицілу 6,7 см (39 мм над планкою — табл. 3 настанови), пристрілка на 100 м. Значення приблизні: звіряй з пристрілкою своєї зброї. Розсіювання — r50 = 40 мм на 100 м (ТТХ). Приціли — за рис. 2, 43, 44 настанови; пристрілка коліматора — розділ CompM4s настанови.</p>
   </div>`;
   aimControls(); aimInfo();
   $('m3d').addEventListener('load', () => setTimeout(aimSync, 300));
@@ -1907,6 +1913,7 @@ document.addEventListener('click', e => {
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
     case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : k === 'hint' ? v === 'true' : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; if (k === 'mode') AIM_ST.drill = null; aimControls(); aimInfo(); aimSync(); break; }
     case 'clean-show': cleanShow(+t.dataset.n, t); break;
+    case 'aim-tab': aimTab = t.dataset.v; { const v = document.querySelector('.aimv'); v.dataset.tab = aimTab; v.querySelectorAll('.aim-tabs .btn').forEach(b => b.setAttribute('aria-pressed', String(b === t))); } window.scrollTo(0, 0); break;
     case 'aim-fire': aimSend({ fire: true }); break;
     case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;
     case 'law-next': L.i++; L.chosen = null; lawRender(); window.scrollTo(0, 0); break;
