@@ -345,7 +345,7 @@ p { margin: 0; }
 .m3d-stick { position:sticky; top:calc(57px + env(safe-area-inset-top, 0px)); z-index:5; margin-inline:-4px; padding:6px 4px 8px; background:var(--bg); }
 .m3d-stick .m3d { height:min(34svh, 300px); }
 .m3d.dims { height:min(40svh, 330px); }
-.m3d-stick .m3d.aim { height:min(52svh, 460px); }
+.m3d-stick .m3d.aim { height:min(60svh, 520px); }
 .aim-ctl { display:flex; flex-direction:column; gap:8px; }
 .aseg { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }
 .aseg .btn { min-height:40px; font-size:14px; padding:0 4px; }
@@ -988,7 +988,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-064119';
+const APP_V = '20261118-064359';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1686,15 +1686,12 @@ function aimControls() {
     ${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
     ${AIM_ST.mode === 'train' ? `<div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
 ` : ''}
-    <div class="aseg"><button class="btn" id="aim-breath">Затримати дихання</button><button class="btn primary" data-act="aim-fire">Постріл</button></div>`;
-  const b = $('aim-breath'), on = v => e => { e.preventDefault(); b.classList.toggle('held', v); aimSend({ breath: v }); };
-  b.addEventListener('pointerdown', on(true)); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, on(false));
-  b.addEventListener('contextmenu', e => e.preventDefault());
+`;
 }
 function aimView() {
   setBar('Прицілювання');
   app.innerHTML = `<div class="law aimv">
-    <div class="m3d-stick">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — так наводиш зброю. Тримай «Затримати дихання» і стріляй.</span></p></div>
+    <div class="m3d-stick">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — наводиш зброю. Тримай «Дихання» ліворуч і тисни кнопку пострілу праворуч — можна двома пальцями одночасно.</span></p></div>
     <div class="aim-st" id="aim-st">Наведи точку прицілювання з поправкою на дистанцію</div>
     <div class="aim-ctl" id="aim-ctl"></div>
     <div class="art" id="aim-info"></div>
@@ -1847,7 +1844,7 @@ function cleanShow(n, row) {
 function cleanView() {
   setBar('Чищення зброї');
   app.innerHTML = `<div class="law clv">
-    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі</span></p></div>
+    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі. Свайп — повернути стіл, двома пальцями — наблизити.</span></p></div>
     <section class="art"><h3>Коли чистити</h3><ul>
       <li>Після стрільби — одразу на стрільбищі: ствольну коробку, канал ствола й затвор. Остаточно — після повернення і ще 2–3 доби щодня.</li>
       <li>Після наряду чи занять у полі без стрільби — після повернення.</li>
