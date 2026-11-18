@@ -371,8 +371,10 @@ p { margin: 0; }
 .aim-res { font-weight:600; }
 .sp.trig .A1, .sp.trig .A2 { display:none; }
 .sp.trig .fing { animation:sp-trig 2.6s ease-in-out infinite; }
-@keyframes sp-trig { 0%, 30% { transform:rotate(14deg); } 60%, 75% { transform:rotate(16.5deg) translateX(-3px); } 100% { transform:rotate(14deg); } }
-@media (prefers-reduced-motion: reduce) { .sp.trig .fing { animation:none; transform:rotate(14deg); } }
+@keyframes sp-trig { 0%, 25% { transform:rotate(14deg); } 65%, 78% { transform:rotate(17deg) translateX(-4px); } 100% { transform:rotate(14deg); } }
+.sp.trig .tg { transform-origin:156.5px 73.2px; animation:sp-tg 2.6s ease-in-out infinite; }
+@keyframes sp-tg { 0%, 25% { transform:rotate(0deg); } 65%, 78% { transform:rotate(13deg); } 100% { transform:rotate(0deg); } }
+@media (prefers-reduced-motion: reduce) { .sp.trig .fing { animation:none; transform:rotate(14deg); } .sp.trig .tg { animation:none; } }
 .aim-tab { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; margin-bottom:8px; }
 .aim-tab th, .aim-tab td { padding:6px 4px; border-bottom:1px solid var(--line); text-align:center; }
 .aim-tab th { font:600 12px/1.2 var(--display); letter-spacing:.5px; color:var(--muted); } .aim-tab th small { font-weight:500; }
@@ -986,7 +988,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-062637';
+const APP_V = '20261118-062758';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1743,7 +1745,7 @@ function AIM_PICS() {
     <path d="M${20 + 46 * 4.6} 86 V100" stroke="var(--good)" stroke-width="2"/><text class="sm" x="${20 + 36 * 4.6}" y="122" style="fill:var(--good)">постріл — у паузі</text>
     <text class="sm" x="20" y="26">вдих</text><text class="sm" x="80" y="122">видих</text>`, 'Дихання');
   // 6. Спуск: рука з кодексу, вказівний палець на гачку — плавно тисне прямо назад
-  const p6 = SAFE_PIC[3].replace('class="sp"', 'class="sp trig"').replace(/aria-label="[^"]*"/, 'aria-label="Палець на спусковому гачку тисне плавно прямо назад"')
+  const p6 = SAFE_PIC[3].replace('class="sp"', 'class="sp trig"').replace('<path fill="var(--sp-gun)" d="M152.0 73.2', '<path class="tg" fill="var(--sp-gun)" d="M152.0 73.2').replace(/aria-label="[^"]*"/, 'aria-label="Палець на спусковому гачку тисне плавно прямо назад"')
     .replace('</svg>', `<g stroke="var(--violet)" stroke-width="3" fill="none" stroke-linecap="round"><path d="M200 22 H140"/><path d="M147 15 L139 22 L147 29"/></g><text class="sm" x="206" y="20">прямо назад, плавно</text><text class="sm" x="206" y="34">подушечкою фаланги</text></svg>`);
   const card = (t, pic, items) => `<section class="art"><h3>${t}</h3>${pic}<ul>${items.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
   return card('Як цілитися з коліматора', p1, ['Дивись <b>обома відкритими очима</b>: так ширший огляд і швидше знаходиш ціль.', 'Наведи червону точку на точку прицілювання. Центрувати точку у вікні прицілу не треба: вона «тримається» на цілі, навіть якщо око трохи зміщене.', 'Поверни перемикач яскравості так, щоб точку було добре видно на фоні цілі, але вона не розпливалась.'])
