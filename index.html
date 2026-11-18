@@ -345,6 +345,48 @@ p { margin: 0; }
 .m3d-stick { position:sticky; top:calc(57px + env(safe-area-inset-top, 0px)); z-index:5; margin-inline:-4px; padding:6px 4px 8px; background:var(--bg); }
 .m3d-stick .m3d { height:min(34svh, 300px); }
 .m3d.dims { height:min(40svh, 330px); }
+.m3d-stick .m3d.aim { height:min(60svh, 520px); }
+.aim-ctl { display:flex; flex-direction:column; gap:8px; }
+.aseg { display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px; }
+.aseg .btn { min-height:40px; font-size:14px; padding:0 4px; }
+.aseg.dist { grid-auto-flow:row; grid-template-columns:repeat(9, 1fr); }
+.aseg.dist .btn { font-size:13px; min-height:38px; }
+@media (max-width:480px) { .aseg.dist { grid-template-columns:repeat(5, 1fr); } }
+.aseg .btn[aria-pressed="true"] { background:var(--violet); border-color:var(--violet); color:#fff; }
+.cl-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.cl-steps li { display:grid; grid-template-columns:26px 1fr auto; gap:8px; align-items:start; padding:8px; border-radius:10px; border:1px solid transparent; line-height:1.45; }
+.cl-steps li > b { font:600 15px/1.45 var(--display); color:var(--violet); }
+.cl-steps li[data-act] { cursor:pointer; background:color-mix(in srgb, var(--violet) 8%, transparent); }
+.cl-steps li i { color:var(--violet); width:22px; height:22px; } .cl-steps li i .i { width:22px; height:22px; }
+.cl-steps li.on { border-color:var(--violet); }
+.cl-steps .cl-pic { grid-column:1 / -1; margin:4px 0 0; }
+.cl-push { animation:cl-push 2.6s ease-in-out infinite; } @keyframes cl-push { 0% { transform:translateX(0); } 70%, 100% { transform:translateX(170px); } }
+.cl-pass { animation:cl-pass 1.6s ease-in-out infinite; } @keyframes cl-pass { 0%, 100% { transform:translateX(0); } 50% { transform:translateX(120px); } }
+.cl-wipe { animation:cl-wipe 1.4s ease-in-out infinite; } @keyframes cl-wipe { 0%, 100% { transform:translateX(0); } 50% { transform:translateX(70px); } }
+.cl-spin { animation:cl-spin .9s linear infinite; } @keyframes cl-spin { 50% { transform:scaleY(.55); } }
+.cl-drop { animation:cl-drop 1.35s ease-in infinite; opacity:0; } @keyframes cl-drop { 0% { transform:translate(0, 0); opacity:1; } 90% { transform:translate(-8px, 26px); opacity:1; } 100% { transform:translate(-8px, 28px); opacity:0; } }
+.cl-out { animation:cl-out 2.4s ease-in-out infinite; } @keyframes cl-out { 0%, 20% { transform:translateY(0); } 70%, 100% { transform:translateY(16px); opacity:.4; } }
+@media (prefers-reduced-motion: reduce) { .cl-push, .cl-pass, .cl-wipe, .cl-spin, .cl-drop, .cl-out { animation:none; opacity:1; } }
+.art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
+.aim-res { font-weight:600; }
+.aimv[data-tab="sim"] .aim-how, .aimv[data-tab="how"] .aim-sim { display:none; }
+.aimv .aim-how { display:flex; flex-direction:column; gap:12px; }
+.aimv[data-tab="sim"] .aim-how { display:none; }
+.aim-tabs .btn { min-height:44px; font-size:15px; }
+.sp.trig .A1, .sp.trig .A2 { display:none; }
+.sp.trig .fing { animation:sp-trig 2.6s ease-in-out infinite; }
+@keyframes sp-trig { 0%, 25% { transform:rotate(14deg); } 65%, 78% { transform:rotate(17deg) translateX(-4px); } 100% { transform:rotate(14deg); } }
+.sp.trig .tg { transform-origin:156.5px 73.2px; animation:sp-tg 2.6s ease-in-out infinite; }
+@keyframes sp-tg { 0%, 25% { transform:rotate(0deg); } 65%, 78% { transform:rotate(13deg); } 100% { transform:rotate(0deg); } }
+@media (prefers-reduced-motion: reduce) { .sp.trig .fing { animation:none; transform:rotate(14deg); } .sp.trig .tg { animation:none; } }
+.aim-tab { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; margin-bottom:8px; }
+.aim-tab th, .aim-tab td { padding:6px 4px; border-bottom:1px solid var(--line); text-align:center; }
+.aim-tab th { font:600 12px/1.2 var(--display); letter-spacing:.5px; color:var(--muted); } .aim-tab th small { font-weight:500; }
+.aim-tab td:first-child { text-align:left; font-weight:600; }
+.aim-st { padding:10px 12px; border-radius:12px; border:1.5px solid var(--line); font:600 14px/1.3 var(--display); letter-spacing:.3px; color:var(--muted); text-align:center; transition:background .15s, color .15s; }
+.aim-st.ok { background:var(--good); border-color:var(--good); color:#03281c; }
+#aim-breath.held { background:var(--good); border-color:var(--good); color:#000; }
+#aim-breath { user-select:none; -webkit-user-select:none; touch-action:none; } .aim-res.ok { color:var(--good, #6fbf73); } .aim-res.bad { color:var(--bad); }
 .m3d-nav { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-top:6px; }
 .m3d-nav .btn { min-height:44px; font-size:15px; }
 .m3d-nav span { font:500 13px/1.2 var(--display); letter-spacing:1px; text-transform:uppercase; color:var(--muted); text-align:center; }
@@ -470,7 +512,7 @@ const FACTS = [
 
 const PARTS = {
   1: 'Ствол', 2: 'Цівка', 3: 'Затворна рама з затвором', 4: 'Рама верхня', 5: 'Руків’я перезаряджання', 6: 'Приклад',
-  7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка задня', 12: 'Магазин', 13: 'Руків’я перенесення вогню', 14: 'Антабка передня',
+  7: 'Рама нижня в зборі', 8: 'Пістолетне руків’я', 9: 'Буфер', 10: 'Зворотна пружина', 11: 'Антабка задня', 12: 'Магазин', 13: 'Руків’я перенесення вогню', 14: 'Антабка передня', 15: 'Коліматорний приціл',
 };
 const ON_DIAGRAM = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -632,6 +674,8 @@ const ICON = {
   auto: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
   alert: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/>',
   shield: '<path d="M12 3l7 3v6c0 4.2-3 7.6-7 9-4-1.4-7-4.8-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/>',
+  brush: '<path d="M3 21l9-9"/><path d="M12 12l2-2 4 4-2 2z"/><path d="M16 8l3-3M18 10l3-3M14 6l3-3"/>',
   cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
 };
@@ -768,6 +812,8 @@ function home() {
       ${tile('parts', 'parts', 'Будова', '3D-модель, схема й назви частин')}
       ${tile('quiz', 'test', 'Тест · 10 питань', 'ТТХ і будова, 4 варіанти')}
       ${tile('replay', 'review', 'Повтор помилок', due > 0 ? `пора повторити: ${due}` : 'поки нічого — повтор через 1, 3 і 7 днів', due === 0, due > 0 ? due : 0)}
+      ${tile('target', 'aim', 'Прицілювання', 'вигляд з прицілу: 25–400 м, куди цілитися')}
+      ${tile('brush', 'clean', 'Чищення зброї', 'коли й як чистити, 16 кроків, показ на 3D-моделі')}
       ${tile('photo', 'guide', 'Порядок неповного розбирання', '5 етапів, 12 фото, озвучка, показ на 3D-моделі')}
       ${tile('list', 'guide-as', 'Порядок збирання', '11 кроків з озвучкою і показом на 3D-моделі')}
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
@@ -855,7 +901,7 @@ function table() {
 // — Будова —
 // Органи керування — рис. 3 настанови
 const CTRL_NAMES = { 1: 'Ствол', 2: 'Цівка', 3: 'Кришка вікна викидання гільз', 4: 'Рама верхня', 5: 'Кнопка досилача', 6: 'Приклад', 7: 'Кнопка застібки магазина',
-  8: 'Руків’я перезаряджання', 9: 'Затворна затримка', 10: 'Магазин', 11: 'Перевідник вогню', 12: 'Спусковий гачок', 13: 'Пістолетне руків’я', 14: 'Антабка' };
+  8: 'Руків’я перезаряджання', 9: 'Затворна затримка', 10: 'Магазин', 11: 'Перевідник вогню', 12: 'Спусковий гачок', 13: 'Пістолетне руків’я', 15: 'Коліматорний приціл', 14: 'Антабка' };
 const SLING_NAMES = { 1: 'Передня антабка (рис. 2, поз. 8) — накладка M-LOK з отвором, на цівці з обох боків', 2: 'Задня антабка — опорна плита з гніздом QD на трубі приклада', 3: 'Гніздо QD у прикладі', 4: 'Проріз для ременя в прикладі' };
 let partsSet = 'parts';
 function partsList() {
@@ -946,7 +992,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-074812';
+const APP_V = '20261118-094224';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1609,10 +1655,231 @@ function lawAnswer(k) {
 }
 
 // ═════════ Події й маршрути ═════════
+// ═════════ Прицілювання ═════════
+// Відхилення кулі від лінії прицілювання, см — розрахунок для 5,56 мм SS109 (G7 0,151), 830 м/с, висота прицілу 6,7 см, пристрілка на 100 м
+const AIM_DROP = { 25: -3.5, 50: -1.3, 100: 0, 150: -3.3, 200: -11.8, 250: -26.4, 300: -47.9, 350: -77.4, 400: -116.3 };
+const AIM_ST = { mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null };
+function aimHint(d) {
+  const h = -AIM_DROP[d];
+  if (h <= 5) return 'Наводь у центр фігури — різниця до 5 см, вона в межах розсіювання.';
+  if (h < 20) return `Наводь на ${Math.round(h)} см вище центру — приблизно в груди під горлом.`;
+  if (h < 30) return `Наводь на ${Math.round(h)} см вище центру — у верх голови фігури.`;
+  if (h < 60) return `Наводь на ${Math.round(h)} см вище центру — це на ${Math.round(h - 25)} см вище голови фігури.`;
+  return `Наводь на ${Math.round(h)} см вище центру — ≈ ${(h / 50).toFixed(1).replace('.', ',')} висоти грудної фігури (50 см) над її центром, вище самої мішені.`;
+}
+const aimSend = (extra = {}) => { const f = $('m3d'); try { f.contentWindow.postMessage({ type: 'uar-aim', ...extra }, location.origin); } catch (e) { /* модель ще вантажиться */ } };
+const aimSync = () => aimSend({ dist: AIM_ST.dist, sight: AIM_ST.sight, mode: AIM_ST.mode, hint: AIM_ST.hint });
+const aimMiss = m => { const v = [], y = m.aimOffY, z = m.aimOffZ; if (Math.abs(y) > 3) v.push(`${Math.abs(y)} см ${y > 0 ? 'вище' : 'нижче'}`); if (Math.abs(z) > 3) v.push(`${Math.abs(z)} см ${z > 0 ? 'правіше' : 'лівіше'}`); return v.length ? `Ти цілився ${v.join(' й ')} центру фігури.` : 'Ти цілився в центр фігури.'; };
+function aimInfo() {
+  const el = $('aim-info'); if (!el) return;
+  if (AIM_ST.mode === 'drill') {
+    const d = AIM_ST.drill;
+    el.innerHTML = !d ? '<p>Мішені з’являються по одній на різних дистанціях. Знайди ціль, наведи з поправкою на дистанцію й стріляй — до 3 пострілів на мішень.</p>'
+      : d.done ? `<p class="aim-res ok">Вправу завершено: влучив ${d.hits} з ${d.n} мішеней, пострілів — ${d.shots}, час — ${d.sec} с.</p><p>Натисни «Вправа» ще раз, щоб почати знову.</p>`
+      : `<p><b>Мішень ${d.i} з ${d.n} · ${d.dist} м.</b> ${esc(aimHint(d.dist))}</p>${d.last != null ? `<p class="aim-res ${d.last ? 'ok' : 'bad'}">${d.last ? 'Влучання' : 'Промах'} · ${esc(aimMiss(d))}</p>` : ''}<p class="muted small">Влучань: ${d.hits} · пострілів: ${d.shots}</p>`;
+    return;
+  }
+  const dd = AIM_ST.dist, dr = AIM_DROP[dd];
+  el.innerHTML = `<p><b>${dd} м.</b> ${dr === 0 ? 'Дистанція пристрілки: куля йде точно в точку прицілювання.' : `Куля пройде на <b>${Math.abs(dr).toString().replace('.', ',')} см нижче</b> точки прицілювання.`}</p>
+    <p>${esc(aimHint(dd))} Жовте кільце з хрестом на мішені — туди й наводь. Наведеш правильно — загориться зелена галочка.</p>
+    ${AIM_ST.last ? `<p class="aim-res ${AIM_ST.last.hit ? 'ok' : 'bad'}">${AIM_ST.last.hit ? 'Влучання' : AIM_ST.last.board ? 'Промах — у щит поза фігурою' : 'Промах — куля пішла в землю перед мішенню'} · ${AIM_ST.hits} з ${AIM_ST.shots}</p><p class="muted small">${esc(aimMiss(AIM_ST.last))}</p>` : ''}`;
+}
+function aimSeg(name, cur, items) { return `<div class="aseg" role="group">${items.map(([v, t]) => `<button class="btn" data-act="aim-set" data-k="${name}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`; }
+function aimControls() {
+  $('aim-ctl').innerHTML = `${aimSeg('mode', AIM_ST.mode, [['train', 'Тренування'], ['drill', 'Вправа']])}
+    ${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
+    ${AIM_ST.mode === 'train' ? `<div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
+` : ''}
+`;
+}
+let aimTab = 'sim';
+function aimView() {
+  setBar('Прицілювання');
+  app.innerHTML = `<div class="law aimv" data-tab="${aimTab}">
+    <div class="aseg aim-tabs" role="tablist"><button class="btn" data-act="aim-tab" data-v="sim" aria-pressed="${aimTab === 'sim'}">Тренажер</button><button class="btn" data-act="aim-tab" data-v="how" aria-pressed="${aimTab === 'how'}">Як цілитися</button></div>
+    <div class="m3d-stick aim-sim">${m3d('aim', 'aim')}<p class="m3d-cap"><span>Веди пальцем по екрану — наводиш зброю. Тримай «Дихання» ліворуч і тисни кнопку пострілу праворуч — можна двома пальцями одночасно.</span></p></div>
+    <div class="aim-st aim-sim" id="aim-st">Наведи точку прицілювання з поправкою на дистанцію</div>
+    <div class="aim-ctl aim-sim" id="aim-ctl"></div>
+    <div class="art aim-sim" id="aim-info"></div>
+    <div class="aim-how">${AIM_PICS()}</div>
+    <p class="src aim-how">Поправки — розрахунок для патрона 5,56×45 мм типу SS109 (балістичний коефіцієнт G7 0,151), початкова швидкість 830 м/с (ТТХ) і 796 м/с (GunLib, «Таблиці перевищень 5,56×45, різні стволи», для ствола 29 см); способи пристрілки — ar15.org.ua; висота прицілу 6,7 см (39 мм над планкою — табл. 3 настанови), пристрілка на 100 м. Значення приблизні: звіряй з пристрілкою своєї зброї. Розсіювання — r50 = 40 мм на 100 м (ТТХ). Приціли — за рис. 2, 43, 44 настанови; пристрілка коліматора — розділ CompM4s настанови.</p>
+  </div>`;
+  aimControls(); aimInfo();
+  $('m3d').addEventListener('load', () => setTimeout(aimSync, 300));
+}
+window.addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || view !== 'aim') return;
+  if (e.data.type === 'uar-aim-ok') { const el = $('aim-st'); if (el) { el.classList.toggle('ok', e.data.ok); el.textContent = e.data.ok ? '✓ Наведено правильно — тримай і стріляй' : 'Наведи точку прицілювання з поправкою на дистанцію'; } }
+  if (e.data.type === 'uar-aim-hit') { AIM_ST.shots++; if (e.data.hit) AIM_ST.hits++; AIM_ST.last = e.data; aimInfo(); }
+  if (e.data.type === 'uar-aim-drill') { const m = e.data; AIM_ST.drill = { ...m, last: 'hit' in m ? m.hit : null }; aimInfo(); }
+});
+// ── Малюнки до пояснень ──
+const apSvg = (body, lbl, h = 150) => `<svg class="sp" viewBox="0 0 320 ${h}" role="img" aria-label="${esc(lbl)}">${body}</svg>`;
+const apFig = (cx, cy, s = 1, fill = '#4a5634') => `<path transform="translate(${cx} ${cy}) scale(${s})" d="M-25 25 V-2 Q-24 -9 -14 -10 L-9 -11 Q-12 -25 0 -25 Q12 -25 9 -11 L14 -10 Q24 -9 25 -2 V25 Z" fill="${fill}"/>`;
+function AIM_PICS() {
+  // 1. Картинка в коліматорі: обидва ока відкриті, точка на цілі
+  const p1 = apSvg(`<circle cx="110" cy="72" r="52" fill="#9fb6c4"/><defs><clipPath id="apc1"><circle cx="110" cy="72" r="52"/></clipPath></defs><rect x="58" y="86" width="104" height="40" fill="#9fae6f" clip-path="url(#apc1)"/>
+    ${apFig(110, 74, 0.9)}<circle cx="110" cy="66" r="4.5" fill="#ff2a2a"/><circle cx="110" cy="66" r="9" fill="#ff2a2a" opacity=".25"/>
+    <circle cx="110" cy="72" r="52" fill="none" stroke="var(--sp-gun)" stroke-width="10"/>
+    <g transform="translate(212 40)"><ellipse cx="0" cy="12" rx="16" ry="10" fill="#fff"/><circle cx="0" cy="12" r="6" fill="#3a3f30"/><ellipse cx="44" cy="12" rx="16" ry="10" fill="#fff"/><circle cx="44" cy="12" r="6" fill="#3a3f30"/>
+    <text class="sm" x="-12" y="44">обидва ока</text><text class="sm" x="-4" y="58">відкриті</text></g>
+    <text class="sm" x="70" y="140">точка — на точці прицілювання</text>`, 'Картинка в коліматорі');
+  // 2. Механічний: кільце цілика, мушка в центрі, фокус на мушці
+  const p2 = apSvg(`<circle cx="110" cy="72" r="56" fill="var(--sp-gun)"/><circle cx="110" cy="72" r="30" fill="#b9c8d1"/>
+    <g opacity=".55" filter="url(#bl)">${apFig(110, 74, 0.55)}</g>
+    <path d="M86 102 V76 h8 v-6 h4 v6 h-4" fill="none"/><rect x="107" y="72" width="6" height="40" fill="#1c1f19"/><path d="M84 112 V84 H92 V112 M128 112 V84 H136 V112" fill="#1c1f19"/>
+    <path d="M110 72 m-30 0 h-8 M110 72 m30 0 h8" stroke="var(--violet)" stroke-width="1.5"/>
+    <defs><filter id="bl"><feGaussianBlur stdDeviation="1.6"/></filter></defs>
+    <text class="sm" x="190" y="50">верх мушки —</text><text class="sm" x="190" y="64">у центрі кільця</text><text class="sm" x="190" y="92">фокус на мушці,</text><text class="sm" x="190" y="106">ціль трохи розмита</text>`, 'Механічний приціл');
+  // 3. Траєкторія: лінія прицілювання і куля, пристрілка 100 м
+  const X = d => 30 + d * 0.68, Y = c => 46 - c * 0.62;
+  const pts = [[0, -6.7], [25, -3.5], [50, -1.3], [100, 0], [150, -3.3], [200, -11.8], [250, -26.4], [300, -47.9], [350, -77.4], [400, -116.3]];
+  const p3 = apSvg(`<path d="M${X(0)} ${Y(0)} H${X(400)}" stroke="#ff4a3a" stroke-width="1.8" stroke-dasharray="6 4"/>
+    <path d="M${pts.map(([d, c]) => `${X(d).toFixed(1)} ${Y(c).toFixed(1)}`).join(' L')}" stroke="var(--sp-tan)" stroke-width="2.5" fill="none"/>
+    ${[100, 200, 300, 400].map(d => `<path d="M${X(d)} 34 V${Y(AIM_DROP[d]) + 4}" stroke="var(--sp-dim)" stroke-width="1"/><text class="sm" x="${X(d) - 12}" y="30">${d} м</text><text class="sm" x="${X(d) - (d === 100 ? 4 : 14)}" y="${Math.min(Y(AIM_DROP[d]) + 14, 146)}">${d === 100 ? '0' : Math.round(AIM_DROP[d]) + ' см'}</text>`).join('')}
+    <text class="sm" x="30" y="16" style="fill:#ff6a5a">лінія прицілювання</text><text class="sm" x="${X(30)}" y="${Y(-30)}" style="fill:var(--sp-tan)">траєкторія кулі</text>`, 'Траєкторія кулі');
+  // 4. Куди наводити на 100, 200, 300 м
+  const p4 = apSvg([100, 200, 300].map((d, i) => { const cx = 55 + i * 105, cy = 92, k = 0.9, h = -AIM_DROP[d] * k;
+    return `<rect x="${cx - 40}" y="40" width="80" height="80" rx="4" fill="#c9b88f"/>${apFig(cx, cy, k)}<g stroke="#ffd23f" stroke-width="2.5"><path d="M${cx - 7} ${cy - h} h14 M${cx} ${cy - h - 7} v14"/></g>
+      <text class="sm" x="${cx - 14}" y="30">${d} м</text><text class="sm" x="${cx - 28}" y="138">${d === 100 ? 'у центр' : `на ${Math.round(-AIM_DROP[d])} см вище`}</text>`; }).join(''), 'Куди наводити');
+  // 5. Дихання: природна пауза після видиху
+  const wave = Array.from({ length: 61 }, (_, i) => { const x = 20 + i * 4.6, t = i / 60 * Math.PI * 4; return `${x.toFixed(1)} ${(70 - 26 * Math.sin(t)).toFixed(1)}`; }).join(' L');
+  const p5 = apSvg(`<path d="M${wave}" stroke="var(--sp-ink)" stroke-width="2" fill="none"/><rect x="${20 + 43 * 4.6}" y="88" width="34" height="14" rx="4" fill="var(--good)" opacity=".35"/>
+    <path d="M${20 + 46 * 4.6} 86 V100" stroke="var(--good)" stroke-width="2"/><text class="sm" x="${20 + 36 * 4.6}" y="122" style="fill:var(--good)">постріл — у паузі</text>
+    <text class="sm" x="20" y="26">вдих</text><text class="sm" x="80" y="122">видих</text>`, 'Дихання');
+  // 6. Спуск: рука з кодексу, вказівний палець на гачку — плавно тисне прямо назад
+  const p6 = SAFE_PIC[3].replace('class="sp"', 'class="sp trig"').replace('<path fill="var(--sp-gun)" d="M152.0 73.2', '<path class="tg" fill="var(--sp-gun)" d="M152.0 73.2').replace(/aria-label="[^"]*"/, 'aria-label="Палець на спусковому гачку тисне плавно прямо назад"')
+    .replace('</svg>', `<g stroke="var(--violet)" stroke-width="3" fill="none" stroke-linecap="round"><path d="M200 22 H140"/><path d="M147 15 L139 22 L147 29"/></g><text class="sm" x="206" y="20">прямо назад, плавно</text><text class="sm" x="206" y="34">подушечкою фаланги</text></svg>`);
+  const card = (t, pic, items) => `<section class="art"><h3>${t}</h3>${pic}<ul>${items.map(x => `<li>${x}</li>`).join('')}</ul></section>`;
+  return card('Як цілитися з коліматора', p1, ['Дивись <b>обома відкритими очима</b>: так ширший огляд і швидше знаходиш ціль.', 'Наведи червону точку на точку прицілювання. Центрувати точку у вікні прицілу не треба: вона «тримається» на цілі, навіть якщо око трохи зміщене.', 'Поверни перемикач яскравості так, щоб точку було добре видно на фоні цілі, але вона не розпливалась.'])
+    + card('Як цілитися з механічного прицілу', p2, ['Дивись крізь кільце цілика. <b>Верх мушки</b> — у центрі кільця, око саме знаходить центр.', 'Фокус — на мушці: вона чітка, ціль трохи розмита. Верх мушки — це точка прицілювання.', 'Щока на прикладі щоразу в тому самому місці.'])
+    + card('Чому куля летить по дузі і навіщо поправка', p3, [
+      'Куля вилітає зі ствола зі швидкістю близько <b>830 м/с</b> (ТТХ UAR-15S: 830 ± 60 м/с) і <b>з першої миті падає</b> під дією земного тяжіння, а повітря її гальмує: на 300 м вона летить уже ≈ 550 м/с, на 400 м — ≈ 470 м/с.',
+      'Чим довше летить — тим нижче опускається: до 100 м куля летить ≈ 0,13 с, до 300 м — ≈ 0,44 с, до 400 м — ≈ 0,64 с.',
+      'Приціл стоїть на <b>6,7 см вище</b> осі ствола. Після пристрілки ствол дивиться трохи вгору: куля піднімається до лінії прицілювання, на дистанції пристрілки (100 м) перетинає її, а далі йде дедалі нижче — тому з відстанню наводимо вище.',
+      'У UAR-15S короткий ствол — 289 мм. Короткий ствол дає меншу швидкість: за таблицями GunLib (розрахунок Applied Ballistics для патрона M855) для ствола 29 см — ≈ 796 м/с, і тоді куля падає ще трохи більше (друга колонка таблиці).',
+      'Пристрілюють і по-іншому: на 50/200 м куля від 50 до 250 м тримається в межах ≈ 7–10 см від точки прицілювання; армія США — 25/300 м, морська піхота — 36/300 м. У тренажері — 100 м; якщо у вашому підрозділі інша пристрілка, поправки будуть інші.'])
+    + `<section class="art"><h3>Таблиця поправок · пристрілка 100 м</h3><table class="aim-tab"><thead><tr><th>Дистанція</th><th>Куля нижче, см<br><small>830 м/с</small></th><th>Куля нижче, см<br><small>796 м/с</small></th></tr></thead><tbody>
+      ${[[25, 3.5, 3.4], [50, 1.3, 1.1], [100, 0, 0], [150, 3.3, 3.9], [200, 11.8, 13.5], [250, 26.4, 29.8], [300, 47.9, 53.7], [350, 77.4, 86.5], [400, 116.3, 129.7]].map(([d, a, b]) => `<tr><td>${d} м</td><td>${String(a).replace('.', ',')}</td><td>${String(b).replace('.', ',')}</td></tr>`).join('')}
+      </tbody></table><p class="muted small">Висота прицілу 6,7 см, патрон 5,56×45 типу SS109/M855. Розрахунок приблизний: вітер, температура й конкретна партія патронів дають свої відхилення.</p></section>`
+    + card('Куди наводити', p4, ['100 м — у центр фігури. 200 м — трохи вище центру. 300 м — над головою фігури.', 'На 350–400 м точка прицілювання вже вище мішені — тому ефективна дальність 400–500 м (ТТХ).'])
+    + card('Дихання', p5, ['Вдих — видих — і постріл на природній паузі, поки груди не рухаються.', 'Довго не затримуй дихання: через кілька секунд руки починають тремтіти — краще видихнути й почати знову. У тренажері це теж так.'])
+    + card('Спуск', p6, ['Палець — подушечкою першої фаланги на спусковому гачку.', 'Натискай плавно й прямо назад, не смикай. Постріл має статися «несподівано».', 'Після пострілу тримай приціл на цілі й відпускай гачок лише до клацання.'])
+    + card('Пристрілка коліматора (настанова)', '', ['Гвинт зверху — по висоті, гвинт справа — по горизонталі. Інструмент: монета, викрутка, гільза.', '1 клік = <b>16 мм на 100 м</b> (4 мм на 25 м, 32 мм на 200 м).', 'Точку влучання вгору — гвинт по висоті проти годинникової стрілки; вниз — за годинниковою. Вправо — гвинт горизонталі проти годинникової; вліво — за годинниковою.', 'Перевір пристрілку щонайменше трьома пострілами, потім переконайся, що приціл і кріплення надійно затягнуті.']);
+}
+
+// ═════════ Чищення зброї (п. 2.8 настанови) ═════════
+// [текст кроку, номер анімації на 3D-моделі або 0]
+const CLEAN_STEPS = [
+  ['Розрядити зброю (п. 2.3.1 настанови).', 0],
+  ['Прибрати бойові патрони з місця, де чистять.', 0],
+  ['Підготувати матеріали для чищення й змащування, оглянути приладдя.', 0],
+  ['Неповне розбирання. <b>Цівку не знімати.</b> Якщо цівка й простір між нею та стволом дуже брудні — продути стисненим повітрям. Газову трубку не чистять і не змащують.', 0],
+  ['Ствол чистять <b>лише з боку патронника</b>. Патч із засобом для чищення — на вішер, шомполом проштовхнути від патронника до дульного зрізу: так виходить бруд і дрібні абразивні частки.', 1],
+  ['Йорж для патронника із засобом — у патронник, кілька обертів за годинниковою стрілкою. Знову патч від патронника до дула. Патронник і муфту бойових упорів протерти ганчір’ям насухо.', 2],
+  ['Направляючу втулку — в патронник. Латунний йорж із засобом — <b>20 проходів</b> (прохід — від патронника до дула й назад). Залишити засіб у каналі на 15–20 хв. Йорж промити або знежирити: один латунний йорж — не більше 5 чищень.', 3],
+  ['Витягти втулку, 3–4 чисті патчі — канал ствола насухо.', 4],
+  ['Обміднення: втулку — в патронник, пластиковий йорж із засобом для видалення міді — 10–20 проходів, залишити на 10–20 хв, йорж промити. Потім 3–4 чисті патчі насухо. Раз на 1000 пострілів знімати дульні пристрої й чистити дульний зріз, потім протерти його насухо.', 5],
+  ['Затвор від’єднати від рами. Затвор і раму тонким шаром засобу на 5–10 хв, потім витерти насухо; сильне забруднення — пластикова щітка. Внутрішню частину рами біля кілець затвора — дерев’яною паличкою з ганчір’ям.', 6],
+  ['Змастити відбивач і викидач, перевірити, натиснувши на пружини. Ударник очистити, змастити й протерти насухо.', 7],
+  ['Верхню й нижню рами — ганчір’ям із засобом, у пазах дерев’яними паличками; 5–10 хв, потім насухо. Затворну затримку <b>не знімати</b>: при сильному забрудненні продути й змастити.', 8],
+  ['Газоблок: регулювальний гвинт <b>повністю не викручувати</b>. Засіб на різьбу, згодом — один оберт за годинниковою стрілкою й назад у початкове положення.', 0],
+  ['УСМ: трохи засобу на осі курка й спускового гачка та деталі вузла. Сильне забруднення — продути стисненим повітрям, змастити.', 9],
+  ['Трубу буфера обслуговують при кожному чищенні: буфер і пружину протерти насухо від пилу й бруду, змастити тонким шаром.', 10],
+  ['Пристрій зниження звуку пострілу не обслуговують. Якщо всередину потрапив сніг чи пісок — промити гасом і обов’язково продути.', 0],
+];
+// Малюнки до кроків чищення (власні схеми в стилі розділу «Кодекс»)
+const clSvg = (body, lbl = '') => `<svg class="sp cl-pic" viewBox="0 0 320 112" role="img" aria-label="${esc(lbl)}">${body}</svg>`;
+const STEEL = '#b8bdc2', BRASS = '#c9a24a', PLAS = '#3d7be0', WHITE = '#efece4', OIL = '#e0a92e', DIRT = '#6f6a5c';
+// ствол у розрізі: патронник ліворуч (x0), дуло праворуч (x1)
+const clBarrel = (x0, x1, y, mufta = true) => `<path d="M${x0} ${y - 13} H${x0 + 34} L${x0 + 42} ${y - 8} H${x1} V${y + 8} H${x0 + 42} L${x0 + 34} ${y + 13} H${x0} Z" fill="var(--sp-gun)" stroke="var(--sp-dim)" stroke-width="1"/>
+  <path d="M${x0} ${y - 6} H${x0 + 30} L${x0 + 36} ${y - 3} H${x1} V${y + 3} H${x0 + 36} L${x0 + 30} ${y + 6} H${x0} Z" fill="var(--sp-bg)"/>
+  ${mufta ? `<rect x="${x0 - 14}" y="${y - 16}" width="14" height="32" rx="2" fill="var(--sp-gun)" stroke="var(--sp-dim)"/>` : ''}
+  <text class="sm" x="${x0 + 6}" y="${y + 30}">патронник</text><text class="sm" x="${x1 - 30}" y="${y + 30}">дуло</text>`;
+const clRod = (x, y, len, tip) => `<g><rect x="${x - len - 26}" y="${y - 5}" width="26" height="10" rx="4" fill="#2a2d30" stroke="var(--sp-dim)"/><path d="M${x - len} ${y} H${x}" stroke="${STEEL}" stroke-width="3"/>${tip}</g>`;
+const clPatch = (x, y, c = WHITE) => `<rect x="${x - 2}" y="${y - 5}" width="9" height="10" rx="2" fill="${c}"/>`;
+const clBrush = (x, y, c, r = 5, n = 6) => `<g>${Array.from({ length: n }, (_, i) => `<path d="M${x + i * 3} ${y - r} V${y + r}" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/>`).join('')}</g>`;
+const clArrow = (x1, y, x2, both = false, c = 'var(--violet)') => `<g stroke="${c}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${x1} ${y} H${x2}"/><path d="M${x2 - 7} ${y - 5} L${x2} ${y} L${x2 - 7} ${y + 5}"/>${both ? `<path d="M${x1 + 7} ${y - 5} L${x1} ${y} L${x1 + 7} ${y + 5}"/>` : ''}</g>`;
+const clX = (x, y, s = 14) => `<g stroke="var(--bad)" stroke-width="4" stroke-linecap="round"><path d="M${x - s} ${y - s} L${x + s} ${y + s}M${x + s} ${y - s} L${x - s} ${y + s}"/></g>`;
+const clChip = (x, y, t, c = 'var(--violet)') => `<g><rect x="${x}" y="${y}" width="${t.length * 7 + 14}" height="20" rx="10" fill="none" stroke="${c}" stroke-width="1.5"/><text class="sm" x="${x + 7}" y="${y + 13.5}" style="fill:${c}">${t}</text></g>`;
+const clCarrier = (x, y) => `<g><rect x="${x}" y="${y - 12}" width="120" height="24" rx="6" fill="#4b4f55" stroke="var(--sp-dim)"/><rect x="${x + 72}" y="${y - 20}" width="30" height="9" rx="2" fill="#3d4045"/>${Array.from({ length: 6 }, (_, i) => `<rect x="${x + 24 + i * 6}" y="${y - 3}" width="3" height="6" fill="#2a2c30"/>`).join('')}</g>`;
+const clBolt = (x, y) => `<g><rect x="${x}" y="${y - 7}" width="60" height="14" rx="3" fill="#6b7077" stroke="var(--sp-dim)"/>${[0, 1, 2, 3].map(i => `<rect x="${x + 60}" y="${y - 9 + i * 5}" width="7" height="3" fill="#6b7077"/>`).join('')}<rect x="${x + 44}" y="${y - 12}" width="12" height="5" fill="#8a8f95"/></g>`;
+const clRag = (x, y, w = 40) => `<g><rect x="${x}" y="${y - 2}" width="${w}" height="16" rx="6" fill="${WHITE}" stroke="var(--sp-dim)"/><path d="M${x + 8} ${y + 1} q4 6 0 11 M${x + w / 2} ${y} q-4 7 1 12 M${x + w - 9} ${y + 1} q3 5 -1 11" stroke="#bdb8aa" stroke-width="1.4" fill="none"/></g>`;
+const clBottle = (x, y) => `<g transform="rotate(35 ${x} ${y})"><rect x="${x - 9}" y="${y - 30}" width="18" height="30" rx="4" fill="#2d6a3e"/><path d="M${x - 5} ${y} L${x} ${y + 12} L${x + 5} ${y} Z" fill="#2d6a3e"/></g>`;
+const clDrops = (x, y) => [0, 1, 2].map(i => `<circle class="cl-drop" style="animation-delay:${i * 0.45}s" cx="${x}" cy="${y}" r="3.2" fill="${OIL}"/>`).join('');
+const CLEAN_PICS = [
+  // 1 розрядити
+  clSvg(`<g transform="translate(40 30)">${clCarrier(0, 26)}</g><rect x="96" y="70" width="34" height="34" rx="4" fill="var(--sp-gun)" stroke="var(--sp-dim)" class="cl-out"/>${clChip(180, 20, 'МАГАЗИН — ВІД’ЄДНАТИ')}${clChip(180, 50, 'ПАТРОННИК — ПЕРЕВІРИТИ')}${clChip(180, 80, 'КУРОК — СПУСТИТИ')}`, 'Розрядити зброю'),
+  // 2 патрони геть
+  clSvg(`${Array.from({ length: 5 }, (_, i) => `<g transform="translate(${40 + i * 18} 40)"><rect width="10" height="34" rx="2" fill="${BRASS}"/><path d="M0 0 Q5 -12 10 0Z" fill="#a8653a"/></g>`).join('')}${clArrow(140, 57, 210)}<rect x="220" y="34" width="62" height="46" rx="6" fill="none" stroke="var(--sp-dim)" stroke-dasharray="5 4"/><text class="sm" x="226" y="96">окремо</text>`, 'Прибрати патрони'),
+  // 3 приладдя
+  clSvg(`${clRod(250, 30, 190, clPatch(250, 30))}<g transform="translate(40 58)">${clBrush(0, 0, BRASS)}${clBrush(40, 0, PLAS)}${clBrush(80, 0, BRASS, 9, 5)}</g><rect x="150" y="50" width="16" height="30" rx="4" fill="#2d6a3e"/><rect x="180" y="52" width="16" height="28" rx="4" fill="#7a5c2c"/>${clRag(215, 64, 44)}<path d="M40 92 H120" stroke="#a07a4a" stroke-width="3"/><text class="sm" x="40" y="106">йоржі · мастило · ганчір’я · палички</text>`, 'Приладдя'),
+  // 4 цівку не знімати
+  clSvg(`<rect x="40" y="40" width="240" height="30" rx="6" fill="var(--sp-tan)"/>${Array.from({ length: 7 }, (_, i) => `<rect x="${58 + i * 30}" y="50" width="18" height="10" rx="5" fill="var(--sp-bg)"/>`).join('')}${clX(160, 55, 20)}<text class="sm" x="40" y="96">цівку не знімати · газову трубку не чистити</text>`, 'Цівку не знімати'),
+  // 5 патч від патронника до дула
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-push">${clRod(100, 50, 90, clPatch(100, 50, DIRT))}</g>${clArrow(140, 18, 260)}`, 'Патч від патронника до дула'),
+  // 6 йорж для патронника
+  clSvg(`${clBarrel(70, 300, 50)}<g>${clRod(98, 50, 90, '')}<g class="cl-spin" style="transform-origin:110px 50px">${clBrush(92, 50, BRASS, 9, 8)}</g></g><path d="M126 22 a14 14 0 1 1 -4 -2" stroke="var(--violet)" stroke-width="2.5" fill="none"/><path d="M118 16 l6 4 -6 4" stroke="var(--violet)" stroke-width="2.5" fill="none"/>${clChip(150, 2, 'ЗА ГОДИННИКОВОЮ')}`, 'Йорж для патронника'),
+  // 7 латунний йорж 20 проходів
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-pass">${clRod(150, 50, 140, clBrush(150, 50, BRASS))}</g>${clArrow(120, 18, 270, true)}${clChip(196, 80, '20 ПРОХОДІВ')}`, 'Латунний йорж'),
+  // 8 чисті патчі насухо
+  clSvg(`${clBarrel(70, 300, 50)}<g class="cl-push">${clRod(100, 50, 90, clPatch(100, 50))}</g>${[0, 1, 2, 3].map(i => clPatch(230 + i * 14, 92)).join('')}<text class="sm" x="160" y="104">3–4 патчі</text>`, 'Чисті патчі насухо'),
+  // 9 обміднення
+  clSvg(`${clBarrel(70, 300, 50)}<path d="M110 47 H296 M110 53 H296" stroke="#b56a3a" stroke-width="2" stroke-dasharray="6 9"/><g class="cl-pass">${clRod(150, 50, 140, clBrush(150, 50, PLAS))}</g>${clArrow(120, 18, 270, true)}${clChip(186, 80, '10–20 ПРОХОДІВ')}`, 'Обміднення'),
+  // 10 затвор і рама
+  clSvg(`${clCarrier(30, 46)}${clBolt(200, 46)}<g class="cl-wipe">${clRag(46, 22, 44)}</g><path d="M70 92 L140 70" stroke="#a07a4a" stroke-width="4" stroke-linecap="round"/><text class="sm" x="150" y="96">паличка з ганчір’ям</text>`, 'Затвор і рама'),
+  // 11 відбивач, викидач, ударник
+  clSvg(`${clBolt(110, 66)}${clBottle(200, 26)}${clDrops(186, 46)}<rect x="40" y="88" width="80" height="4" rx="2" fill="${STEEL}"/><text class="sm" x="40" y="106">ударник: очистити, змастити, насухо</text>`, 'Змащування затвора'),
+  // 12 рами
+  clSvg(`<path d="M30 40 H170 V60 H120 L110 72 H60 L50 60 H30 Z" fill="var(--sp-tan)"/><path d="M180 30 H300 V58 H180 Z" fill="var(--sp-tan)"/><g class="cl-wipe">${clRag(40, 18, 44)}</g><rect x="58" y="48" width="12" height="8" fill="var(--sp-gun)"/>${clChip(180, 76, 'ЗАТРИМКУ НЕ ЗНІМАТИ', 'var(--bad)')}`, 'Рами'),
+  // 13 газоблок
+  clSvg(`<rect x="40" y="46" width="250" height="12" fill="var(--sp-gun)"/><rect x="120" y="30" width="60" height="40" rx="4" fill="#3d4045" stroke="var(--sp-dim)"/><circle cx="150" cy="30" r="8" fill="${STEEL}"/><path d="M146 30 h8" stroke="#2a2d30" stroke-width="2"/><path d="M168 14 a18 18 0 1 1 -30 0" stroke="var(--violet)" stroke-width="2.5" fill="none"/><text class="sm" x="196" y="22">1 оберт і назад</text>${clChip(190, 76, 'НЕ ВИКРУЧУВАТИ', 'var(--bad)')}`, 'Газоблок'),
+  // 14 УСМ
+  clSvg(`<path d="M40 30 H260 V80 H40 Z" fill="var(--sp-tan)" opacity=".35"/><path d="M150 70 l-30 -30 l20 -6 l26 30 z" fill="#9aa0a6"/><circle cx="160" cy="62" r="5" fill="var(--sp-gun)"/><path d="M90 66 h60 l-6 30 h-10 z" fill="#4f5359"/><circle cx="110" cy="66" r="5" fill="var(--sp-gun)"/>${clBottle(210, 10)}${clDrops(196, 30)}<text class="sm" x="40" y="104">осі курка й спускового гачка</text>`, 'УСМ'),
+  // 15 буфер і пружина
+  clSvg(`<path d="M30 56 ${Array.from({ length: 22 }, (_, i) => `L${36 + i * 8} ${i % 2 ? 44 : 68}`).join(' ')}" stroke="${STEEL}" stroke-width="2.5" fill="none"/><rect x="220" y="42" width="70" height="28" rx="6" fill="#a0a6ac"/><circle cx="292" cy="56" r="8" fill="#3d7be0"/><g class="cl-wipe">${clRag(40, 22, 44)}</g>`, 'Буфер і пружина'),
+  // 16 ПЗРЗП
+  clSvg(`<rect x="60" y="34" width="180" height="44" rx="10" fill="#3a3d42" stroke="var(--sp-dim)"/><rect x="30" y="46" width="30" height="20" fill="var(--sp-gun)"/><text class="sm" x="72" y="100">лише якщо всередині сніг чи пісок — гас, продути</text>`, 'ПЗРЗП'),
+];
+let cleanCur = 0;
+function cleanShow(n, row) {
+  cleanCur = n; const f = $('m3d');
+  try { f.contentWindow.postMessage({ type: 'uar-clean', n }, location.origin); } catch (e) { /* модель ще вантажиться */ }
+  document.querySelectorAll('.cl-steps li').forEach(li => li.classList.toggle('on', li === row));
+}
+function cleanView() {
+  setBar('Чищення зброї');
+  app.innerHTML = `<div class="law clv">
+    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі. Свайп — повернути стіл, двома пальцями — наблизити.</span></p></div>
+    <section class="art"><h3>Коли чистити</h3><ul>
+      <li>Після стрільби — одразу на стрільбищі: ствольну коробку, канал ствола й затвор. Остаточно — після повернення і ще 2–3 доби щодня.</li>
+      <li>Після наряду чи занять у полі без стрільби — після повернення.</li>
+      <li>У бою й на довгих навчаннях — щодня в перервах; якщо зброю не застосовували — щонайменше раз на тиждень.</li>
+      <li>У кімнаті зберігання зброї — щонайменше раз на 3 місяці, навіть якщо не користувались.</li></ul></section>
+    <section class="art"><h3>Приладдя</h3><ul>
+      <li>Нейтральне мастило — чищення й змащування (від −50 до +50 °C). Лужне мастило або засіб від нагару — для каналу ствола та деталей, на які діють гази.</li>
+      <li>Шомпол і шомпол для патронника; вішер для патчів; протирка для ганчір’я.</li>
+      <li>Йоржі латунний і пластиковий для ствола, йорж для патронника; патчі — лише для каналу ствола.</li>
+      <li>Ганчір’я, щітка, дерев’яні палички для пазів і отворів.</li></ul></section>
+    <section class="art"><h3>Порядок чищення</h3>
+      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span>${n ? `<i>${svg('play')}</i>` : '<i></i>'}${CLEAN_PICS[i] || ''}</li>`).join('')}</ol></section>
+    <section class="art"><h3>Змащування</h3><ul>
+      <li>Одразу після чищення, лише на чисту суху поверхню — щоб волога не діяла на метал.</li>
+      <li>При +5 °C і нижче — лише універсальний засіб або нейтральне мастило. Змінюєш тип мастила — ретельно прибери старе.</li>
+      <li>Зброю, внесену з морозу в тепло, чистити не раніше ніж через 10–20 хв, коли висохне конденсат.</li></ul></section>
+    <section class="art warn"><h3>Заборонено</h3><ul>
+      <li>Абразиви: наждачний папір, пісок тощо.</li>
+      <li>Гострі й тверді предмети, сталеві щітки та йоржі.</li>
+      <li>Знімати цівку, демонтувати затворну затримку, повністю викручувати гвинт газоблока.</li></ul></section>
+    <p class="src">Завжди чисти від казенної частини до дульної — за напрямком руху кулі. Чищення — під керівництвом командира (інструктора): він визначає обсяг, перевіряє якість і дає дозвіл на змащування та збирання. Джерело: Настанова щодо експлуатування UAR-15, п. 2.8.</p>
+  </div>`;
+  $('m3d').addEventListener('load', () => setTimeout(() => { const row = document.querySelector('.cl-steps li[data-n="1"]'); cleanShow(1, row); }, 400));
+}
+
 const ROUTES = {
   '': home, ttx: cards, table, parts,
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
-  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, safe: safeView, law: lawView, 'law-test': lawTest,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, aim: aimView, clean: cleanView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
 // Статистика (GoatCounter, без cookies): шлемо перегляд розділу напряму, без стороннього скрипта
 let gcLast = null;
@@ -1656,6 +1923,10 @@ document.addEventListener('click', e => {
     case 'card-prev': cardGo(-1); break;
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
+    case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : k === 'hint' ? v === 'true' : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; if (k === 'mode') AIM_ST.drill = null; aimControls(); aimInfo(); aimSync(); break; }
+    case 'clean-show': cleanShow(+t.dataset.n, t); break;
+    case 'aim-tab': aimTab = t.dataset.v; { const v = document.querySelector('.aimv'); v.dataset.tab = aimTab; v.querySelectorAll('.aim-tabs .btn').forEach(b => b.setAttribute('aria-pressed', String(b === t))); } window.scrollTo(0, 0); break;
+    case 'aim-fire': aimSend({ fire: true }); break;
     case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;
     case 'law-next': L.i++; L.chosen = null; lawRender(); window.scrollTo(0, 0); break;
     case 'law-again': lawTest(); window.scrollTo(0, 0); break;
