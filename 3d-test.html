@@ -1225,7 +1225,7 @@ function aimDrillNext(start) {
   const d = AIM.drill; if (d.i >= d.n) { aimPost({ type: 'uar-aim-drill', done: true, hits: d.hits, shots: d.shots, n: d.n, sec: Math.round((performance.now() - d.t0) / 1000) }); return; }
   const D = DRILL_D[Math.floor(Math.random() * DRILL_D.length)], z = (Math.random() * 2 - 1) * 45;   // до 45 см убік — мішень одразу у збільшеному вікні
   AIM.dist = D; d.tries = 0; aimClearHits(); aimTargetPlace(D * 100, z, SIGHT_Y); AIM.up = 0; AIM.rise = performance.now() + 500;
-  if (aimHintMark) aimHintMark.visible = false; aimInset.querySelector('span').textContent = `ціль ${d.i + 1} з ${d.n}`;
+  if (aimHintMark) aimHintMark.visible = false; aimInset.querySelector('span').textContent = `ціль ${d.i + 1} з ${d.n} · ${D} м`;
   aimPost({ type: 'uar-aim-drill', i: d.i + 1, n: d.n, dist: D, hits: d.hits, shots: d.shots });
 }
 const aimPost = m => { try { parent.postMessage(m, location.origin); } catch (e) {} };
