@@ -70,6 +70,8 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 [data-embed="dims"] .hint { display:none; }
 [data-embed="aim"] .tabs, [data-embed="aim"] .panel, [data-embed="aim"] .hint { display:none !important; }
 [data-embed="aim"] .stage { height:100vh; border-radius:0; }
+[data-embed="clean"] .tabs, [data-embed="clean"] .panel, [data-embed="clean"] .hint { display:none !important; }
+[data-embed="clean"] .stage { height:100vh; }
 .aim-inset { position:absolute; pointer-events:none; border:2px solid rgba(255,255,255,.85); border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,.4); }
 .aim-inset span { position:absolute; left:6px; bottom:4px; font:600 11px/1 var(--display); color:#fff; text-shadow:0 1px 2px #000; letter-spacing:.5px; }
 .labels { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
@@ -1209,9 +1211,61 @@ function aimRender() {
   Object.assign(aimInset.style, { width: sz + 'px', height: sz + 'px', right: '10px', top: '10px' });
 }
 
+// ── Чищення (embed=clean): розібрана гвинтівка й приладдя (п. 2.8 настанови) ──
+const CLEAN = { on: EMB === 'clean', n: 0, t0: 0 };
+const tools = new THREE.Group(); tools.visible = false; scene.add(tools);
+const TM = { steel: M(0xb8bdc2, { metalness: 0.8, roughness: 0.35 }), handle: M(0x2a2d30, { roughness: 0.7 }), brass: M(0xc9a24a, { metalness: 0.8, roughness: 0.4 }),
+  plastic: M(0x2f6fd0, { roughness: 0.6 }), patch: M(0xf1eee6, { roughness: 1 }), dirty: M(0x5d5a52, { roughness: 1 }), rag: M(0xe8e3d6, { roughness: 1 }),
+  oil: new THREE.MeshStandardMaterial({ color: 0xd9a531, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.85 }), bottle: M(0x2d6a3e, { roughness: 0.5 }) };
+const mk = (g, m) => new THREE.Mesh(g, m);
+// шомпол: стрижень уздовж +x, кінчик у x = 0, ручка позаду
+function rodWith(tip) { const g = new THREE.Group(); g.add(mk(cylX(0.17, 62, -31, 0), TM.steel), mk(cylX(0.6, 9, -66, 0), TM.handle)); g.add(tip); tools.add(g); return g; }
+const patchTip = (() => { const g = new THREE.Group(); g.add(mk(cylX(0.27, 1.6, 0.8, 0), TM.patch)); return g; })();
+const bristles = (r, len, mat) => { const g = new THREE.Group(); g.add(mk(cylX(r * 0.35, len + 0.6, len / 2, 0), TM.steel));
+  for (let i = 0; i < 9; i++) g.add(mk(new THREE.TorusGeometry(r * 0.75, r * 0.28, 6, 14).rotateY(Math.PI / 2).translate(0.3 + i * len / 9, 0, 0), mat)); return g; };
+const rodPatch = rodWith(patchTip), rodBrass = rodWith(bristles(0.3, 3, TM.brass)), rodPlastic = rodWith(bristles(0.3, 3, TM.plastic));
+const chBrush = (() => { const g = new THREE.Group(); g.add(mk(cylX(0.16, 22, -11, 0), TM.steel), mk(new THREE.TorusGeometry(1.4, 0.25, 8, 20).rotateY(Math.PI / 2).translate(-22, 0, 0), TM.handle));
+  g.add(bristles(0.72, 2.4, TM.brass)); tools.add(g); return g; })();
+const rag = mk(new THREE.BoxGeometry(4.2, 0.35, 3.2), TM.rag); tools.add(rag);
+const bottle = (() => { const g = new THREE.Group(); g.add(mk(cylY(1.1, 4.2, 0, 2.6), TM.bottle), mk(new THREE.ConeGeometry(0.5, 1.4, 12).rotateX(Math.PI).translate(0, -0.2, 0), TM.bottle)); tools.add(g); return g; })();
+const drops = Array.from({ length: 3 }, () => { const d = mk(new THREE.SphereGeometry(0.22, 10, 8), TM.oil); tools.add(d); return d; });
+const ALLT = [rodPatch, rodBrass, rodPlastic, chBrush, rag, bottle, ...drops];
+// де лежать деталі в розібраному стані (крок 16 неповного розбирання)
+const wp = id => posAt(id, STEPS.length, new THREE.Vector3());
+const tri = u => 1 - Math.abs(((u % 2) + 2) % 2 - 1);   // 0→1→0
+// анімації: кожна повертає, куди дивитися камері
+const CLEAN_ANIM = {
+  patch: (t, dirty) => { const B = wp('barrel'), x = -6 + ((t / 3.4) % 1) * 64; rodPatch.visible = true; rodPatch.position.set(B.x + x, B.y, B.z);
+    patchTip.children[0].material = dirty ? TM.dirty : TM.patch; patchTip.visible = x < 55.5; return [B.x + 26, B.y, 0, 44]; },
+  chamber: t => { const B = wp('barrel'); chBrush.visible = true; chBrush.position.set(B.x + 17.2 + 1.2 * tri(t / 0.8), B.y, B.z); chBrush.rotation.x = t * 9; return [B.x + 14, B.y, 0, 18]; },
+  brass: t => { const B = wp('barrel'); rodBrass.visible = true; rodBrass.position.set(B.x + 20 + 33 * tri(t / 1.6), B.y, B.z); return [B.x + 30, B.y, 0, 40]; },
+  copper: t => { const B = wp('barrel'); rodPlastic.visible = true; rodPlastic.position.set(B.x + 20 + 33 * tri(t / 1.6), B.y, B.z); return [B.x + 30, B.y, 0, 40]; },
+  bolt: t => { const C = wp('carrier'); rag.visible = true; rag.position.set(C.x + 4 + 12 * tri(t / 1.2), C.y + 1.45, C.z); rag.rotation.z = 0; return [C.x + 9, C.y, 0, 20]; },
+  oil: t => { const Bo = wp('bolt'); bottle.visible = true; bottle.position.set(Bo.x + 16, Bo.y + 3.2, 0); bottle.rotation.z = 0.5;
+    drops.forEach((d, i) => { const k = ((t + i * 0.45) % 1.35) / 1.35; d.visible = true; d.position.set(Bo.x + 15.4 - 1.5 * k, Bo.y + 2.5 - 1.8 * k * k, 0); d.scale.setScalar(k > 0.92 ? 1.6 : 1); }); return [Bo.x + 15, Bo.y + 1, 0, 14]; },
+  frame: t => { rag.visible = true; rag.rotation.z = Math.PI / 2; rag.position.set(3 + 14 * tri(t / 1.4), -4.6, 2.3); return [10, -4, 0, 26]; },
+  buffer: t => { const S = wp('spring'); rag.visible = true; rag.rotation.z = 0; rag.position.set(S.x - 16 + 13 * tri(t / 1.3), S.y + 1.4, 0); return [S.x - 9, S.y, 0, 24]; },
+  fcg: t => { bottle.visible = true; bottle.position.set(12.5, 1.6, 2.6); bottle.rotation.z = 0.5;
+    const P = [[10.43, -3.85], [8.35, -4.6], [10.43, -3.85]]; drops.forEach((d, i) => { const k = ((t + i * 0.45) % 1.35) / 1.35, [x, y] = P[i]; d.visible = true; d.position.set(12 + (x - 12) * k, 1.0 + (y - 1.0) * k, 2.2 - 0.6 * k); }); return [9.5, -3, 0, 18]; },
+};
+const CLEAN_STEP = { 1: 'patch', 2: 'chamber', 3: 'brass', 4: 'patch', 5: 'copper', 6: 'bolt', 7: 'oil', 8: 'frame', 9: 'fcg', 10: 'buffer' };
+function cleanTick(now) {
+  for (const o of ALLT) o.visible = false; patchTip.visible = true;
+  const a = CLEAN_ANIM[CLEAN_STEP[CLEAN.n]]; if (!a) return;
+  const f = a((now - CLEAN.t0) / 1000, CLEAN.n === 1);
+  if (CLEAN.cam !== CLEAN.n) { CLEAN.cam = CLEAN.n; dT.set(f[0], f[1], f[2]); const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); dDist = Math.max(f[3] / (half * camera.aspect), f[3] * 0.6 / half); dDir.copy(SIDE); auto = true; }
+}
+function cleanSet(n) {
+  CLEAN.n = n; CLEAN.t0 = performance.now(); CLEAN.cam = -1;
+  // для чищення УСМ і рам корпус прозорий
+  setXray(n === 9 || n >= 1 && n <= 5); for (const p of Object.values(parts)) p.mat.emissive.setHex(0x000000);
+}
+if (CLEAN.on) { mode = 'steps'; step = STEPS.length; tools.visible = true; }
+
 new ResizeObserver(resize).observe(stage);
 resize(); paint();
 if (AIM.on) aimSetup();
+if (CLEAN.on) { for (const id in parts) sC[id] = STEPS.length; cleanSet(1); }
 
 let lastT = 0;
 renderer.setAnimationLoop(() => {
@@ -1239,11 +1293,13 @@ renderer.setAnimationLoop(() => {
     camera.position.copy(controls.target).add(dir.multiplyScalar(len + (dDist - len) * 0.09));
     if (controls.target.distanceTo(dT) < 0.02 && Math.abs(len - dDist) < 0.05 && dir.angleTo(dDir) < 0.01) auto = false;
   }
+  if (CLEAN.on) cleanTick(performance.now());
   if (AIM.on) { aimTick(); aimRender(); } else { controls.update(); renderer.render(scene, camera); }
   if (tags.length) placeTags();
 });
 // Навчальна сторінка керує кроком розбирання
 window.addEventListener('message', e => {
+  if (e.origin === location.origin && e.data && e.data.type === 'uar-clean' && CLEAN.on) { cleanSet(e.data.n | 0); return; }
   if (e.origin === location.origin && e.data && e.data.type === 'uar-aim' && AIM.on) {
     const d = e.data; if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUp = d.sight === 'iron' ? 1 : 0; } if (d.dist) AIM.dist = d.dist; if (d.hold) AIM.hold = d.hold;
     if (d.fire) aimFire(); else aimApply(); return; }

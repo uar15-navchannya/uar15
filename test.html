@@ -353,6 +353,13 @@ p { margin: 0; }
 .aseg.dist .btn { font-size:13px; min-height:38px; }
 @media (max-width:480px) { .aseg.dist { grid-template-columns:repeat(5, 1fr); } }
 .aseg .btn[aria-pressed="true"] { background:var(--violet); border-color:var(--violet); color:#fff; }
+.cl-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.cl-steps li { display:grid; grid-template-columns:26px 1fr auto; gap:8px; align-items:start; padding:8px; border-radius:10px; border:1px solid transparent; line-height:1.45; }
+.cl-steps li > b { font:600 15px/1.45 var(--display); color:var(--violet); }
+.cl-steps li[data-act] { cursor:pointer; background:color-mix(in srgb, var(--violet) 8%, transparent); }
+.cl-steps li i { color:var(--violet); width:22px; height:22px; } .cl-steps li i .i { width:22px; height:22px; }
+.cl-steps li.on { border-color:var(--violet); }
+.art.warn { border-color:var(--bad); } .art.warn h3 { color:var(--bad); }
 .aim-res { font-weight:600; } .aim-res.ok { color:var(--good, #6fbf73); } .aim-res.bad { color:var(--bad); }
 .m3d-nav { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; margin-top:6px; }
 .m3d-nav .btn { min-height:44px; font-size:15px; }
@@ -780,6 +787,7 @@ function home() {
       ${tile('quiz', 'test', 'Тест · 10 питань', 'ТТХ і будова, 4 варіанти')}
       ${tile('replay', 'review', 'Повтор помилок', due > 0 ? `пора повторити: ${due}` : 'поки нічого — повтор через 1, 3 і 7 днів', due === 0, due > 0 ? due : 0)}
       ${tile('target', 'aim', 'Прицілювання', 'вигляд з прицілу: 25–400 м, куди цілитися')}
+      ${tile('brush', 'clean', 'Чищення зброї', 'коли й як чистити, 16 кроків, показ на 3D-моделі')}
       ${tile('photo', 'guide', 'Порядок неповного розбирання', '5 етапів, 12 фото, озвучка, показ на 3D-моделі')}
       ${tile('list', 'guide-as', 'Порядок збирання', '11 кроків з озвучкою і показом на 3D-моделі')}
       ${tile('watch', 'drill-dis', 'Розбирання на час', best(bd))}
@@ -958,7 +966,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-050212';
+const APP_V = '20261118-050622';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1681,10 +1689,65 @@ window.addEventListener('message', e => {
   AIM_ST.shots++; if (e.data.hit) AIM_ST.hits++; AIM_ST.last = e.data; aimInfo();
 });
 
+// ═════════ Чищення зброї (п. 2.8 настанови) ═════════
+// [текст кроку, номер анімації на 3D-моделі або 0]
+const CLEAN_STEPS = [
+  ['Розрядити зброю (п. 2.3.1 настанови).', 0],
+  ['Прибрати бойові патрони з місця, де чистять.', 0],
+  ['Підготувати матеріали для чищення й змащування, оглянути приладдя.', 0],
+  ['Неповне розбирання. <b>Цівку не знімати.</b> Якщо цівка й простір між нею та стволом дуже брудні — продути стисненим повітрям. Газову трубку не чистять і не змащують.', 0],
+  ['Ствол чистять <b>лише з боку патронника</b>. Патч із засобом для чищення — на вішер, шомполом проштовхнути від патронника до дульного зрізу: так виходить бруд і дрібні абразивні частки.', 1],
+  ['Йорж для патронника із засобом — у патронник, кілька обертів за годинниковою стрілкою. Знову патч від патронника до дула. Патронник і муфту бойових упорів протерти ганчір’ям насухо.', 2],
+  ['Направляючу втулку — в патронник. Латунний йорж із засобом — <b>20 проходів</b> (прохід — від патронника до дула й назад). Залишити засіб у каналі на 15–20 хв. Йорж промити або знежирити: один латунний йорж — не більше 5 чищень.', 3],
+  ['Витягти втулку, 3–4 чисті патчі — канал ствола насухо.', 4],
+  ['Обміднення: втулку — в патронник, пластиковий йорж із засобом для видалення міді — 10–20 проходів, залишити на 10–20 хв, йорж промити. Потім 3–4 чисті патчі насухо. Раз на 1000 пострілів знімати дульні пристрої й чистити дульний зріз, потім протерти його насухо.', 5],
+  ['Затвор від’єднати від рами. Затвор і раму тонким шаром засобу на 5–10 хв, потім витерти насухо; сильне забруднення — пластикова щітка. Внутрішню частину рами біля кілець затвора — дерев’яною паличкою з ганчір’ям.', 6],
+  ['Змастити відбивач і викидач, перевірити, натиснувши на пружини. Ударник очистити, змастити й протерти насухо.', 7],
+  ['Верхню й нижню рами — ганчір’ям із засобом, у пазах дерев’яними паличками; 5–10 хв, потім насухо. Затворну затримку <b>не знімати</b>: при сильному забрудненні продути й змастити.', 8],
+  ['Газоблок: регулювальний гвинт <b>повністю не викручувати</b>. Засіб на різьбу, згодом — один оберт за годинниковою стрілкою й назад у початкове положення.', 0],
+  ['УСМ: трохи засобу на осі курка й спускового гачка та деталі вузла. Сильне забруднення — продути стисненим повітрям, змастити.', 9],
+  ['Трубу буфера обслуговують при кожному чищенні: буфер і пружину протерти насухо від пилу й бруду, змастити тонким шаром.', 10],
+  ['Пристрій зниження звуку пострілу не обслуговують. Якщо всередину потрапив сніг чи пісок — промити гасом і обов’язково продути.', 0],
+];
+let cleanCur = 0;
+function cleanShow(n, row) {
+  cleanCur = n; const f = $('m3d');
+  try { f.contentWindow.postMessage({ type: 'uar-clean', n }, location.origin); } catch (e) { /* модель ще вантажиться */ }
+  document.querySelectorAll('.cl-steps li').forEach(li => li.classList.toggle('on', li === row));
+}
+function cleanView() {
+  setBar('Чищення зброї');
+  app.innerHTML = `<div class="law clv">
+    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі</span></p></div>
+    <section class="art"><h3>Коли чистити</h3><ul>
+      <li>Після стрільби — одразу на стрільбищі: ствольну коробку, канал ствола й затвор. Остаточно — після повернення і ще 2–3 доби щодня.</li>
+      <li>Після наряду чи занять у полі без стрільби — після повернення.</li>
+      <li>У бою й на довгих навчаннях — щодня в перервах; якщо зброю не застосовували — щонайменше раз на тиждень.</li>
+      <li>У кімнаті зберігання зброї — щонайменше раз на 3 місяці, навіть якщо не користувались.</li></ul></section>
+    <section class="art"><h3>Приладдя</h3><ul>
+      <li>Нейтральне мастило — чищення й змащування (від −50 до +50 °C). Лужне мастило або засіб від нагару — для каналу ствола та деталей, на які діють гази.</li>
+      <li>Шомпол і шомпол для патронника; вішер для патчів; протирка для ганчір’я.</li>
+      <li>Йоржі латунний і пластиковий для ствола, йорж для патронника; патчі — лише для каналу ствола.</li>
+      <li>Ганчір’я, щітка, дерев’яні палички для пазів і отворів.</li></ul></section>
+    <section class="art"><h3>Порядок чищення</h3>
+      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span>${n ? `<i>${svg('play')}</i>` : ''}</li>`).join('')}</ol></section>
+    <section class="art"><h3>Змащування</h3><ul>
+      <li>Одразу після чищення, лише на чисту суху поверхню — щоб волога не діяла на метал.</li>
+      <li>При +5 °C і нижче — лише універсальний засіб або нейтральне мастило. Змінюєш тип мастила — ретельно прибери старе.</li>
+      <li>Зброю, внесену з морозу в тепло, чистити не раніше ніж через 10–20 хв, коли висохне конденсат.</li></ul></section>
+    <section class="art warn"><h3>Заборонено</h3><ul>
+      <li>Абразиви: наждачний папір, пісок тощо.</li>
+      <li>Гострі й тверді предмети, сталеві щітки та йоржі.</li>
+      <li>Знімати цівку, демонтувати затворну затримку, повністю викручувати гвинт газоблока.</li></ul></section>
+    <p class="src">Завжди чисти від казенної частини до дульної — за напрямком руху кулі. Чищення — під керівництвом командира (інструктора): він визначає обсяг, перевіряє якість і дає дозвіл на змащування та збирання. Джерело: Настанова щодо експлуатування UAR-15, п. 2.8.</p>
+  </div>`;
+  $('m3d').addEventListener('load', () => setTimeout(() => { const row = document.querySelector('.cl-steps li[data-n="1"]'); cleanShow(1, row); }, 400));
+}
+
 const ROUTES = {
   '': home, ttx: cards, table, parts,
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
-  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, aim: aimView, safe: safeView, law: lawView, 'law-test': lawTest,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, aim: aimView, clean: cleanView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
 function route() {
   closeZoom();
@@ -1717,6 +1780,7 @@ document.addEventListener('click', e => {
     case 'card-next': cardGo(1); break;
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
     case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; aimControls(); aimInfo(); aimSend(); break; }
+    case 'clean-show': cleanShow(+t.dataset.n, t); break;
     case 'aim-fire': aimSend({ fire: true }); break;
     case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;
     case 'law-next': L.i++; L.chosen = null; lawRender(); window.scrollTo(0, 0); break;
