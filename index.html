@@ -1005,7 +1005,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-132413';
+const APP_V = '20261118-132720';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1900,6 +1900,15 @@ const ROUTES = {
 };
 // Статистика (GoatCounter, без cookies): шлемо перегляд розділу напряму, без стороннього скрипта
 let gcLast = null;
+/* ?nostat — цей пристрій більше не рахується; ?stat — знову рахується */
+let gcOff = false;
+try {
+  const sp = new URLSearchParams(location.search);
+  if (sp.has('nostat')) localStorage.setItem('uar15_nostat', '1');
+  if (sp.has('stat')) localStorage.removeItem('uar15_nostat');
+  gcOff = localStorage.getItem('uar15_nostat') === '1';
+  if (sp.has('nostat') || sp.has('stat')) { sp.delete('nostat'); sp.delete('stat'); history.replaceState(null, '', location.pathname + (sp.toString() ? '?' + sp : '') + location.hash); }
+} catch (e) { /* без сховища */ }
 function gcSend(p, t, ev) {
   try {
     const q = new URLSearchParams({ p, t, r: ev ? '' : (document.referrer || ''), s: `${screen.width},${screen.height},${devicePixelRatio || 1}`, rnd: Math.random().toString(36).slice(2) });
@@ -1921,7 +1930,7 @@ function gcDevice() {
 }
 function gcCount() {
   const path = '/uar15/' + (view || '');
-  if (path === gcLast || /^(localhost|127\.)/.test(location.hostname) || location.protocol === 'file:') return;
+  if (gcOff || path === gcLast || /^(localhost|127\.)/.test(location.hostname) || location.protocol === 'file:') return;
   gcLast = path;
   gcDevice();
   try {
