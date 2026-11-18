@@ -328,8 +328,8 @@ part('optic', 'Коліматорний приціл', [
   box(5.0, 0.32, 2.3, OPT_X + 0.1, 3.34), box(4.6, 0.25, 2.7, OPT_X + 0.1, 3.6),
   [cylZ(0.95, 1.1, OPT_X + 0.1, 3.3, -1.95), RUB], [cylZ(0.75, 0.5, OPT_X + 0.1, 3.3, -2.75), M(0x3a3d42, { roughness: 0.6 })], [cylZ(0.2, 1.4, OPT_X + 0.1, 3.3, -1.0), SCREW],
   // лінзи
-  [cylX(1.62, 0.04, OPT_X - 5.5, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0x8fb0b8, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false })],
-  [cylX(1.8, 0.04, OPT_X + 4.9, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0xb05040, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.22, depthWrite: false })],
+  [cylX(1.62, 0.04, OPT_X - 5.5, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0x8fb0b8, metalness: 0, roughness: 0.1, transparent: true, opacity: 0.1, depthWrite: false, envMapIntensity: 0.15 })],
+  [cylX(1.8, 0.04, OPT_X + 4.9, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0xb05040, metalness: 0, roughness: 0.1, transparent: true, opacity: 0.2, depthWrite: false, envMapIntensity: 0.15 })],
 ], M(0x24272b, { roughness: 0.55, metalness: 0.35 }), [0, 14, 0]);
 // Механічні прицільні пристрої (рис. 2, поз. 3): відкидні цілик і мушка
 const RS_X = 1.4, FS_X = 46.9;
@@ -365,8 +365,13 @@ const leafF = (() => { const g = new THREE.Group(); g.position.set(FS_X - 0.6, H
   const drum = new THREE.Mesh(cylY(0.32, 0.22, 0, 0.62), parts.fsight.mat); drum.userData.part = 'fsight'; g.add(drum);
   parts.fsight.group.add(g); return g; })();
 // режим прицілу: 'red' — коліматор, 'iron' — коліматор знято; механіка розкладена (у прицілюванні з коліматора цілик складено, щоб не заступав)
-let sightMode = 'red', leafUp = 1, leafUpR = 1;
-function setSights(m) { sightMode = m; parts.optic.group.visible = m === 'red'; }
+let sightMode = 'red', leafUp = 0, optOn = 1;   // leafUp: 0 — механіка складена, 1 — розкладена; optOn: 1 — коліматор на планці
+function setSights(m, now) { sightMode = m; if (now) { optOn = m === 'red' ? 1 : 0; leafUp = 1 - optOn; } }
+// світна точка в коліматорі: видно крізь окуляр
+const optDot = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,250,245,1)'); g.addColorStop(0.15, 'rgba(255,40,30,1)'); g.addColorStop(0.45, 'rgba(255,0,0,.35)'); g.addColorStop(1, 'rgba(255,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  sp.position.set(OPT_X - 5.45, SIGHT_Y, 0); sp.scale.setScalar(1.0); sp.renderOrder = 15; sp.userData.part = 'optic'; parts.optic.group.add(sp); return sp; })();
 let coverOpen = false, coverTouched = null;
 let stockExt = false; const stockTv = new THREE.Vector3();
 // Що видно у вікні викидання: затворна рама (коли вона в рамі верхній) або темний отвір
@@ -582,6 +587,7 @@ function lightStep() {
   for (const id of lit) parts[id].mat.emissive.setHex(0x7a3200);
 }
 function focusStep() {
+  if (EMB === 'clean') return;
   let ids = null;
   if (step > 0) ids = asm ? ASM_FOCUS[step] : [...new Set(STEPS[step - 1][1].flatMap(m => m[0]))];
   const b = new THREE.Box3();
@@ -687,7 +693,6 @@ function paint() {
   shotMode(mode === 'shot');
   $('panel-view').hidden = mode !== 'view'; $('panel-steps').hidden = mode !== 'steps'; $('panel-bcg').hidden = mode !== 'bcg';
   for (const p of Object.values(parts)) p.group.visible = mode !== 'bcg' || p.id in BCG_EXPLODE;
-  if (mode !== 'bcg') parts.optic.group.visible = sightMode === 'red';
   const f = mode === 'bcg' ? { t: [10, 0.5, 0], w: 16.5, h: 9 } : mode === 'shot' ? { t: [22, -5, 0], w: 45, h: 14 } : BASE;
   if (f.w !== frame.w) { frame = f; controls.target.set(...f.t); if (mode === 'shot') camera.position.set(f.t[0] + 0.12, f.t[1] + 0.1, f.t[2] + 1); resize(); }
   if (mode === 'steps') {
@@ -727,7 +732,7 @@ $('next').onclick = () => { if (step < STEPS.length) { step++; paint(); } };
 // ── Номери частин (як у списку «Будова») і розміри з таблиці ТТХ ──
 const NUM = { barrel: 1, handguard: 2, carrier: 3, upper: 4, ch: 5, stock: 6, lower: 7, grip: 8, buffer: 9, spring: 10, sling: 11, mag: 12 };
 // 13 — руків'я перенесення вогню, 14 — передня антабка
-NUM.fgrip = 13; NUM.fsling = 14;
+NUM.fgrip = 13; NUM.fsling = 14; NUM.optic = 15;
 const tags = [];   // { el, at() } — підписи, що йдуть за деталями
 function setPicked(id, notify) {
   if (picked) parts[picked].mat.emissive.setHex(0x000000);
@@ -743,7 +748,7 @@ const CTRL = [
   [4, 'Рама верхня', 'upper', [6, 1.4, 1.5]], [5, 'Кнопка досилача', 'upper', [0.3, -0.15, 2.5]], [6, 'Приклад', 'stock', [-18, -4.5, 1.6]],
   [7, 'Кнопка застібки магазина', 'lower', [12.4, -3.8, 1.75]], [8, 'Руків’я перезаряджання', 'ch', [-0.7, 2.1, 2.2]], [9, 'Затворна затримка', 'lower', [13.1, -2.0, -1.85]],
   [10, 'Магазин', 'mag', [17, -14, 1.2]], [11, 'Перевідник вогню', 'lower', [5.6, -3.4, 1.75]], [12, 'Спусковий гачок', 'trigger', [9.3, -6.6, 0.3]],
-  [13, 'Пістолетне руків’я', 'grip', [3.3, -11, 1.5]], [14, 'Антабка', 'sling', [-1.07, -2.75, 0.7]],
+  [13, 'Пістолетне руків’я', 'grip', [3.3, -11, 1.5]], [14, 'Антабка', 'sling', [-1.07, -2.75, 0.7]], [15, 'Коліматорний приціл', 'optic', [OPT_X + 1, SIGHT_Y + 2.2, 0]],
 ];
 const NUMNAME = { carrier: 'Затворна рама з затвором', sling: 'Антабка задня', fsling: 'Антабка передня' };
 // Точки кріплення ременя
@@ -872,6 +877,7 @@ function resize() {
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
   if (EMB_AIM) return;
+  if (EMB === 'clean') { cleanCam(); return; }
   const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const dist = Math.max(frame.w / (half * camera.aspect), frame.h / half);
   const dir = camera.position.clone().sub(controls.target);
@@ -1384,25 +1390,43 @@ function cleanLayout(dt) {
   for (const [id, p] of Object.entries(parts)) {
     const want = up.has(id) ? 1 : 0, cur = CLEAN.lift[id] ?? 0, nxt = cur + (want - cur) * Math.min(1, dt * 5);
     CLEAN.lift[id] = nxt; const [x, y] = CLAY[id] || [0, 0];
-    p.group.position.set(x, y, nxt * LIFT); p.group.rotation.x = -0.35 * nxt;
+    // деталь, з якою працюємо, підіймаємо й підносимо ближче — на вільне місце перед собою
+    const dm = CLEAN.demo || [0, 0];
+    p.group.position.set(x + dm[0] * nxt, y + dm[1] * nxt, nxt * LIFT); p.group.rotation.x = 0;
   }
+}
+// зсув групи деталей кроку: центр групи — у зону перед глядачем (x ≈ 18, y ≈ −24)
+function cleanDemo(ids) {
+  const b = new THREE.Box3(); for (const id of ids) if (BOX[id]) b.union(BOX[id].clone().translate(new THREE.Vector3(...(CLAY[id] || [0, 0]), 0)));
+  const c = b.getCenter(new THREE.Vector3()), [x0, y0] = CLAY[ids[0]] || [0, 0];
+  return [16 - c.x, -28 - c.y];
 }
 function cleanTick(now) {
   for (const o of ALLT) { o.visible = false; o.rotation.set(0, 0, 0); } patchTip.visible = true;
   const a = CLEAN_ANIM[CLEAN_STEP[CLEAN.n]]; if (!a) return;
   const f = a.f((now - CLEAN.t0) / 1000, CLEAN.n === 1);
-  if (CLEAN.cam !== CLEAN.n && (now - CLEAN.t0) > 300) { CLEAN.cam = CLEAN.n; dT.set(f[0], f[1], f[2]); const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); dDist = Math.max(f[3] / 2 / (half * camera.aspect), f[3] * 0.32 / half); dDir.copy(CL_DIR); auto = true; }
+  if (false) { CLEAN.cam = CLEAN.n; dT.set(f[0], f[1], f[2]); const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)); dDist = Math.max(f[3] / 2 / (half * camera.aspect), f[3] * 0.32 / half); dDir.copy(CL_DIR); auto = true; }
+}
+// погляд сидячи за столом: стіл перед нами, дальній край — угорі кадру
+function cleanCam() {
+  const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  controls.target.set(18, -6, TABLE_Z);
+  const dir = new THREE.Vector3(0, -0.85, 1).normalize(), dist = Math.max(46 / (half * camera.aspect), 34 / half);
+  camera.position.copy(controls.target).addScaledVector(dir, dist); controls.update();
 }
 function cleanSet(n) {
   CLEAN.n = n; CLEAN.t0 = performance.now(); CLEAN.cam = -1;
+  const a = CLEAN_ANIM[CLEAN_STEP[n]]; CLEAN.demo = a ? cleanDemo(a.lift) : [0, 0];
+  for (const id in CLEAN.lift) CLEAN.lift[id] = 0;
   setXray(n === 9); for (const p of Object.values(parts)) p.mat.emissive.setHex(0x000000);
 }
 if (CLEAN.on) {
   mode = 'steps'; step = STEPS.length; tools.visible = true;
   tableMesh = new THREE.Group();
-  const top = mk(new THREE.BoxGeometry(170, 110, 2), M(0x6e5136, { roughness: 0.8 })); top.position.set(20, 5, TABLE_Z - 1.2);
-  const mat = mk(new THREE.BoxGeometry(100, 62, 0.3), M(0x3f4a33, { roughness: 1 })); mat.position.set(22, 4, TABLE_Z);
+  const top = mk(new THREE.BoxGeometry(300, 240, 2), M(0x7a5a3a, { roughness: 0.75 })); top.position.set(18, 0, TABLE_Z - 1.2);
+  const mat = mk(new THREE.BoxGeometry(110, 82, 0.3), M(0x3f4a33, { roughness: 1 })); mat.position.set(18, -2, TABLE_Z);
   tableMesh.add(top, mat); scene.add(tableMesh);
+
 }
 
 new ResizeObserver(resize).observe(stage);
@@ -1412,7 +1436,11 @@ if (CLEAN.on) { for (const id in parts) sC[id] = STEPS.length; cleanSet(1); }
 
 let lastT = 0;
 renderer.setAnimationLoop(() => {
-  leafUpR += ((AIM.on && sightMode === 'red' ? 0 : 1) - leafUpR) * 0.15; leafR.rotation.z = -(1 - leafUpR) * Math.PI / 2; leafF.rotation.z = 0;
+  // зняття / встановлення коліматора: спершу знімається приціл, потім розкладаються цілик і мушка; назад — навпаки
+  { const k = 0.09, wantO = sightMode === 'red' && leafUp < 0.03 ? 1 : 0, wantL = sightMode === 'iron' && optOn < 0.03 ? 1 : 0;
+    optOn += Math.max(-k, Math.min(k, wantO - optOn)); leafUp += Math.max(-k * 1.4, Math.min(k * 1.4, wantL - leafUp));
+    const e = optOn * optOn * (3 - 2 * optOn), l = leafUp * leafUp * (3 - 2 * leafUp);
+    leafR.rotation.z = -(1 - l) * Math.PI / 2; leafF.rotation.z = (1 - l) * Math.PI / 2; }
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
   if (mode !== 'shot') { const now = performance.now(), want = hammerFired && now >= hammerAt ? HAM_F : HAM_C; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === HAM_F ? 0.45 : 0.15); }
@@ -1429,6 +1457,10 @@ renderer.setAnimationLoop(() => {
     p.group.position.copy(tgt);
   }
   if (CLEAN.on) cleanLayout(dt);
+  // точку видно, лише коли дивимось у окуляр приблизно вздовж осі прицілу (як у справжньому коліматорі)
+  { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
+    optDot.visible = v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
+  { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg'; og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
   if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
@@ -1448,7 +1480,7 @@ window.addEventListener('message', e => {
     const d = e.data;
     if (d.fire) { aimFire(); return; }
     if (d.breath !== undefined) { AIM.breath = !!d.breath; return; }
-    if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUpR = d.sight === 'iron' ? 1 : 0; }
+    if (d.sight && d.sight !== sightMode) { setSights(d.sight, true); }
     if (d.dist) AIM.dist = d.dist; if (d.mode) AIM.mode = d.mode; if (d.hint !== undefined) AIM.hint = !!d.hint;
     aimApply(); return; }
   if (e.origin !== location.origin || !e.data) return;
