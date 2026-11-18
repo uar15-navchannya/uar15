@@ -86,6 +86,8 @@ input[type=range] { flex:1; accent-color:var(--orange); height:32px; }
 .aim-inset.ok { border-color:#34d399; box-shadow:0 0 0 3px #34d399, 0 2px 10px rgba(0,0,0,.4); }
 .aim-tick { position:absolute; right:6px; top:4px; font:700 28px/1 sans-serif; color:#34d399; text-shadow:0 1px 3px #000; opacity:0; transition:opacity .15s; }
 .aim-inset.ok .aim-tick { opacity:1; }
+.aim-tube { position:absolute; inset:0; pointer-events:none; z-index:1; }
+.hud { z-index:3; } .aim-inset, .aim-ok { z-index:2; }
 .aim-inset span { position:absolute; left:6px; bottom:4px; font:600 11px/1 var(--display); color:#fff; text-shadow:0 1px 2px #000; letter-spacing:.5px; }
 .labels { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
 .lb { position:absolute; transform:translate(-50%,-50%); min-width:22px; height:22px; padding:0 5px; border:0; border-radius:11px; background:var(--orange); color:#000; font:700 13px/22px var(--display); text-align:center; pointer-events:auto; cursor:pointer; box-shadow:0 0 0 2px rgba(16,21,13,.7); }
@@ -1329,6 +1331,19 @@ function aimTick() {
     const tol = 3 + 0.04 * AIM.dist, ok = AIM.up > 0.95 && Math.hypot(lz, ly + AIM_DROP[AIM.dist]) < tol;
     if (ok !== aimOk) { aimOk = ok; aimOkEl.classList.toggle('on', ok); aimInset.classList.toggle('ok', ok); if (aimHintMark) aimHintMark.children.forEach(m => m.material.color.setHex(ok ? 0x34d399 : 0xffd23f)); aimPost({ type: 'uar-aim-ok', ok }); } }
 }
+// Корпус коліматора у прицілюванні — пласке кільце окуляра й об’єктива поверх кадру: стабільно, без мерехтіння на телефонах
+const tubeV = new THREE.Vector3();
+function aimTube(w, h) {
+  const el = aimTubeEl || (aimTubeEl = Object.assign(document.createElement('div'), { className: 'aim-tube' }));
+  if (!el.parentNode) stage.insertBefore(el, aimInset);
+  el.style.display = sightMode === 'red' ? 'block' : 'none'; if (sightMode !== 'red') return;
+  const proj = (x, r) => { tubeV.set(x, SIGHT_Y, 0); aimRig.localToWorld(tubeV); const d = tubeV.distanceTo(camera.position); tubeV.project(camera);
+    const pxRad = h / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))); return [(tubeV.x + 1) / 2 * w, (1 - tubeV.y) / 2 * h, r / d * pxRad]; };
+  const [ex, ey, er] = proj(OPT_X - 5.6, 2.1), [ox, oy, or] = proj(OPT_X + 5.1, 1.75);
+  // кільце об’єктива (чітке), напівпрозора труба між об’єктивом і окуляром (обидва ока відкриті), край окуляра
+  el.style.background = `radial-gradient(circle at ${ox}px ${oy}px, rgba(160,200,215,.07) ${or - 1}px, rgba(20,22,25,.85) ${or}px, rgba(20,22,25,.85) ${or + 6}px, rgba(20,22,25,.3) ${or + 7}px, rgba(20,22,25,.3) ${er - 14}px, rgba(20,22,25,.7) ${er - 13}px, rgba(20,22,25,.7) ${er}px, transparent ${er + 1}px)`;
+}
+let aimTubeEl = null;
 function aimRender() {
   const w = stage.clientWidth, h = stage.clientHeight, sz = Math.round(Math.min(w, h) * 0.42);
   // яскравість 1–16 (як перемикач CompM4s): тьмяна — дрібна й бліда; денна — чітка; максимум — розпливається
@@ -1337,7 +1352,7 @@ function aimRender() {
     const px = Math.max(5, 0.00058 / 0.8 * pxRad) * (0.8 + b * 0.02 + Math.max(0, b - 12) * 0.12);
     aimDot.scale.setScalar(px / pxRad * d); aimDot.material.opacity = Math.min(1, 0.35 + b * 0.065);
     aimDotFar.material.opacity = Math.max(0.6, aimDot.material.opacity); aimDotFar.scale.setScalar(aimTarget.position.x * 0.058 / 100 / 0.8 * (1 + Math.max(0, b - 12) * 0.12)); }
-  renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera);
+  renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera); aimTube(w, h);
   // збільшене вікно з мішенню — у правому верхньому куті
   aimCam.aspect = 1; aimCam.updateProjectionMatrix();
   renderer.setScissorTest(true); renderer.setScissor(w - sz - 10, h - sz - 10, sz, sz); renderer.setViewport(w - sz - 10, h - sz - 10, sz, sz);
@@ -1530,7 +1545,7 @@ renderer.setAnimationLoop(() => {
   // точку видно, лише коли дивимось у окуляр приблизно вздовж осі прицілу (як у справжньому коліматорі)
   { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
     optDot.visible = !AIM.on && v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
-  { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg'; og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
+  { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg' && !AIM.on; /* у прицілюванні корпус — пласке кільце */ og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
   if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
     controls.target.lerp(dT, 0.09);
