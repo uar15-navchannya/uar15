@@ -997,7 +997,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-095632';
+const APP_V = '20261118-100742';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1086,7 +1086,7 @@ function playStep(kind, n, all) {
   }
   if (kind === 'dis' || kind === 'as') { modelStep(n, kind); gStep = n; modelPos(); }
   if (kind === 'clean' && el && el.dataset.n) cleanShow(+el.dataset.n, el);
-  $('player-text').textContent = `${VOICE_NAME[kind]} ${n} з ${VOICE_STEPS[kind]}`;
+  $('player-text').textContent = kind === 'clean' ? (n >= 3 && n <= 18 ? `Чищення · крок ${n - 2} з 16` : `Чищення · ${{ 1: 'коли чистити', 2: 'приладдя', 19: 'змащування', 20: 'заборонено' }[n]}`) : `${VOICE_NAME[kind]} ${n} з ${VOICE_STEPS[kind]}`;
   $('player').hidden = false;
   paintListen();
   stepAudio.onended = () => {
