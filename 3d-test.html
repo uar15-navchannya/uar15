@@ -1445,24 +1445,29 @@ function cleanCam() {
   const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), W = CLEAN.want || [18.5, -4, 100];
   const fr = CLEAN.fr || (CLEAN.fr = W.slice()); for (let i = 0; i < 3; i++) fr[i] += (W[i] - fr[i]) * 0.06;
   const dist = Math.max(fr[2] / 2 / (half * camera.aspect), fr[2] * 0.36 / half) * CLEAN.zoom;
-  const dir = new THREE.Vector3(0, -0.5, 1).normalize().applyAxisAngle(new THREE.Vector3(0, 0, 1), CLEAN.az), focus = new THREE.Vector3(fr[0], fr[1], TABLE_Z);
+  const dir = new THREE.Vector3(0, -0.5, 1).normalize().applyAxisAngle(new THREE.Vector3(0, 0, 1), CLEAN.az), focus = new THREE.Vector3(fr[0] + CLEAN.px, fr[1] + CLEAN.py, TABLE_Z);
+  CLEAN.span = 2 * dist * half * camera.aspect;
   camera.up.set(0, 0, 1); camera.position.copy(focus).addScaledVector(dir, dist); camera.lookAt(focus);
   controls.enabled = false;
 }
-if (CLEAN.on) { CLEAN.az = 0; CLEAN.zoom = 1;
-  const pts = new Map(); let pinch0 = 0, zoom0 = 1;
+// Керування столом: один палець — пересувати стіл (огляд будь-якої деталі), два пальці — щипок наближає, поворот пальців крутить стіл
+if (CLEAN.on) { CLEAN.az = 0; CLEAN.zoom = 1; CLEAN.px = 0; CLEAN.py = 0;
+  const pts = new Map(); let g0 = null;
+  const two = () => { const [a, b] = [...pts.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), ang: Math.atan2(b.y - a.y, b.x - a.x) }; };
+  const clampPan = () => { CLEAN.px = THREE.MathUtils.clamp(CLEAN.px, -70, 70); CLEAN.py = THREE.MathUtils.clamp(CLEAN.py, -45, 45); };
   stage.style.touchAction = 'none';
   stage.addEventListener('pointerdown', e => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); stage.setPointerCapture(e.pointerId);
-    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = CLEAN.zoom; } });
+    if (pts.size === 2) { const t = two(); g0 = { d: t.d, ang: t.ang, zoom: CLEAN.zoom, az: CLEAN.az }; } });
   stage.addEventListener('pointermove', e => { const p = pts.get(e.pointerId); if (!p) return;
-    if (pts.size === 1) CLEAN.az = THREE.MathUtils.clamp(CLEAN.az - (e.clientX - p.x) * 0.006, -1.2, 1.2);
-    p.x = e.clientX; p.y = e.clientY;
-    if (pts.size === 2 && pinch0) { const [a, b] = [...pts.values()]; CLEAN.zoom = THREE.MathUtils.clamp(zoom0 * pinch0 / Math.max(20, Math.hypot(a.x - b.x, a.y - b.y)), 0.35, 1.15); } });
-  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = 0; }; stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
-  stage.addEventListener('wheel', e => { e.preventDefault(); CLEAN.zoom = THREE.MathUtils.clamp(CLEAN.zoom * Math.exp(e.deltaY * 0.001), 0.35, 1.15); }, { passive: false });
+    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (pts.size === 1) { const k = (CLEAN.span || 100) / stage.clientWidth, c = Math.cos(CLEAN.az), s = Math.sin(CLEAN.az);
+      CLEAN.px -= (dx * c + dy * s) * k; CLEAN.py -= (dx * s - dy * c) * k * 1.3; clampPan(); }
+    else if (pts.size === 2 && g0) { const t = two(); CLEAN.zoom = THREE.MathUtils.clamp(g0.zoom * g0.d / Math.max(20, t.d), 0.25, 1.15); CLEAN.az = g0.az - (t.ang - g0.ang); } });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) g0 = null; }; stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+  stage.addEventListener('wheel', e => { e.preventDefault(); if (e.shiftKey) CLEAN.az += e.deltaY * 0.003; else CLEAN.zoom = THREE.MathUtils.clamp(CLEAN.zoom * Math.exp(e.deltaY * 0.001), 0.25, 1.15); }, { passive: false });
 }
 function cleanSet(n) {
-  CLEAN.n = n; CLEAN.t0 = performance.now(); CLEAN.cam = -1;
+  CLEAN.n = n; CLEAN.t0 = performance.now(); CLEAN.cam = -1; CLEAN.px = CLEAN.py = 0;
   const a = CLEAN_ANIM[CLEAN_STEP[n]]; CLEAN.demo = a ? cleanDemo(a.lift) : [0, 0];
   for (const id in CLEAN.lift) CLEAN.lift[id] = 0;
   // ствол і раму показуємо прозорими, щоб було видно шомпол і патч усередині

@@ -992,7 +992,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-094224';
+const APP_V = '20261118-094550';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1850,7 +1850,7 @@ function cleanShow(n, row) {
 function cleanView() {
   setBar('Чищення зброї');
   app.innerHTML = `<div class="law clv">
-    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі. Свайп — повернути стіл, двома пальцями — наблизити.</span></p></div>
+    <div class="m3d-stick">${m3d('clean', '')}<p class="m3d-cap"><span>Торкнись кроку з ▶ — покажу на моделі. Одним пальцем — пересувати стіл, двома — наблизити й повернути.</span></p></div>
     <section class="art"><h3>Коли чистити</h3><ul>
       <li>Після стрільби — одразу на стрільбищі: ствольну коробку, канал ствола й затвор. Остаточно — після повернення і ще 2–3 доби щодня.</li>
       <li>Після наряду чи занять у полі без стрільби — після повернення.</li>
