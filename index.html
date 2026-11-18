@@ -1005,7 +1005,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-121239';
+const APP_V = '20261118-132413';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1900,10 +1900,30 @@ const ROUTES = {
 };
 // Статистика (GoatCounter, без cookies): шлемо перегляд розділу напряму, без стороннього скрипта
 let gcLast = null;
+function gcSend(p, t, ev) {
+  try {
+    const q = new URLSearchParams({ p, t, r: ev ? '' : (document.referrer || ''), s: `${screen.width},${screen.height},${devicePixelRatio || 1}`, rnd: Math.random().toString(36).slice(2) });
+    if (ev) q.set('e', 'true');
+    const img = new Image(); img.referrerPolicy = 'no-referrer-when-downgrade'; img.src = 'https://ivanruten.goatcounter.com/count?' + q;
+  } catch (e) { /* лічильник недоступний — сайт працює без нього */ }
+}
+/* Унікальні пристрої: анонімна позначка в браузері; «new-device» — раз за весь час, «day-device» — раз на добу (за київським часом) */
+let gcDevDone = false;
+function gcDevice() {
+  if (gcDevDone) return; gcDevDone = true;
+  let seen = null, day = null;
+  try { seen = localStorage.getItem('uar15_dev'); day = localStorage.getItem('uar15_dev_day'); } catch (e) { return; /* без сховища не рахуємо, щоб не завищувати */ }
+  let today; try { today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Kyiv' }); } catch (e) { today = new Date().toISOString().slice(0, 10); }
+  try {
+    if (!seen) { localStorage.setItem('uar15_dev', Math.random().toString(36).slice(2) + Date.now().toString(36)); if (localStorage.getItem('uar15_dev')) gcSend('new-device', 'Новий пристрій', true); }
+    if (day !== today) { localStorage.setItem('uar15_dev_day', today); if (localStorage.getItem('uar15_dev_day') === today) gcSend('day-device', 'Пристрій за день', true); }
+  } catch (e) { /* сховище заповнене — пропускаємо */ }
+}
 function gcCount() {
   const path = '/uar15/' + (view || '');
   if (path === gcLast || /^(localhost|127\.)/.test(location.hostname) || location.protocol === 'file:') return;
   gcLast = path;
+  gcDevice();
   try {
     const q = new URLSearchParams({ p: path, t: document.title, r: document.referrer || '', s: `${screen.width},${screen.height},${devicePixelRatio || 1}`, rnd: Math.random().toString(36).slice(2) });
     const img = new Image(); img.referrerPolicy = 'no-referrer-when-downgrade'; img.src = 'https://ivanruten.goatcounter.com/count?' + q;
