@@ -456,7 +456,7 @@ p { margin: 0; }
 
 <div id="sgt" class="sgt" hidden aria-live="polite">
   <button class="sgt-in" data-act="sgt-close" aria-label="Закрити">
-    <img id="sgt-img" src="img/sgt/calm.png" alt="">
+    <img id="sgt-img" src="img/sgt/calm.webp" alt="">
     <span class="t"><span class="who">Сержант Андрій</span><p id="sgt-text"></p></span>
   </button>
 </div>
@@ -689,8 +689,8 @@ const svg = name => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICO
 const zimg = (src, photo, size, alt) =>
   `<button class="zimg${photo ? ' photo' : ''}${size ? ' ' + size : ''}" data-act="zoom" data-src="${src}" data-photo="${photo ? 1 : 0}" aria-label="Збільшити: ${esc(alt)}">`
   + `<img src="${src}" alt="${esc(alt)}" loading="lazy"><span class="zbadge">${svg('zoom')}Збільшити</span></button>`;
-const stepImg = n => `img/step_${pad(n)}.jpg`;
-const SCHEME = 'img/scheme.jpg';
+const stepImg = n => `img/step_${pad(n)}.webp`;
+const SCHEME = 'img/scheme.webp';
 
 function setBar(title) {
   $('title').textContent = title;
@@ -754,7 +754,7 @@ document.addEventListener('pointerdown', sfxInit, { once: true, capture: true })
 let audio = null, sgtTimer = null;
 const recent = { good: [], bad: [] };
 function showSgt(text, mood, ms) {
-  $('sgt-img').src = `img/sgt/${mood}.png`;
+  $('sgt-img').src = `img/sgt/${mood}.webp`;
   $('sgt-text').textContent = text;
   $('sgt').hidden = false;
   clearTimeout(sgtTimer);
@@ -814,7 +814,7 @@ function home() {
       <div><span>Будова ${progress(m, 'p:')}%</span><div class="meter"><i style="--p:${progress(m, 'p:')}%"></i></div></div>
     </div>
     <div class="coach">
-      <video id="coach-v" src="img/sgt/idle.mp4" poster="img/sgt/idle.jpg" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-label="Сержант Андрій"></video>
+      <video id="coach-v" src="img/sgt/idle.mp4" poster="img/sgt/idle.webp" autoplay muted loop playsinline preload="auto" disablepictureinpicture aria-label="Сержант Андрій"></video>
       <div><div class="who">Сержант Андрій</div>
       <p>Помилки повторюємо завтра, правильні відповіді — через 1, 3 і 7 днів. Прогрес зберігається в цьому браузері.</p></div>
     </div>
@@ -1005,8 +1005,14 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-135007';
+const APP_V = '20261118-141941';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
+/* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
+addEventListener('load', () => setTimeout(() => {
+  try { if (navigator.connection && navigator.connection.saveData) return; } catch (e) { /* немає API */ }
+  const go = () => ['vendor/three.module.min.js', 'vendor/OrbitControls.js'].forEach(u => fetch(u, { credentials: 'same-origin' }).catch(() => { /* офлайн — нічого */ }));
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 4000 }); else go();
+}, 1500));
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
   modelWant = n; if (kind) modelKind = kind;
