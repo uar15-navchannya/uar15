@@ -1161,7 +1161,7 @@ function aimSetup() {
   // тому корпус коліматора напівпрозорий; скло окуляра з легким блакитним відтінком
   parts.optic.group.traverse(o => { if (!o.isMesh || o === optDot) return; const lens = o.geometry.type === 'CylinderGeometry' && o.geometry.parameters.height < 0.05;
     o.material = lens ? new THREE.MeshBasicMaterial({ color: 0x9fc4d6, transparent: true, opacity: 0.1, depthWrite: false })
-      : Object.assign(o.material.clone(), { transparent: true, opacity: 0.45, depthWrite: false }); });
+      : Object.assign(o.material.clone(), { transparent: true, opacity: 0.45, depthWrite: true, side: THREE.FrontSide }); if (!lens) o.renderOrder = 5; });   // запис глибини — без мерехтіння
   // руки: ліва долоня обхоплює цівку знизу, права — пістолетне руків’я; рукави
   const GLOVE = M(0x3a3f30, { roughness: 0.9 }), SLEEVE = M(0x5f6a48, { roughness: 0.95 });
   const limb = (a, b, r, mat) => { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), L = A.distanceTo(B);
@@ -1201,7 +1201,7 @@ function aimSetup() {
   g2.addColorStop(0, 'rgba(255,150,130,1)'); g2.addColorStop(0.12, 'rgba(255,40,25,1)'); g2.addColorStop(0.4, 'rgba(255,20,10,.95)'); g2.addColorStop(0.5, 'rgba(255,0,0,.25)'); g2.addColorStop(1, 'rgba(255,0,0,0)');
   x2.fillStyle = g2; x2.fillRect(0, 0, 64, 64); const sharpTex = new THREE.CanvasTexture(c2);
   aimDot.material.map = sharpTex; aimDot.material.needsUpdate = true; aimDot.position.set(OPT_X + 25, SIGHT_Y, 0); aimDot.userData.px = 9;
-  aimDotFar = new THREE.Sprite(new THREE.SpriteMaterial({ map: sharpTex, depthTest: false, transparent: true }));   // на мішені — чисто червона, без змішування з фоном aimDotFar.renderOrder = 21; aimDotFar.layers.set(2); aimRig.add(aimDotFar);
+  aimDotFar = new THREE.Sprite(new THREE.SpriteMaterial({ map: sharpTex, depthTest: false, transparent: true })); /* на мішені — чисто червона */ aimDotFar.renderOrder = 21; aimDotFar.layers.set(2); aimRig.add(aimDotFar);
   camera.layers.enable(1);
   aimCam = new THREE.PerspectiveCamera(1, 1, 50, 200000); aimCam.layers.enable(2); scene.add(aimCam);
   aimOkEl = document.createElement('div'); aimOkEl.className = 'aim-ok'; aimOkEl.textContent = '✓ Наведено правильно'; stage.appendChild(aimOkEl);   // збільшене вікно не смикається від віддачі
@@ -1297,8 +1297,9 @@ function aimTick() {
   const now = performance.now();
   if (!aimHintMark) { aimHintMark = new THREE.Group(); const mm = new THREE.MeshBasicMaterial({ color: 0xffd23f, side: THREE.DoubleSide });
     // точка, куди цілитися: хрест і кільце
-    aimHintMark.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.9, 9), mm), new THREE.Mesh(new THREE.BoxGeometry(0.4, 9, 0.9), mm),
-      new THREE.Mesh(new THREE.RingGeometry(5.2, 6.2, 32).rotateY(Math.PI / 2), mm)); aimTarget.add(aimHintMark); aimApply(); }
+    // кільце з рисками зовні — центр вільний, щоб було видно червону точку
+    aimHintMark.add(new THREE.Mesh(new THREE.RingGeometry(5.2, 6.2, 32).rotateY(Math.PI / 2), mm),
+      ...[[0, 8], [0, -8], [8, 0], [-8, 0]].map(([z, y]) => new THREE.Mesh(new THREE.BoxGeometry(0.4, y ? 3.6 : 0.9, z ? 3.6 : 0.9).translate(0, y, z), mm))); aimTarget.add(aimHintMark); aimApply(); }
   const dtA = Math.min(0.05, (now - (AIM.last || now)) / 1000); AIM.last = now; AIM.t += dtA;
   for (let i = AIM.pend.length - 1; i >= 0; i--) if (now >= AIM.pend[i].at) { aimLand(AIM.pend[i]); AIM.pend.splice(i, 1); }
   for (const h of AIM.hits) if (h.userData.dust) { const k = (now - h.userData.dust) / 900; h.material.opacity = Math.max(0, 0.8 * (1 - k)); h.scale.setScalar(1 + k); }
@@ -1333,7 +1334,7 @@ function aimRender() {
   // яскравість 1–16 (як перемикач CompM4s): тьмяна — дрібна й бліда; денна — чітка; максимум — розпливається
   // розмір точки — справжні 2 MOA (≈ 0,58 мрад) відносно цілі, але не менше 3 px, щоб її було видно на екрані
   { const b = AIM.bright, d = aimDot.position.distanceTo(camera.position), pxRad = h / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
-    const px = Math.max(3, 0.00058 / 0.8 * pxRad) * (0.8 + b * 0.02 + Math.max(0, b - 12) * 0.12);
+    const px = Math.max(5, 0.00058 / 0.8 * pxRad) * (0.8 + b * 0.02 + Math.max(0, b - 12) * 0.12);
     aimDot.scale.setScalar(px / pxRad * d); aimDot.material.opacity = Math.min(1, 0.35 + b * 0.065);
     aimDotFar.material.opacity = Math.max(0.6, aimDot.material.opacity); aimDotFar.scale.setScalar(aimTarget.position.x * 0.058 / 100 / 0.8 * (1 + Math.max(0, b - 12) * 0.12)); }
   renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera);
