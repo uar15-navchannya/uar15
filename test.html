@@ -986,7 +986,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-062106';
+const APP_V = '20261118-062637';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
@@ -1675,7 +1675,7 @@ function aimInfo() {
   }
   const dd = AIM_ST.dist, dr = AIM_DROP[dd];
   el.innerHTML = `<p><b>${dd} м.</b> ${dr === 0 ? 'Дистанція пристрілки: куля йде точно в точку прицілювання.' : `Куля пройде на <b>${Math.abs(dr).toString().replace('.', ',')} см нижче</b> точки прицілювання.`}</p>
-    <p>${esc(aimHint(dd))}${AIM_ST.hint ? ' Жовтий хрестик на мішені — туди й наводь.' : ''}</p>
+    <p>${esc(aimHint(dd))} Жовте кільце з хрестом на мішені — туди й наводь. Наведеш правильно — загориться зелена галочка.</p>
     ${AIM_ST.last ? `<p class="aim-res ${AIM_ST.last.hit ? 'ok' : 'bad'}">${AIM_ST.last.hit ? 'Влучання' : AIM_ST.last.board ? 'Промах — у щит поза фігурою' : 'Промах — куля пішла в землю перед мішенню'} · ${AIM_ST.hits} з ${AIM_ST.shots}</p><p class="muted small">${esc(aimMiss(AIM_ST.last))}</p>` : ''}`;
 }
 function aimSeg(name, cur, items) { return `<div class="aseg" role="group">${items.map(([v, t]) => `<button class="btn" data-act="aim-set" data-k="${name}" data-v="${v}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`; }
@@ -1683,7 +1683,7 @@ function aimControls() {
   $('aim-ctl').innerHTML = `${aimSeg('mode', AIM_ST.mode, [['train', 'Тренування'], ['drill', 'Вправа']])}
     ${aimSeg('sight', AIM_ST.sight, [['red', 'Коліматор'], ['iron', 'Механічний']])}
     ${AIM_ST.mode === 'train' ? `<div class="aseg dist">${Object.keys(AIM_DROP).map(d => `<button class="btn" data-act="aim-set" data-k="dist" data-v="${d}" aria-pressed="${+d === AIM_ST.dist}">${d}</button>`).join('')}</div>
-    ${aimSeg('hint', String(AIM_ST.hint), [['true', 'Підказка: так'], ['false', 'Без підказки']])}` : ''}
+` : ''}
     <div class="aseg"><button class="btn" id="aim-breath">Затримати дихання</button><button class="btn primary" data-act="aim-fire">Постріл</button></div>`;
   const b = $('aim-breath'), on = v => e => { e.preventDefault(); b.classList.toggle('held', v); aimSend({ breath: v }); };
   b.addEventListener('pointerdown', on(true)); for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, on(false));
