@@ -775,7 +775,7 @@ function say(kind) {
   } catch (err) { /* звук недоступний — лишається текст */ }
 }
 // Усі відповіді тесту неправильні — окрема фраза сержанта (запис Ростислава)
-const SGT_ZERO = 'Ви шо, дуба… шо?!';
+const SGT_ZERO = 'Ви що, довбо... би чи що?';
 function sayZero() {
   showSgt(SGT_ZERO, 'facepalm', 6000);
   if (!voiceOn) return;
@@ -1004,7 +1004,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-101545';
+const APP_V = '20261118-101758';
 const m3d = (mode, cls) => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 let modelWant = 0, modelKind = 'dis';
 function modelStep(n, kind) {
