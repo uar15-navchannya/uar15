@@ -331,7 +331,7 @@ part('optic', 'Коліматорний приціл', [
   [cylX(1.62, 0.04, OPT_X - 5.5, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0x8fb0b8, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.18, depthWrite: false })],
   [cylX(1.8, 0.04, OPT_X + 4.9, SIGHT_Y, 0, 40), new THREE.MeshStandardMaterial({ color: 0xb05040, metalness: 0.3, roughness: 0.05, transparent: true, opacity: 0.22, depthWrite: false })],
 ], M(0x24272b, { roughness: 0.55, metalness: 0.35 }), [0, 14, 0]);
-// Механічні прицільні пристрої: складаються, коли стоїть коліматор
+// Механічні прицільні пристрої (рис. 2, поз. 3): відкидні цілик і мушка
 const RS_X = 1.4, FS_X = 46.9;
 part('rsight', 'Цілик', [
   box(2.6, 0.55, 2.3, RS_X, 2.78 + 0.28), box(2.0, 0.35, 2.0, RS_X, 2.78 + 0.7),
@@ -343,25 +343,29 @@ part('fsight', 'Мушка', [
   box(2.4, 0.6, 2.3, FS_X, 2.83 + 0.3), box(1.8, 0.35, 2.0, FS_X, 2.83 + 0.75),
   [cylZ(0.18, 2.4, FS_X - 0.6, 2.83 + 0.9), SCREW],
 ], M(0x23262a, { roughness: 0.6, metalness: 0.3 }), [0, 14, 0]);
-// відкидні частини: рамка цілика з діоптром і стійка мушки — обертаються на осях
-const leafR = (() => { const g = new THREE.Group(); g.position.set(RS_X + 0.7, 2.78 + 0.85, 0);
-  const sh = new THREE.Shape([[-0.35, 0], [0.35, 0], [0.4, 3.2], [0.0, 3.55], [-0.4, 3.2]].map(p => new THREE.Vector2(...p)));
-  const ap = new THREE.Path(); ap.absarc(0, SIGHT_Y - (2.78 + 0.85), 0.32, 0, Math.PI * 2, true); sh.holes.push(ap);
-  const ge = new THREE.ExtrudeGeometry(sh, { depth: 1.6, bevelEnabled: false }); ge.translate(0, 0, -0.8);
-  const m = new THREE.Mesh(ge, parts.rsight.mat); m.rotation.y = Math.PI / 2; m.userData.part = 'rsight'; g.add(m);
-  // крило-захист з боків діоптра
-  for (const z of [-1.0, 1.0]) { const w = new THREE.Mesh(box(0.35, 2.6, 0.3, 0, 1.7, z), parts.rsight.mat); w.userData.part = 'rsight'; g.add(w); }
+// відкидні частини за рис. 2 настанови (поз. 3): цілик — рамка з діоптром і захисними вушками, мушка — вежа з вушками й стовпчиком
+const HR = 2.78 + 0.85, HF = 2.83 + 0.9;
+const plate = (pts, holes, depth, mat, partId) => { const sh = new THREE.Shape(pts.map(p => new THREE.Vector2(...p))); for (const h of holes) sh.holes.push(h);
+  const ge = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.04, bevelSegments: 2 }); ge.translate(0, 0, -depth / 2);
+  const m = new THREE.Mesh(ge, mat); m.rotation.y = Math.PI / 2; m.userData.part = partId; return m; };
+const leafR = (() => { const g = new THREE.Group(); g.position.set(RS_X + 0.7, HR, 0); const ay = SIGHT_Y - HR;
+  // рамка: широка внизу, звужується до діоптра; вушка по боках діоптра вище за нього
+  const ap = new THREE.Path(); ap.absarc(0, ay, 0.24, 0, Math.PI * 2, true);
+  g.add(plate([[-0.95, 0], [0.95, 0], [0.95, 0.5], [0.62, 1.4], [0.62, ay - 0.55], [0.95, ay - 0.2], [0.95, ay + 0.75], [0.66, ay + 0.75], [0.62, ay + 0.2],
+    [0.42, ay + 0.48], [-0.42, ay + 0.48], [-0.62, ay + 0.2], [-0.66, ay + 0.75], [-0.95, ay + 0.75], [-0.95, ay - 0.2], [-0.62, ay - 0.55], [-0.62, 1.4], [-0.95, 0.5]], [ap], 0.42, parts.rsight.mat, 'rsight'));
+  // кільце діоптра виступає назад
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.1, 8, 20).rotateY(Math.PI / 2).translate(-0.24, ay, 0), parts.rsight.mat); ring.userData.part = 'rsight'; g.add(ring);
   parts.rsight.group.add(g); return g; })();
-const leafF = (() => { const g = new THREE.Group(); g.position.set(FS_X - 0.6, 2.83 + 0.9, 0);
-  const sh = new THREE.Shape([[-0.6, 0], [0.6, 0], [0.75, 2.2], [0.45, 2.6], [-0.45, 2.6], [-0.75, 2.2]].map(p => new THREE.Vector2(...p)));
-  const win = new THREE.Path([[-0.5, 0.6], [0.5, 0.6], [0.4, 2.35], [-0.4, 2.35]].map(p => new THREE.Vector2(...p))); sh.holes.push(win);
-  const ge = new THREE.ExtrudeGeometry(sh, { depth: 0.5, bevelEnabled: false }); ge.translate(0, 0, -0.25);
-  const m = new THREE.Mesh(ge, parts.fsight.mat); m.rotation.y = Math.PI / 2; m.userData.part = 'fsight'; g.add(m);
-  // мушка — вертикальний стовпчик у вікні, верх якого на висоті лінії прицілювання
-  const post = new THREE.Mesh(box(0.14, SIGHT_Y - (2.83 + 0.9) - 0.6, 0.14, 0, (SIGHT_Y - (2.83 + 0.9) + 0.6) / 2, 0), parts.fsight.mat); post.userData.part = 'fsight'; g.add(post);
+const leafF = (() => { const g = new THREE.Group(); g.position.set(FS_X - 0.6, HF, 0); const ty = SIGHT_Y - HF;
+  // вежа з вікном; верх вікна відкритий між вушками
+  const win = new THREE.Path([[-0.55, 0.75], [0.55, 0.75], [0.55, ty + 0.25], [-0.55, ty + 0.25]].map(p => new THREE.Vector2(...p)));
+  g.add(plate([[-1.0, 0], [1.0, 0], [1.0, 0.6], [0.85, ty + 0.65], [0.6, ty + 0.85], [0.35, ty + 0.65], [0.35, ty + 0.4], [-0.35, ty + 0.4], [-0.35, ty + 0.65], [-0.6, ty + 0.85], [-0.85, ty + 0.65], [-1.0, 0.6]], [win], 0.5, parts.fsight.mat, 'fsight'));
+  // стовпчик мушки: верх — на лінії прицілювання; барабан висоти біля основи
+  const post = new THREE.Mesh(box(0.13, ty - 0.55, 0.13, 0, (ty + 0.55) / 2, 0), parts.fsight.mat); post.userData.part = 'fsight'; g.add(post);
+  const drum = new THREE.Mesh(cylY(0.32, 0.22, 0, 0.62), parts.fsight.mat); drum.userData.part = 'fsight'; g.add(drum);
   parts.fsight.group.add(g); return g; })();
-// режим прицілу: 'red' — коліматор, механіка складена; 'iron' — коліматор знято, механіка піднята
-let sightMode = 'red', leafUp = 0;
+// режим прицілу: 'red' — коліматор, 'iron' — коліматор знято; механіка розкладена (у прицілюванні з коліматора цілик складено, щоб не заступав)
+let sightMode = 'red', leafUp = 1, leafUpR = 1;
 function setSights(m) { sightMode = m; parts.optic.group.visible = m === 'red'; }
 let coverOpen = false, coverTouched = null;
 let stockExt = false; const stockTv = new THREE.Vector3();
@@ -1406,7 +1410,7 @@ if (CLEAN.on) { for (const id in parts) sC[id] = STEPS.length; cleanSet(1); }
 
 let lastT = 0;
 renderer.setAnimationLoop(() => {
-  leafUp += ((sightMode === 'iron' ? 1 : 0) - leafUp) * 0.15; leafR.rotation.z = -(1 - leafUp) * Math.PI / 2; leafF.rotation.z = (1 - leafUp) * Math.PI / 2;
+  leafUpR += ((AIM.on && sightMode === 'red' ? 0 : 1) - leafUpR) * 0.15; leafR.rotation.z = -(1 - leafUpR) * Math.PI / 2; leafF.rotation.z = 0;
   const busy = runAnims(performance.now());
   { const want = (coverTouched == null ? coverOpen : coverTouched) ? 1.95 : 0; for (const m of parts.cover.group.children) m.rotation.x += (want - m.rotation.x) * 0.15; }
   if (mode !== 'shot') { const now = performance.now(), want = hammerFired && now >= hammerAt ? HAM_F : HAM_C; for (const m of parts.hammer.group.children) m.rotation.z += (want - m.rotation.z) * (want === HAM_F ? 0.45 : 0.15); }
@@ -1442,7 +1446,7 @@ window.addEventListener('message', e => {
     const d = e.data;
     if (d.fire) { aimFire(); return; }
     if (d.breath !== undefined) { AIM.breath = !!d.breath; return; }
-    if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUp = d.sight === 'iron' ? 1 : 0; }
+    if (d.sight && d.sight !== sightMode) { setSights(d.sight); leafUpR = d.sight === 'iron' ? 1 : 0; }
     if (d.dist) AIM.dist = d.dist; if (d.mode) AIM.mode = d.mode; if (d.hint !== undefined) AIM.hint = !!d.hint;
     aimApply(); return; }
   if (e.origin !== location.origin || !e.data) return;
