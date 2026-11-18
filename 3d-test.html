@@ -1191,8 +1191,13 @@ function aimSetup() {
   const dotTex = new THREE.CanvasTexture(c), dotMat = () => new THREE.SpriteMaterial({ map: dotTex, depthTest: false, transparent: true, blending: THREE.AdditiveBlending });
   // точка для основного вигляду — фіксований кутовий розмір у вікні прицілу; для збільшеного вікна — 2 MOA на дистанції мішені
   aimDot = new THREE.Sprite(dotMat()); aimDot.renderOrder = 21; aimDot.layers.set(1); aimRig.add(aimDot);
-  aimDot.position.set(OPT_X + 25, SIGHT_Y, 0); aimDot.scale.setScalar(2.1);
-  aimDotFar = new THREE.Sprite(dotMat()); aimDotFar.renderOrder = 21; aimDotFar.layers.set(2); aimRig.add(aimDotFar);
+  // Точка 2 MOA (табл. 3): кутовий розмір ≈ 0,6 мрад — у звичайному вигляді це кілька пікселів, видно її завдяки яскравості.
+  // Тому в основному вигляді — маленька чітка точка ≈ 6–7 px із легким ореолом; у збільшеному вікні — справжній розмір на мішені
+  const c2 = document.createElement('canvas'); c2.width = c2.height = 64; const x2 = c2.getContext('2d'), g2 = x2.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g2.addColorStop(0, 'rgba(255,150,130,1)'); g2.addColorStop(0.12, 'rgba(255,40,25,1)'); g2.addColorStop(0.4, 'rgba(255,20,10,.95)'); g2.addColorStop(0.5, 'rgba(255,0,0,.25)'); g2.addColorStop(1, 'rgba(255,0,0,0)');
+  x2.fillStyle = g2; x2.fillRect(0, 0, 64, 64); const sharpTex = new THREE.CanvasTexture(c2);
+  aimDot.material.map = sharpTex; aimDot.material.needsUpdate = true; aimDot.position.set(OPT_X + 25, SIGHT_Y, 0); aimDot.userData.px = 14;
+  aimDotFar = new THREE.Sprite(new THREE.SpriteMaterial({ map: sharpTex, depthTest: false, transparent: true, blending: THREE.AdditiveBlending })); aimDotFar.renderOrder = 21; aimDotFar.layers.set(2); aimRig.add(aimDotFar);
   camera.layers.enable(1);
   aimCam = new THREE.PerspectiveCamera(1, 1, 50, 200000); aimCam.layers.enable(2); scene.add(aimCam);
   aimOkEl = document.createElement('div'); aimOkEl.className = 'aim-ok'; aimOkEl.textContent = '✓ Наведено правильно'; stage.appendChild(aimOkEl);   // збільшене вікно не смикається від віддачі
@@ -1206,7 +1211,7 @@ function aimSetup() {
 // «Затримати дихання» на кілька секунд майже прибирає хитання, потім руки починають тремтіти сильніше.
 Object.assign(AIM, { yaw: 0, pitch: 0, sy: 0, sp: 0, breath: false, bT: 0, mode: 'train', hint: true, drill: null, tz: 0, ty: 0, up: 1, t: 0 });
 const DRILL_D = [50, 100, 150, 200, 250, 300, 350];
-function aimTargetPlace(D, z, y) { aimTarget.position.set(D, y, z); if (aimDotFar) { aimDotFar.position.set(D - 3, SIGHT_Y, 0); aimDotFar.scale.setScalar(0.058 * D / 100 * 1.6); } AIM.tz = z; AIM.ty = y; aimCam.fov = 2 * Math.atan(85 / D) * 180 / Math.PI; aimCam.updateProjectionMatrix(); }
+function aimTargetPlace(D, z, y) { aimTarget.position.set(D, y, z); if (aimDotFar) { aimDotFar.position.set(D - 3, SIGHT_Y, 0); aimDotFar.scale.setScalar(0.058 * D / 100 / 0.8); /* ядро (80 % спрайта) = 2 MOA ≈ 5,8 см на 100 м */ } AIM.tz = z; AIM.ty = y; aimCam.fov = 2 * Math.atan(85 / D) * 180 / Math.PI; aimCam.updateProjectionMatrix(); }
 function aimClearHits() { for (const h of AIM.hits) h.removeFromParent(); AIM.hits = []; }
 function aimApply() {
   const eyeX = sightMode === 'red' ? OPT_X - 5.6 - 11 : RS_X + 0.7 - 7;
@@ -1321,6 +1326,7 @@ function aimTick() {
 }
 function aimRender() {
   const w = stage.clientWidth, h = stage.clientHeight, sz = Math.round(Math.min(w, h) * 0.42);
+  { const d = aimDot.position.distanceTo(camera.position); aimDot.scale.setScalar(aimDot.userData.px / h * 2 * d * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))); }
   renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera);
   // збільшене вікно з мішенню — у правому верхньому куті
   aimCam.aspect = 1; aimCam.updateProjectionMatrix();
@@ -1513,7 +1519,7 @@ renderer.setAnimationLoop(() => {
   if (CLEAN.on) cleanLayout(dt);
   // точку видно, лише коли дивимось у окуляр приблизно вздовж осі прицілу (як у справжньому коліматорі)
   { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
-    optDot.visible = v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
+    optDot.visible = !AIM.on && v.x < 0 && a < 0.7; optDot.material.opacity = Math.max(0, 1 - (a / 0.7) ** 3); }
   { const e = optOn * optOn * (3 - 2 * optOn), og = parts.optic.group; og.visible = optOn > 0.01 && mode !== 'bcg'; og.position.y += (1 - e) * 10; og.position.z -= (1 - e) * 7; }
   if (mode === 'shot') { shotTick(dt); sfxTick(); }
   if (auto && mode === 'steps') {
