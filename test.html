@@ -837,7 +837,7 @@ function home() {
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
       ${tile('alert', 'safe', 'Кодекс поводження зі зброєю', '6 пунктів з малюнками й озвучкою')}
       ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
-      ${tile('chat', 'feedback', 'Зворотний зв’язок', 'запропонуй покращення або постав питання')}
+      ${tile('chat', 'feedback', 'Зворотний зв’язок', 'покращення та пропозиції')}
     </div>
     <div class="srcs">
       <p class="src">ТТХ і будова: ${esc(SRC_TTX)}.</p>
@@ -1009,7 +1009,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261119-183118';
+const APP_V = '20261119-183210';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1147,8 +1147,8 @@ const FB_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSce-warMDyZLX4eZtw1lACo
 function feedbackView() {
   setBar('Зворотний зв’язок');
   app.innerHTML = `
-    <p>Що покращити, що незрозуміло, де помилка — напиши. Повідомлення анонімне. Хочеш відповідь — залиш свій email у тексті.</p>
-    <textarea id="fb-text" class="code fb-text" rows="7" maxlength="2000" placeholder="Твоє повідомлення…" aria-label="Повідомлення"></textarea>
+    <p>Зворотний зв’язок щодо покращення та пропозицій — пишіть.</p>
+    <textarea id="fb-text" class="code fb-text" rows="7" maxlength="2000" placeholder="Ваше повідомлення…" aria-label="Повідомлення"></textarea>
     <button class="btn primary" id="fb-send" data-act="fb-send">Надіслати</button>
     <p class="note" id="fb-st" hidden></p>`;
 }
