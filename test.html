@@ -1009,7 +1009,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261119-182952';
+const APP_V = '20261119-183118';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1147,7 +1147,7 @@ const FB_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSce-warMDyZLX4eZtw1lACo
 function feedbackView() {
   setBar('Зворотний зв’язок');
   app.innerHTML = `
-    <p>Що покращити, що незрозуміло, де помилка — напиши. Повідомлення анонімне. Хочеш відповідь — залиш свій Telegram чи email у тексті.</p>
+    <p>Що покращити, що незрозуміло, де помилка — напиши. Повідомлення анонімне. Хочеш відповідь — залиш свій email у тексті.</p>
     <textarea id="fb-text" class="code fb-text" rows="7" maxlength="2000" placeholder="Твоє повідомлення…" aria-label="Повідомлення"></textarea>
     <button class="btn primary" id="fb-send" data-act="fb-send">Надіслати</button>
     <p class="note" id="fb-st" hidden></p>`;
@@ -1178,7 +1178,7 @@ function saveView() {
       <p>Відкривай навчання з іконки. На iPhone дані іконки окремі від Safari: перенеси прогрес кодом нижче.</p>
     </div>
     <h3 class="h">Резервний код</h3>
-    <p class="muted small">Скопіюй код і збережи, наприклад, у «Збережене» в Telegram. На іншому телефоні або після очищення встав його нижче.</p>
+    <p class="muted small">Скопіюй код і збережи, наприклад, у нотатках телефону. На іншому телефоні або після очищення встав його нижче.</p>
     <button class="btn primary" data-act="backup-copy">Скопіювати код</button>
     <textarea id="code-out" class="code" rows="3" readonly hidden aria-label="Код прогресу"></textarea>
     <p id="copy-status" class="small" hidden></p>
@@ -1197,7 +1197,7 @@ function backupCopy() {
   out.value = code; out.hidden = false;
   const manual = () => { out.focus(); out.select(); status('copy-status', 'Не вдалося скопіювати автоматично: код виділено, скопіюй його вручну.', false); };
   try {
-    navigator.clipboard.writeText(code).then(() => status('copy-status', 'Код скопійовано. Встав його в «Збережене» в Telegram.', true), manual);
+    navigator.clipboard.writeText(code).then(() => status('copy-status', 'Код скопійовано. Збережи його в нотатках телефону.', true), manual);
   } catch (e) { manual(); }
 }
 function backupCheck() {
