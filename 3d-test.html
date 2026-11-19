@@ -1574,6 +1574,13 @@ renderer.setAnimationLoop(() => {
     if (p.id === 'stock' && !stockExt && EMB !== 'dims') tgt.x += 2.8;
     p.group.position.copy(tgt);
   }
+  // затворна рама відходить назад, поки рами з'єднані — буфер іде за нею, зворотна пружина стискається (не проходять одне крізь одне)
+  if (mode !== 'shot' && mode !== 'bcg' && !CLEAN.on && !AIM.on) {
+    const c = parts.carrier.group.position, l = parts.lower.group.position, bf = parts.buffer.group.position, sp = parts.spring.group;
+    const home = Math.abs(c.y - l.y) < 0.3 && Math.abs(c.z - l.z) < 0.3 && bf.distanceToSquared(l) < 1e-4 && sp.position.distanceToSquared(l) < 1e-4;
+    const d = home ? Math.max(0, Math.min(8, l.x - c.x)) : 0, k = (16.7 - d) / 16.7;
+    bf.x -= d; sp.scale.x = k; sp.position.x -= 17.3 * (1 - k);
+  }
   if (CLEAN.on) cleanLayout(dt);
   // точку видно, лише коли дивимось у окуляр приблизно вздовж осі прицілу (як у справжньому коліматорі)
   { const w = optDot.getWorldPosition(stockTv.clone()), v = camera.position.clone().sub(w), a = Math.acos(Math.max(-1, Math.min(1, -v.x / v.length())));
