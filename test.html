@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ivanruten.goatcounter.com; font-src 'self'; media-src 'self'; connect-src 'self'; frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://ivanruten.goatcounter.com; font-src 'self'; media-src 'self'; connect-src 'self' https://docs.google.com; frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -317,6 +317,8 @@ p { margin: 0; }
 .pick:hover { border-color: var(--muted); }
 .pick.wrong { border-color: var(--bad); animation: shake .3s; }
 .verdict { font: 600 21px/1.3 var(--display); }
+.code.fb-text { min-height: 9em; resize: vertical; margin: 12px 0; font: inherit; }
+.note.ok { color: var(--text); border-color: #3f8a4a; }
 .note { padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); font-size: 14px; line-height: 1.4; }
 .empty { display: flex; flex-direction: column; gap: 16px; align-items: stretch; padding-top: 18vh; text-align: center; }
 
@@ -684,6 +686,7 @@ const ICON = {
   brush: '<path d="M3 21l9-9"/><path d="M12 12l2-2 4 4-2 2z"/><path d="M16 8l3-3M18 10l3-3M14 6l3-3"/>',
   cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
   stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
 };
 const svg = name => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
 const zimg = (src, photo, size, alt) =>
@@ -834,6 +837,7 @@ function home() {
       ${tile('save', 'save', 'Збереження прогресу', 'іконка на екрані телефону, резервний код')}
       ${tile('alert', 'safe', 'Кодекс поводження зі зброєю', '6 пунктів з малюнками й озвучкою')}
       ${tile('shield', 'law', 'Застосування зброї', 'статті 20–22: коли й як можна застосовувати')}
+      ${tile('chat', 'feedback', 'Зворотний зв’язок', 'запропонуй покращення або постав питання')}
     </div>
     <div class="srcs">
       <p class="src">ТТХ і будова: ${esc(SRC_TTX)}.</p>
@@ -1005,7 +1009,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261118-171619';
+const APP_V = '20261119-182952';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1138,6 +1142,30 @@ function parseCode(s) {
   } catch (e) { return null; }
 }
 let pending = null;
+// ═════════ Зворотний зв’язок: повідомлення йде у Google Форму (відповіді — у Google Таблиці автора) ═════════
+const FB_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSce-warMDyZLX4eZtw1lACoSxBO_j7OZ754uT84_hWTbqFSUw/formResponse', FB_FIELD = 'entry.1482232466', FB_KEY = 'uar15_fb_last';
+function feedbackView() {
+  setBar('Зворотний зв’язок');
+  app.innerHTML = `
+    <p>Що покращити, що незрозуміло, де помилка — напиши. Повідомлення анонімне. Хочеш відповідь — залиш свій Telegram чи email у тексті.</p>
+    <textarea id="fb-text" class="code fb-text" rows="7" maxlength="2000" placeholder="Твоє повідомлення…" aria-label="Повідомлення"></textarea>
+    <button class="btn primary" id="fb-send" data-act="fb-send">Надіслати</button>
+    <p class="note" id="fb-st" hidden></p>`;
+}
+async function feedbackSend() {
+  const ta = $('fb-text'), st = $('fb-st'), btn = $('fb-send'), text = ta.value.trim();
+  const say = (m, ok) => { st.hidden = false; st.textContent = m; st.classList.toggle('ok', !!ok); };
+  if (text.length < 3) { say('Напиши хоча б кілька слів.'); ta.focus(); return; }
+  let last = 0; try { last = +localStorage.getItem(FB_KEY) || 0; } catch (e) { /* без сховища */ }
+  if (Date.now() - last < 60000) { say('Зачекай хвилину перед наступним повідомленням.'); return; }
+  btn.disabled = true; say('Надсилаю…');
+  try {
+    await fetch(FB_URL, { method: 'POST', mode: 'no-cors', body: new URLSearchParams({ [FB_FIELD]: text }) });
+    try { localStorage.setItem(FB_KEY, String(Date.now())); } catch (e) { /* без сховища */ }
+    ta.value = ''; say('Дякую! Повідомлення надіслано.', true);
+  } catch (e) { say('Не вдалося надіслати — перевір інтернет і спробуй ще раз.'); }
+  btn.disabled = false;
+}
 function saveView() {
   setBar('Збереження прогресу');
   pending = null;
@@ -1902,7 +1930,7 @@ function cleanView() {
 const ROUTES = {
   '': home, ttx: cards, table, parts,
   test: () => quiz(false), review: () => quiz(true), guide, 'guide-as': guideAs,
-  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, model: modelView, aim: aimView, clean: cleanView, safe: safeView, law: lawView, 'law-test': lawTest,
+  'drill-dis': () => drill(false), 'drill-as': () => drill(true), save: saveView, feedback: feedbackView, model: modelView, aim: aimView, clean: cleanView, safe: safeView, law: lawView, 'law-test': lawTest,
 };
 function route() {
   closeZoom();
@@ -1936,6 +1964,7 @@ document.addEventListener('click', e => {
     case 'opt': answer(parseInt(t.dataset.k, 10)); break;
     case 'aim-set': { const k = t.dataset.k, v = t.dataset.v; AIM_ST[k] = k === 'dist' ? +v : k === 'hint' ? v === 'true' : v; AIM_ST.last = null; AIM_ST.shots = AIM_ST.hits = 0; if (k === 'mode') AIM_ST.drill = null; aimControls(); aimInfo(); aimSync(); break; }
     case 'clean-show': cleanShow(+t.dataset.n, t); break;
+    case 'fb-send': feedbackSend(); break;
     case 'aim-tab': aimTab = t.dataset.v; { const v = document.querySelector('.aimv'); v.dataset.tab = aimTab; v.querySelectorAll('.aim-tabs .btn').forEach(b => b.setAttribute('aria-pressed', String(b === t))); } window.scrollTo(0, 0); break;
     case 'aim-fire': aimSend({ fire: true }); break;
     case 'law-opt': lawAnswer(parseInt(t.dataset.k, 10)); break;
