@@ -1024,7 +1024,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261121-140329';
+const APP_V = '20261121-160806';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1950,7 +1950,7 @@ const TOOLS = [
   [20, 'pull', 'Протяжка', '1', ''],
   [21, 'hex25', 'Ключ шестигранний 2,5 мм', '1', 'Г-подібний, двосторонній. Фіксація гвинтів планок Пікатінні на цівці.'],
 ];
-const toolCards = () => `<div class="tools">${TOOLS.map(([n, img, name, q, note]) => `<figure class="tool">${img ? `<button class="tool-pic" data-act="zoom" data-src="img/tools/${img}.webp" data-photo="0" aria-label="Збільшити: ${esc(name)}"><img src="img/tools/${img}.webp" alt="${esc(name)}" loading="lazy"></button>` : '<div class="tool-pic tool-none">А4</div>'}<figcaption><b>${n}. ${esc(name)}</b><span class="tool-q">${q} шт.</span>${note ? `<small>${esc(note)}</small>` : ''}</figcaption></figure>`).join('')}</div>`;
+const toolCards = () => `<div class="tools">${TOOLS.map(([n, img, name, q, note]) => `<figure class="tool">${img ? `<button class="tool-pic" data-act="zoom" data-src="img/tools/${img}.webp" data-photo="0" aria-label="Збільшити: ${esc(name)}"><img src="img/tools/${img}.webp" alt="${esc(name)}" loading="lazy"></button>` : `<div class="tool-pic tool-none" role="img" aria-label="Регламент чисток — аркуш А4"><svg viewBox="0 0 84 104" width="78" height="96"><path d="M6 4h52l20 20v76H6z" fill="#fff" stroke="#444" stroke-width="1.6"/><path d="M58 4v20h20" fill="none" stroke="#444" stroke-width="1.6"/><text x="12" y="20" font-size="7.5" font-weight="700" fill="#333" font-family="sans-serif">РЕГЛАМЕНТ</text><text x="12" y="29" font-size="7.5" font-weight="700" fill="#333" font-family="sans-serif">ЧИСТОК</text>${[40, 48, 56, 64, 72, 80, 88].map((y, i) => `<path d="M12 ${y}h${i % 3 === 2 ? 40 : 58}" stroke="#999" stroke-width="1.4"/>`).join('')}<text x="62" y="97" font-size="7" fill="#777" font-family="sans-serif">А4</text></svg></div>`}<figcaption><b>${n}. ${esc(name)}</b><span class="tool-q">${q} шт.</span>${note ? `<small>${esc(note)}</small>` : ''}</figcaption></figure>`).join('')}</div>`;
 // Озвучка: номер блоку на сторінці → номер запису clean_NN.mp3 (старі записи 1–20 лишились; нові блоки — 21–23)
 const CLEAN_VF = [0, 1, 21, 2, 22, 23, ...Array.from({ length: 16 }, (_, i) => i + 3), 19, 20];
 const CLEAN_LBL = ['', 'коли чистити', 'види обслуговування', 'засоби чищення', 'засоби й мастила', 'де й під чиїм керівництвом', ...Array.from({ length: 16 }, (_, i) => `крок ${i + 1} з 16`), 'змащування', 'заборонено'];
