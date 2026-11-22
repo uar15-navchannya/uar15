@@ -373,6 +373,9 @@ p { margin: 0; }
 .cl-steps .cl-more li { display:list-item; padding:0; border:0; border-radius:0; background:none; }
 .cl-more ul { margin:6px 0 2px; padding-left:18px; display:flex; flex-direction:column; gap:6px; line-height:1.45; }
 .cl-sub { margin:16px 0 8px; font:600 14px/1.25 var(--display); letter-spacing:1.2px; text-transform:uppercase; color:var(--text); }
+.liq { display:flex; flex-direction:column; gap:8px; margin:0 0 10px; }
+.liq-i { display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); line-height:1.45; }
+.liq-i i { flex:none; width:16px; height:26px; margin-top:1px; border-radius:4px 4px 6px 6px; box-shadow:inset 0 5px 0 rgba(0,0,0,.35); }
 .to-list p { margin:0 0 10px; line-height:1.5; } .to-list p:last-child { margin:0; } .to-list b:first-child { color:var(--violet); }
 .tools { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; margin:0 0 12px; }
 .tool { margin:0; display:flex; flex-direction:column; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--bg); }
@@ -1029,7 +1032,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261122-062006';
+const APP_V = '20261122-062726';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1943,8 +1946,8 @@ const CLEAN_NOTE = { 10: `<div class="cl-note"><b>Нагар на ударник
 const TOOLS = [
   [1, 'rod', 'Шомпол складаний', '1', 'Для чищення каналу ствола: на нього накручують вішер, протирку або йоржики.'],
   [2, 'chrod', 'Шомпол для чищення патронника', '1', 'З йоржем для патронника — патронник і муфта бойових упорів.'],
-  [3, 'oilA', 'Ємність для лужного мастила або засобу для зняття нагару', '1', ''],
-  [4, 'oilN', 'Ємність для нейтрального мастила', '1', ''],
+  [3, 'oilA', 'Ємність для лужного мастила або засобу для зняття нагару', '1', 'У наборі — червона: для очищення.'],
+  [4, 'oilN', 'Ємність для нейтрального мастила', '1', 'У наборі — зелена: для змащування.'],
   [5, 'bplast', 'Йоржик пластиковий', '1', 'Канал ствола; із засобом для видалення міді — від обміднення.'],
   [6, 'bbrass', 'Йоржик латунний', '3', 'Канал ствола від порохового нагару. Ресурс — не більше 5 чищень.'],
   [7, 'bch', 'Йоржик для патронника', '1', 'Патронник і муфта бойових упорів, обертати за годинниковою стрілкою.'],
@@ -2004,6 +2007,11 @@ function cleanView() {
       ${zimg('img/tools/kit_scheme.webp', false, '', 'Засоби чищення та обслуговування — схема розміщення')}
       <p class="muted small">Схема розміщення з настанови. Комплектація узгоджується із замовником, усі засоби зображені умовно. За окремою вимогою можуть додаватися пристрій для фіксації ствольної коробки під час чищення та вставка у верхню раму для чищення ствола.</p></section>
     ${ph(4, 'Засоби й мастила')}
+      <div class="liq">
+        <div class="liq-i"><i style="background:#c8322a"></i><span><b>Червона</b> — для <b>очищення</b>: засіб від нагару й міді (ємність для лужного мастила). Після неї — протерти насухо й змастити.</span></div>
+        <div class="liq-i"><i style="background:#2f8a3c"></i><span><b>Зелена</b> — для <b>змащування</b>: нейтральне мастило.</span></div>
+      </div>
+      <p class="muted small">Так у наборі від виробника. Яка саме марка всередині — дивись етикетку або формуляр; настанова рекомендує такі:</p>
       <div class="to-list">
         <p><b>HTA CLP</b> — універсальний засіб: чищення, змащення й захист вузлів і механізмів. Видаляє пороховий нагар, вуглецеві відкладення та інші забруднення.</p>
         <p><b>HTA Exterminator</b> — видаляє пороховий нагар і обміднення з каналу ствола. <b>Не змащує</b>: після нього поверхні ретельно протерти й обробити HTA CLP, Shooter’s Choice FP-10 або іншим нейтральним збройовим мастилом.</p>
