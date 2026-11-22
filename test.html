@@ -363,6 +363,11 @@ p { margin: 0; }
 .cl-steps li.playing { border-color:var(--violet); }
 .cl-steps li.on { border-color:var(--violet); }
 .cl-steps .cl-pic { grid-column:1 / -1; margin:4px 0 0; }
+.cl-note { grid-column:1 / -1; margin:6px 0 0; padding:12px 14px; border-radius:12px; border:2px solid var(--orange); background:color-mix(in srgb, var(--orange) 12%, transparent); font-size:14px; line-height:1.45; }
+.cl-note > b { display:block; margin-bottom:6px; font:600 15px/1.2 var(--display); letter-spacing:1.2px; text-transform:uppercase; color:var(--orange); }
+.cl-note ol { margin:0 0 8px; padding-left:20px; display:flex; flex-direction:column; gap:4px; }
+.cl-steps .cl-note li { display:list-item; padding:0; border:0; background:none; } .cl-steps .cl-note li > b { font:inherit; font-weight:700; color:inherit; }
+.cl-note p { margin:0 0 6px; } .cl-note p:last-child { margin:0; } .cl-ban { color:var(--bad); font-weight:600; }
 .cl-more { grid-column:1 / -1; margin:2px 0 0; font-size:14px; color:var(--muted); }
 .cl-more summary { cursor:pointer; color:var(--violet); font-weight:600; padding:4px 0; }
 .cl-steps .cl-more li { display:list-item; padding:0; border:0; border-radius:0; background:none; }
@@ -1024,7 +1029,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261121-160806';
+const APP_V = '20261122-062006';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d-test.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1926,6 +1931,14 @@ const CLEAN_DETAIL = [
   ['12.1 Пружину й буфер протерти насухо, очистити від пилу й бруду.', '12.2 Змастити поверхні тонким шаром універсального засобу або нейтрального мастила.'],
   ['13 Пристрій зниження звуку пострілу не вимагає обслуговування впродовж усього терміну експлуатації.', '13.1 Якщо всередину потрапив сніг чи пісок — допускається промивання гасом з обов’язковим продуванням стисненим повітрям.'],
 ];
+// Важливі пояснення до кроків — завжди видно, виділено
+const CLEAN_NOTE = { 10: `<div class="cl-note"><b>Нагар на ударнику</b><ol>
+  <li>Вийняти ударник: шплінт, потім ударник із затворної рами (як у неповному розбиранні).</li>
+  <li>Нанести засіб від нагару (HTA Exterminator або MC-7) чи HTA CLP, залишити на 5–10 хв.</li>
+  <li>Зчистити <b>пластиковою щіткою</b> або ганчір’ям; канавки — дерев’яною паличкою з ганчір’ям.</li>
+  <li>Протерти насухо, тонко змастити (CLP, FP-10 або нейтральне мастило) і знову протерти насухо.</li></ol>
+  <p class="cl-ban">Заборонено: наждак, пісок, сталеві щітки, ніж, викрутка — будь-які абразиви, гострі й тверді предмети.</p>
+  <p>Нагар не сходить або на ударнику сколи, деформація бойка — замінити на запасний з одиночного комплекту ЗІП (п. 2.5.1: особа, за якою закріплена зброя, або служба РАО).</p></div>` };
 // Засоби чищення та обслуговування — Додаток 1, табл. 1 (малюнки з настанови; призначення — лише там, де його вказано в настанові)
 const TOOLS = [
   [1, 'rod', 'Шомпол складаний', '1', 'Для чищення каналу ствола: на нього накручують вішер, протирку або йоржики.'],
@@ -2007,7 +2020,7 @@ function cleanView() {
       <li>Частини класти в порядку розбирання, не класти одну на одну, без надмірних зусиль і ударів. Без потреби часто не розбирати — це прискорює зношування.</li>
       <li>Чищення й змащування — під безпосереднім керівництвом командира (інструктора). Він визначає ступінь розбирання, чищення й змащування; перевіряє справність приладдя та якість матеріалів; перевіряє якість чищення; дає дозвіл на змащування й збирання і перевіряє їх.</li></ul></section>
     <section class="art"><h3>Порядок чищення</h3>
-      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li data-step="${i + 6}"${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span><button class="play" data-act="play-step" data-kind="clean" data-n="${i + 6}" aria-label="Слухати крок ${i + 1}">${svg('play')}</button>${CLEAN_PICS[i] || ''}${CLEAN_DETAIL[i] ? `<details class="cl-more"><summary>Детально за настановою</summary><ul>${CLEAN_DETAIL[i].map(d => `<li>${esc(d)}</li>`).join('')}</ul></details>` : ''}</li>`).join('')}</ol></section>
+      <ol class="cl-steps">${CLEAN_STEPS.map(([t, n], i) => `<li data-step="${i + 6}"${n ? ` data-act="clean-show" data-n="${n}" tabindex="0"` : ''}><b>${i + 1}</b><span>${t}</span><button class="play" data-act="play-step" data-kind="clean" data-n="${i + 6}" aria-label="Слухати крок ${i + 1}">${svg('play')}</button>${CLEAN_PICS[i] || ''}${CLEAN_NOTE[i] || ''}${CLEAN_DETAIL[i] ? `<details class="cl-more"><summary>Детально за настановою</summary><ul>${CLEAN_DETAIL[i].map(d => `<li>${esc(d)}</li>`).join('')}</ul></details>` : ''}</li>`).join('')}</ol></section>
     ${ph(22, 'Змащування')}<ul>
       <li>Одразу після чищення, лише на чисту суху поверхню — щоб волога не діяла на метал.</li>
       <li>При +5 °C і нижче — лише універсальний засіб або нейтральне мастило. Змінюєш тип мастила — ретельно прибери старе.</li>
