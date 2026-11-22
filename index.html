@@ -608,6 +608,17 @@ const SGT = {
     'Нічого. Помилки — це розвідка боєм.',
   ] },
 };
+// Нові фрази сержанта: записи voice/<clip>_NN.mp3
+Object.assign(SGT, {
+  perfect: { mood: 'proud', clip: 'sgtPerfect', lines: ['Десять з десяти. Інструктор плаче від щастя.', 'Чисто, як канал ствола після двадцяти проходів.'] },
+  record: { mood: 'stopwatch', clip: 'sgtRecord', lines: ['Новий рекорд! Руки пам’ятають краще за голову.', 'Швидко. Але без поспіху — затворна затримка не любить метушні.'] },
+  slow: { mood: 'stopwatch', clip: 'sgtSlow', lines: ['Повільно. Противник зачекає, а я — ні.', 'Так довго збирав, що автомат встиг засумувати.'] },
+  hit: { mood: 'proud', clip: 'sgtHit', lines: ['Є влучання! Мішень подала скаргу.'] },
+  miss: { mood: 'facepalm', clip: 'sgtMiss', lines: ['Мимо. Затримай дихання, а не думки.', 'Куля не винна. Винен палець.'] },
+  clean: { mood: 'proud', clip: 'sgtClean', lines: ['Чиста зброя — спокійний сон. Брудна — нічна зміна.', 'Почистив? Тепер і себе приведи до ладу.'] },
+  back: { mood: 'laugh', clip: 'sgtBack', lines: ['О, з’явився! Я вже думав — дезертирство.', 'Пам’ять без повтору — як автомат без мастила: заклинить.'] },
+  night: { mood: 'calm', clip: 'sgtNight', lines: ['Друга ночі, а ти ТТХ вчиш. Поважаю. Але спати теж наказ.'] },
+});
 const RIGHT5 = ['П’ять поспіль! Голова працює.', 'Оце розвідка! Так тримати.', 'Розумник. У штаб би взяли.', 'Мозок прогрівся. Продовжуй, боєць.'];
 const WRONG3 = ['Голова — не тільки щоб каску носити.', 'Три мимо. Вдих. Спершу думай, потім тисни.', 'Не поспішай, боєць. Мозок — не кулемет.', 'Стоп. Перечитай умову. Повільно.'];
 
@@ -776,7 +787,7 @@ function sfx(name) {
 // Перший дотик розблоковує звук (iPhone дозволяє Web Audio лише після дії людини).
 document.addEventListener('pointerdown', sfxInit, { once: true, capture: true });
 let audio = null, sgtTimer = null;
-const recent = { good: [], bad: [] };
+const recent = Object.fromEntries(Object.keys(SGT).map(k => [k, []]));
 function showSgt(text, mood, ms) {
   $('sgt-img').src = `img/sgt/${mood}.webp`;
   $('sgt-text').textContent = text;
@@ -787,9 +798,9 @@ function showSgt(text, mood, ms) {
 function hideSgt() { $('sgt').hidden = true; clearTimeout(sgtTimer); }
 function say(kind) {
   const e = SGT[kind];
-  const free = e.lines.map((_, i) => i).filter(i => !recent[kind].includes(i));
+  const free = e.lines.length > 1 ? e.lines.map((_, i) => i).filter(i => !recent[kind].includes(i)) : [0];
   const i = free[Math.floor(Math.random() * free.length)];
-  recent[kind] = [i, ...recent[kind]].slice(0, 2);
+  recent[kind] = [i, ...recent[kind]].slice(0, Math.min(2, e.lines.length - 1));
   showSgt(e.lines[i], e.mood, 7000);
   if (!voiceOn) return;
   try {
@@ -1015,7 +1026,7 @@ function quizNext() {
   if (Q.i < Q.qs.length - 1) { Q.i++; Q.chosen = null; renderQuiz(); return; }
   Q.done = true;
   const share = Q.ok.filter(Boolean).length / Q.qs.length;
-  if (share === 0) sayZero(); else if (share >= 0.8) say('good'); else if (share < 0.5) say('bad');
+  if (share === 0) sayZero(); else if (share === 1) say('perfect'); else if (share >= 0.8) say('good'); else if (share < 0.5) say('bad');
   renderQuiz();
 }
 function renderResults() {
@@ -1032,7 +1043,7 @@ function renderResults() {
 
 // — Неповне розбирання: етапи, кроки, фото —
 // 3D-модель (3d.html) вбудована рамкою; крок передаємо повідомленням
-const APP_V = '20261122-070014';
+const APP_V = '20261122-070357';
 const m3d = (mode, cls, q = '') => `<iframe class="m3d ${cls}" id="m3d" src="3d.html?embed=${mode}${q}&v=${APP_V}" title="3D-модель UAR-15S"></iframe>`;
 /* Фонове завантаження бібліотек 3D, поки людина на сторінці: коли відкриє модель, вони вже будуть у кеші браузера */
 addEventListener('load', () => setTimeout(() => {
@@ -1134,7 +1145,7 @@ function playStep(kind, n, all) {
     if (tok !== P.token) return;
     markStep(n, false);
     if (P.all && n < VOICE_STEPS[kind]) P.wait = setTimeout(() => { if (tok === P.token) playStep(kind, n + 1, true); }, 500);
-    else stopSteps();
+    else { const done = P.all && kind === 'clean' && n === VOICE_STEPS.clean; stopSteps(); if (done) say('clean'); }
   };
   stepAudio.src = `voice/${kind}_${pad(kind === 'clean' ? CLEAN_VF[n] : n)}.mp3`;
   try {
@@ -1299,8 +1310,10 @@ function pickStep(i) {
       D.finished = true;
       D.sec = Math.floor((performance.now() - D.t0) / 1000);
       clearInterval(drillTick);
+      const prev = D.best;
       if (D.mistakes === 0) { setBest(D.key, D.sec); D.best = getBest(D.key); }
-      say(D.mistakes === 0 ? 'good' : 'bad');
+      // рекорд — швидше за попередній найкращий; повільно — у півтора раза довше
+      say(D.mistakes === 0 && prev != null && D.sec < prev ? 'record' : prev != null && D.sec > prev * 1.5 ? 'slow' : D.mistakes === 0 ? 'good' : 'bad');
     }
   } else {
     D.mistakes++; D.wrong = s; sfx('miss'); buzz();
@@ -1700,7 +1713,7 @@ function lawRender() {
   if (L.i >= L.qs.length) {
     const n = L.ok.filter(Boolean).length;
     try { const b = +localStorage.getItem(LAW_BEST) || 0; if (n > b) localStorage.setItem(LAW_BEST, String(n)); } catch (e) { /* без сховища */ }
-    if (n / L.qs.length >= 0.8) say('good'); else if (n / L.qs.length < 0.5) say('bad');
+    if (n === L.qs.length) say('perfect'); else if (n / L.qs.length >= 0.8) say('good'); else if (n / L.qs.length < 0.5) say('bad');
     setBar('Підсумок');
     const miss = L.qs.map((q, i) => L.ok[i] ? '' : `<div><p>${esc(q.prompt)}</p><p>${esc(q.right)} (ст. ${q.art})</p></div>`).join('');
     app.innerHTML = `<div><p class="score">${n} / ${L.qs.length}</p><p class="muted center">правильних відповідей</p></div>
@@ -1730,7 +1743,7 @@ function lawAnswer(k) {
 // ═════════ Прицілювання ═════════
 // Відхилення кулі від лінії прицілювання, см — розрахунок для 5,56 мм SS109 (G7 0,151), 830 м/с, висота прицілу 6,7 см, пристрілка на 100 м
 const AIM_DROP = { 25: -3.5, 50: -1.3, 100: 0, 150: -3.3, 200: -11.8, 250: -26.4, 300: -47.9, 350: -77.4, 400: -116.3 };
-const AIM_ST = { bright: 9, mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null };
+const AIM_ST = { bright: 9, mode: 'train', dist: 100, sight: 'red', hint: true, shots: 0, hits: 0, last: null, drill: null, missRun: 0 };
 function aimHint(d) {
   const h = -AIM_DROP[d];
   if (h <= 5) return 'Наводь у центр фігури — різниця до 5 см, вона в межах розсіювання.';
@@ -1784,6 +1797,9 @@ function aimView() {
 window.addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data || view !== 'aim') return;
   if (e.data.type === 'uar-aim-ok') { const el = $('aim-st'); if (el) { el.classList.toggle('ok', e.data.ok); el.textContent = e.data.ok ? '✓ Наведено правильно — тримай і стріляй' : 'Наведи точку прицілювання з поправкою на дистанцію'; } }
+  if (e.data.type === 'uar-aim-hit' || (e.data.type === 'uar-aim-drill' && 'hit' in e.data)) {
+    // влучив після кількох промахів — похвала; три промахи поспіль — підказка
+    if (e.data.hit) { if (AIM_ST.missRun >= 2) say('hit'); AIM_ST.missRun = 0; } else if (++AIM_ST.missRun === 3) say('miss'); }
   if (e.data.type === 'uar-aim-hit') { AIM_ST.shots++; if (e.data.hit) AIM_ST.hits++; AIM_ST.last = e.data; aimInfo(); }
   if (e.data.type === 'uar-aim-drill') { const m = e.data; AIM_ST.drill = { ...m, last: 'hit' in m ? m.hit : null }; aimInfo(); }
 });
@@ -2172,6 +2188,13 @@ document.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('hashchange', route);
+// Сержант при відкритті: повернувся через 3+ доби — «з’явився!»; уночі (0–5) — «спати теж наказ» (раз за ніч)
+{ const now = Date.now(), h = new Date().getHours(); let last = 0, night = '';
+  try { last = +localStorage.getItem('uar15_last') || 0; night = localStorage.getItem('uar15_night') || ''; localStorage.setItem('uar15_last', String(now)); } catch (e) { /* без сховища */ }
+  const tonight = new Date(now - 6 * 3600e3).toDateString();
+  const k = last && now - last >= 3 * 864e5 ? 'back' : h < 5 && night !== tonight ? 'night' : '';
+  if (k === 'night') try { localStorage.setItem('uar15_night', tonight); } catch (e) { /* без сховища */ }
+  if (k) setTimeout(() => say(k), 1800); }
 document.addEventListener('load', e => { if (e.target && e.target.id === 'm3d' && (modelWant || modelKind === 'as') && /embed=steps/.test(e.target.src)) setTimeout(() => modelStep(modelWant), 400); }, true);
 
 applyTheme();
